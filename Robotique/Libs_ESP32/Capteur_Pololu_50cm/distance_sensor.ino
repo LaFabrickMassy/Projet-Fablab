@@ -2,9 +2,21 @@
 // Pololu distance sensor 50cm, product item #4064
 // https://www.pololu.com/product/4064
 // Circuit based on ST VL53L0X ToF ranging sensor
+//
+// Note: it would be more elegant with a class, but ISR must be 
+// a static function, and object methods are not static. So we need
+// do define static functions.
+//
+// To add more sensors, just copy/paste and replace sensor1 with sensorX.
+//
+// Usage:
+//   Setup the sensor read functions with setup_sensorX(pin) 
+//   read the measured distance with distance_sensorX()
+//
 //********************************************************************
 
 //********************************************************************
+// typedef for sensor
 typedef struct {
 	int pin;
 	unsigned long rising_time;
@@ -18,6 +30,7 @@ sensor_t;
 sensor_t sensor1;
 
 //********************************************************************
+// ISR for sensor 1 : read pulse duration
 void IRAM_ATTR isr_sensor1() 
 {
 	if (digitalRead(sensor1.pin))
@@ -29,14 +42,21 @@ void IRAM_ATTR isr_sensor1()
 }
 
 //********************************************************************
+// Setup sensor 1 : 
+// Set pin of sensor and attach ISR
+//
+// @param pin
 void setup_sensor1(int pin)
 {
 	sensor1.pin = pin;
+	sensor1.rising_time = 0;
+	sensor1.duration = 0;
 	pinMode(pin, INPUT_PULLDOWN);
 	attachInterrupt(pin, isr_sensor1, CHANGE);
 }
 
 //********************************************************************
+// Read measured distance of sensor 1
 int distance_sensor1()
 {
 	if(sensor1.duration > 2000)
@@ -65,6 +85,8 @@ void IRAM_ATTR isr_sensor2()
 void setup_sensor2(int pin)
 {
 	sensor2.pin = pin;
+	sensor2.rising_time = 0;
+	sensor2.duration = 0;
 	pinMode(pin, INPUT_PULLDOWN);
 	attachInterrupt(pin, isr_sensor2, CHANGE);
 }
