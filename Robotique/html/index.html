@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="fr" style="height: 100%; overflow:hidden;">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robot C2</title>
+    <script>
+        var OrigX, OrigY;
+        const MAX_NORM  = 75;
+        const MAX_MOTOR = 100;
+        const MAX_RATIO = MAX_MOTOR/MAX_NORM;
+        const MAX_SPEED = 1;      //   m/s (/MAX_MOTOR)
+        const MS_PER_S  = 1000;
+
+        const S1K       = 0.5;
+        const S2K       = 0.25;
+        const S3K       = 0.25;
+        const SQRT2     = Math.sqrt(2.0);
+        const INTERVAL  = 0.250;  // 250ms per timer
+        const PIX_SCALE = 100;    // pixel / m devrait être égal à ROBOT_PX_UNIT * 2 / ROB_WIDTH
+        const ROB_WIDTH = 0.06;   // 60mm entre roues
+        const ROBOT_PX_SIZE = 16;
+        const ROBOT_PX_UNIT = 3;
+        const CANVAS_SIZE   = 2048;
+        const CANVAS_BORDER = 8;
+
+        const LXF      = MAX_RATIO*(S1K*SQRT2-1);
+        const LYF      = MAX_RATIO;
+        const RXF      = MAX_RATIO*(S3K*SQRT2-1);
+        const RYF      = MAX_RATIO;
+        const LXT      = MAX_RATIO*S2K;
+        const LYT      = MAX_RATIO*(S1K*SQRT2-S2K);
+        const RXT      = -MAX_RATIO*S2K;
+        const RYT      = MAX_RATIO*(S2K+S3K*SQRT2);
+
+        let SpeedL;      //-- Elément HTML où écrire la consigne moteur gauche du robot
+        let SpeedR;      //-- Elément HTML où écrire la consigne moteur droit du robot
+        let LocX;        //-- Elément HTML où écrire la coordonée X de la position du robot
+        let LocY;        //-- Elément HTML où écrire la coordonée Y de la position du robot
+        let Frame;       //-- Cadre (élément HTML) auquel le Canvas du terrain appartient (le canvas est clippé et scrollé dans ce cadre)
+        let Robot;       //-- Elément HTML du canvas de l'icone du robot. lui aussi appartient au cadre ci-dessus mais sa position varie
+        let Saver;       //-- Elément HTML permettant la sauvegarde de fichier
+        let Robot2DCtx;  //-- Le contexte de dessin dans l'icône du robot
+        let Canvas2DCtx; //-- Le contexte de dessin dans le canvas du terrain
+
+        let Angle = -0.5 * Math.PI;     //-- Angle (radian) de l'orientation du robot
+        let VectorX = 0;                //-- Coord. X du vecteur normalisé de l'orientation du robot
+        let VectorY = -1;               //-- Coord. Y du vecteur ci-dessus (donc cosinus de Angle)
+        let PosX = CANVAS_SIZE * 0.5;   //-- Coord. X de la position du robot (démarre au centre du canvas)
+        let PosY = CANVAS_SIZE * 0.5;   //-- Coord. Y de la position du robot
+        let CurTimer = null;            //-- Handle du délai en cours (null si pas de delai)
+        let LastTime;                   //-- Heure à laquelle le robot était à la coordonnée (PosX, PosY)
+        let MotorLeft;                  //-- Consigne moteur gauche
+        let MotorRight;                 //-- Consigne moteur droit
+
+        function OnDragStart(event) {
+            document.onmouseup   = OnDragStop;
+            document.onmousemove = OnDragPosition;
+            OrigX = event.clientX;
+            OrigY = event.clientY;
+        }
+
+        function OnDragStop(event) {
+            SetPosition(0, 0);
+            UpdateMotor(0, 0);
+            if (CurTimer != null) {
+                clearInterval(CurTimer);
+                CurTimer = null;
+            }
+            document.onmouseup   = null;
+            document.onmousemove = null;
+        }
+
+        function OnDragPosition(event) {
+            const Degree45 = Math.sqrt(2)*MAX_NORM;
+            const MinNorm2 = 5;
+            let DeltaX = event.clientX - OrigX;
+            let DeltaY = OrigY - event.clientY;
+            let Norm = DeltaX*DeltaX + DeltaY*DeltaY;
+            if (Norm < MinNorm2) {
+                DeltaX = 0;
+                DeltaY = 0;
+            } else if (Norm > MAX_NORM*MAX_NORM) {
+                Norm =  MAX_NORM / Math.sqrt(Norm);
+                DeltaX *= Norm;
+                DeltaY *= Norm;
+            }
+            SetPosition(DeltaX, DeltaY);
+
+            let NegX = (DeltaX < 0);
+            let NegY = (DeltaY < 0);
+            if (NegX)
+                DeltaX = -DeltaX;
+            if (NegY)
+                DeltaY = -DeltaY;
+
+            if (DeltaY <= DeltaX) {
+                //-- Turn
+                MotorRight = RXT * DeltaX + RYT * DeltaY;
+                MotorLeft  = LXT * DeltaX + LYT * DeltaY;
+            } else {
+                //-- Forward
+                MotorLeft  = LXF * DeltaX + LYF * DeltaY;
+                MotorRight = RXF * DeltaX + RYF * DeltaY;
+            }
+            MotorLeft  = Math.round(MotorLeft);
+            MotorRight = Math.round(MotorRight);
+            if (NegX)
+                [MotorLeft, MotorRight] = [MotorRight, MotorLeft];
+            if (NegY) 
+                [MotorLeft, MotorRight] = [-MotorRight, -MotorLeft];
+            UpdateMotor(MotorLeft, MotorRight);
+        }
+
+        function OnTimer() {
+            ComputeTraj();
+        }
+
+        function UpdateMotor(Left, Right) {
+            if ((Left==0) && (Right==0)) {
+                if (CurTimer) {
+                    clearInterval(CurTimer);
+                    CurTimer = null;
+                }
+            } else {
+                if (!CurTimer) {
+                    LastTime = Date.now();
+                    CurTimer = setInterval(OnTimer, INTERVAL*MS_PER_S);
+                } else
+                    ComputeTraj();
+            }
+            AddLog("Send:Motor(L= "+MotorLeft+", R= "+MotorRight+")");
+            SpeedL.innerText = Intl.NumberFormat('fr', {minimumIntegerDigits: 3}).format(MotorLeft);
+            SpeedR.innerText = Intl.NumberFormat('fr', {minimumIntegerDigits: 3}).format(MotorRight);
+        }
+
+        var LogText;
+        var Cursor;
+
+        function SetPosition(x, y) {
+            Cursor.style.top  = (MAX_NORM - 5 - y) + "px";
+            Cursor.style.left = (MAX_NORM - 5 + x) + "px";
+        }
+
+        function AddLog(Text) {
+            var Now = new Date();
+            LogText.append(Intl.NumberFormat('fr', {minimumIntegerDigits: 2}).format(Now.getSeconds())+"."
+                            +Intl.NumberFormat('fr', {minimumIntegerDigits: 3}).format(Now.getMilliseconds())+": "+Text, document.createElement("br"));
+            LogText.scrollTo(0, 100000);
+        }
+
+        function SaveLog() {
+            let LineAry = [];
+            for (const line in LogText.childNodes) {
+                let Elem = LogText.childNodes[line];
+                if (Elem.nodeType == Node.TEXT_NODE) {
+                    LineAry.push(Elem.textContent + '\n');
+                }
+            }
+            SaveFile(new Blob(LineAry, 
+                                {type : 'text/log', endings : 'native'}),
+                    "Robot.log");
+            return false;
+        }
+
+        function ClearLog() {
+            LogText.innerHTML = 'Log:<br/>';
+            return false;
+        }
+
+        function OnLoad() {
+            LogText  = document.getElementById("LogText");
+            Cursor   = document.getElementById("Cursor");
+            Frame    = document.getElementById("Frame")
+            Robot    = document.getElementById("Robot")
+            SpeedL   = document.getElementById("SpeedL");
+            SpeedR   = document.getElementById("SpeedR");
+            LocX     = document.getElementById("LocX");
+            LocY     = document.getElementById("LocY");
+            Saver    = document.getElementById("Saver");
+            let Canvas   = document.getElementById("Canvas");
+            Canvas.width = 
+            Canvas.height = CANVAS_SIZE;
+            Canvas.style.borderWidth = CANVAS_BORDER;
+            Canvas2DCtx  = Canvas.getContext('2d');
+            Robot.width = 
+            Robot.height = ROBOT_PX_SIZE;
+            Robot2DCtx   = Robot.getContext('2d');
+            Canvas2DCtx.fillStyle = "black";
+            Canvas2DCtx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+            Canvas2DCtx.beginPath()
+            Canvas2DCtx.strokeStyle = "white";
+            Canvas2DCtx.moveTo(PosX, PosY+1);
+            Canvas2DCtx.lineTo(PosX, PosY);
+            Canvas2DCtx.stroke();
+            ClearLog();
+            SetCanvasPosition();
+            DrawRobot();
+        }
+
+        function SetCanvasPosition() {
+            Frame.scrollTo(PosX - Frame.clientWidth*0.5, PosY - Frame.clientHeight*0.5);
+        }
+
+        let LastAngle = 0;
+        function DrawRobot() {
+            if (LastAngle != Angle) {
+                LastAngle = Angle;
+                Robot2DCtx.clearRect(0, 0, ROBOT_PX_SIZE, ROBOT_PX_SIZE)
+                let UnitX = VectorX * ROBOT_PX_UNIT;
+                let UnitY = VectorY * ROBOT_PX_UNIT;
+                let x = ROBOT_PX_SIZE*0.5 - UnitX - UnitY;
+                let y = ROBOT_PX_SIZE*0.5 - UnitY + UnitX;
+                Robot2DCtx.beginPath();
+                Robot2DCtx.strokeStyle = '#44FF88';
+                Robot2DCtx.moveTo(x, y);
+                x += UnitX * 2;
+                y += UnitY * 2;
+                Robot2DCtx.lineTo(x, y);
+                x += UnitX + UnitY;
+                y += UnitY - UnitX;
+                Robot2DCtx.lineTo(x, y);
+                x += UnitY - UnitX;
+                y -= UnitX + UnitY;
+                Robot2DCtx.lineTo(x, y);
+                x -= UnitX * 2;
+                y -= UnitY * 2;
+                Robot2DCtx.lineTo(x, y);
+                Robot2DCtx.stroke();
+            }
+            Robot.style.left = PosX - ROBOT_PX_SIZE*0.5 + CANVAS_BORDER + 'px';
+            Robot.style.top  = PosY - ROBOT_PX_SIZE*0.5 + CANVAS_BORDER + 'px';
+            AddLog("Comp:Reach(x=" + PosX.toFixed(1) + ", y=" + PosY.toFixed(1) + ")");
+        }
+
+        function ComputeTraj() {
+            let NewTime = Date.now();
+            LastTime -= NewTime;
+            let Curve = (MotorLeft-MotorRight);  // cm/s
+            // let Speed = ((MotorLeft+MotorRight) / MAX_MOTOR * MAX_SPEED) * (LastTime / MS_PER_S) * PIX_SCALE; // pixel / m *m/s * s
+            let Speed = (MotorLeft+MotorRight)  * (0.5*PIX_SCALE*MAX_SPEED/MAX_MOTOR); // pixel / m *cm/s / 100 = pixel /s
+            Canvas2DCtx.beginPath();
+            Canvas2DCtx.strokeStyle = 'white';
+            if (Curve != 0) {
+                Curve *= MAX_SPEED / (MAX_MOTOR * ROB_WIDTH); //-- radian / s
+                let Arc;
+                if (Speed == 0) {
+                    // Arc = (Curve * MAX_SPEED / MAX_MOTOR) * (LastTime / MS_PER_S) / ROB_WIDTH;   // m/s * s / m
+                    Arc = Curve * LastTime * (-1 / MS_PER_S);   // cm/s / 100 m * s = radian
+                } else {
+                    let SignedRadius = Speed / Curve;  // pixel/s / rad/s = pixel/radian = rayon en pixel (signé pour le moment)
+                    Arc = Curve * LastTime * (-1 / MS_PER_S); // rad/s * ms / 1000 = radian
+
+            AddLog("Comp:Arc(Curve=" + Curve.toFixed(3) + ", Radius= " + SignedRadius.toFixed(1) + ", Delta=" + (-LastTime) + ")");
+                    let Radius = SignedRadius;
+					let SquareAngle = Math.PI * 0.5;
+                    if (Radius < 0) {
+                        Radius = -Radius;   //-- Désormais le rayon est toujours positif
+						SquareAngle = - SquareAngle;
+                    }
+                    Arc += Angle;   //-- Le nouvel angle à la fin du segment
+                    CenterX = PosX - VectorY * SignedRadius;
+                    CenterY = PosY + VectorX * SignedRadius;
+                    VectorX = Math.cos(Arc);
+                    VectorY = Math.sin(Arc);
+                    PosX = CenterX + VectorY * SignedRadius;
+                    PosY = CenterY - VectorX * SignedRadius;
+                    Canvas2DCtx.arc(CenterX, CenterY, Radius, Angle-SquareAngle, Arc-SquareAngle, (Curve<0));
+                    Angle = Arc;
+                }
+            } else {
+                Canvas2DCtx.moveTo(PosX, PosY);
+                PosX += Speed * VectorX * LastTime * (-1 / MS_PER_S);   //-- pixel/s * ms / 1000 = pixel
+                PosY += Speed * VectorY * LastTime * (-1 / MS_PER_S);
+                Canvas2DCtx.lineTo(PosX, PosY);
+            }
+            Canvas2DCtx.stroke();
+            DrawRobot();
+			LastTime = NewTime;
+        }
+
+        function SaveFile (Data, Filename) {
+            Saver.download = Filename;
+            let DownloadURL = URL.createObjectURL(Data);
+            Saver.href = DownloadURL;
+            Saver.click();
+            URL.revokeObjectURL(DownloadURL);
+        }
+    </script>
+</head>
+<body onload="OnLoad()" style="height: 100%; margin: 0; overflow:hidden;">
+    <h1 style="text-align: center; margin: 0px;">Tableau de bord</h1>
+    <div id="Frame" style="width: 100%; height:70%; border:1px solid grey; overflow: auto; position:relative;" onresize="SetCanvasPosition()">
+        <canvas id="Canvas" style="display: block; position: relative; border: 8px solid blue"></canvas>
+        <canvas id="Robot" style="display: block; position: absolute;"></canvas>
+    </div>
+    <div style="text-align: center;">
+        <div style="display:inline-block; vertical-align: text-top; height:100%; margin-right:5px;">
+            <h2>Vitesse</h2>
+            <p style="text-align:right">Gauche = <span id="SpeedL">000</span></p>
+            <p style="text-align:right">Droite = <span id="SpeedR">000</span></p>
+        </div>
+        <div style="display:inline-block; vertical-align: text-top; height:100%; margin-right:5px;">
+            <h2>Position</h2>
+            <p style="text-align:right">X = <span id="LocX">0000</span></p>
+            <p style="text-align:right">Y = <span id="LocY">0000</span></p>
+        </div>
+        <div id="drive" style="display:inline-block; position:relative; vertical-align: text-top">
+            <svg style="width:150px; height:150px;"
+            width="40.599998mm"
+            height="40.599998mm"
+            viewbox="0 0 40.599998 40.599998"
+            version="1.1"
+            id="svg5">
+                <g
+                    id="layer1"
+                    transform="translate(-38.253444,-61.886462)">
+                    <path
+                        style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.206036px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+                        d="m 41.397461,83.505953 -0.886097,1.590662 -0.964235,-1.590662 z"
+                        id="path3286" />
+                    <circle
+                        style="fill:none;stroke:#000000;stroke-width:0.6;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000"
+                        id="path846"
+                        cx="58.553444"
+                        cy="82.186462"
+                        r="20" />
+                    <path
+                        style="fill:none;stroke:#000000;stroke-width:0.3;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000"
+                        id="path984"
+                        d="m -71.883886,-83.228073 a 2.3809381,2.3368468 0 0 1 -1.193179,2.025302 2.3809381,2.3368468 0 0 1 -2.383642,-0.0046 2.3809381,2.3368468 0 0 1 -1.185036,-2.029902"
+                        transform="scale(-1)" />
+                    <path
+                        style="fill:none;stroke:#000000;stroke-width:0.3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+                        d="m 76.644391,83.148752 -0.0298,1.705356"
+                        id="path1295" />
+                    <path
+                        style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.206036px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+                        d="m 75.728494,83.505949 0.886097,1.590662 0.964235,-1.590662 z"
+                        id="path2210" />
+                    <path
+                        style="fill:none;stroke:#000000;stroke-width:0.3;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000"
+                        id="path3282"
+                        d="m 45.242068,-83.228073 a 2.3809381,2.3368468 0 0 1 -1.193179,2.025302 2.3809381,2.3368468 0 0 1 -2.383642,-0.0046 2.3809381,2.3368468 0 0 1 -1.185037,-2.029902"
+                        transform="scale(1,-1)" />
+                    <path
+                        style="fill:none;stroke:#000000;stroke-width:0.3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+                        d="m 40.481564,83.148756 0.0298,1.705356"
+                        id="path3284" />
+                    <path
+                        style="fill:none;stroke:#000000;stroke-width:0.3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+                        d="m 58.817993,97.57407 v 0 l -0.02205,3.54936"
+                        id="path2111" />
+                    <path
+                        style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.206036px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+                        d="m 59.689834,99.775273 -0.886097,1.590657 -0.964235,-1.590657 z"
+                        id="path3286-6" />
+                    <path
+                        style="fill:none;stroke:#000000;stroke-width:0.3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+                        d="m 58.817993,66.69577 v 0 l -0.02205,-3.54936"
+                        id="path3574" />
+                    <path
+                        style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.206036px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+                        d="M 59.689834,64.494567 58.803737,62.90391 57.839502,64.494567 Z"
+                        id="path3576" />
+                </g>
+            </svg>
+            <div onmousedown="OnDragStart(event)" id="Cursor" style="background-color: blue; position: absolute; width:10px; height:10px; top:70px; left:70px"></div>
+        </div>
+        <div id="output" style="border: 1px solid grey; display:inline-block; position:relative; height:150px; width: 40%; vertical-align: text-top; text-align: left;">
+            <p id="LogText" style="height: 100%; margin:0; overflow: auto;"></p>
+            <div style="position: absolute; right: 0; top: 0;">
+                <a href="" onclick="return SaveLog()" style="margin-right: 24px;">Sauvegarder</a>
+                <a href="" onclick="return ClearLog()" style="margin-right: 24px;">Effacer</a>
+            </div>
+        </div>
+    </div>
+    <a id="Saver" style="display:none" href="" />
+</body>
+</html>
