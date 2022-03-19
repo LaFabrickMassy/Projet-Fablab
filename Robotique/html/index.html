@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Robot C2</title>
     <script>
-        var OrigX, OrigY;
+        'use strict';
+        var DragOrigX, DragOrigY;
         const MAX_NORM  = 75;
         const MAX_MOTOR = 100;
         const MAX_RATIO = MAX_MOTOR/MAX_NORM;
@@ -24,6 +25,8 @@
         const ROBOT_PX_UNIT = 3;
         const CANVAS_SIZE   = 2048;
         const CANVAS_BORDER = 8;
+        const MIN_NORM2     = 5;  // Longueur minimale du déplacement du drag (au carré) pour considérer que la commande est non nulle
+        const HALF_PI       = 0.5 * Math.PI;
 
         const LXF      = MAX_RATIO*(S1K*SQRT2-1);
         const LYF      = MAX_RATIO;
@@ -44,25 +47,105 @@
         let Robot2DCtx;  //-- Le contexte de dessin dans l'icône du robot
         let Canvas2DCtx; //-- Le contexte de dessin dans le canvas du terrain
 
-        let Angle = -0.5 * Math.PI;     //-- Angle (radian) de l'orientation du robot
-        let VectorX = 0;                //-- Coord. X du vecteur normalisé de l'orientation du robot
-        let VectorY = -1;               //-- Coord. Y du vecteur ci-dessus (donc cosinus de Angle)
-        let PosX = CANVAS_SIZE * 0.5;   //-- Coord. X de la position du robot (démarre au centre du canvas)
-        let PosY = CANVAS_SIZE * 0.5;   //-- Coord. Y de la position du robot
-        let CurTimer = null;            //-- Handle du délai en cours (null si pas de delai)
+        let Angle       = -HALF_PI;     //-- Angle (radian) de l'orientation du robot
+        let CurTimer    = null;         //-- Handle du délai en cours (null si pas de delai)
+        let ScrollTimer = null;         //-- Handle du délai de scrolling
         let LastTime;                   //-- Heure à laquelle le robot était à la coordonnée (PosX, PosY)
         let MotorLeft;                  //-- Consigne moteur gauche
         let MotorRight;                 //-- Consigne moteur droit
 
+        //-- Coordinate
+        class Coordinate {
+            constructor() {
+                this.value = CANVAS_SIZE * 0.5;   //-- Valeur de la coordonnée de la position du robot (démarre au centre du canvas)
+                this.dist0 = 0;
+                this.dist1 = 0;
+            }
+            SetOther(other) {
+                if (this.other == undefined) {
+                    this.other = other;
+                    other.SetOther(this);
+                }
+            }
+            SetMaxScroll(clientSize) { 
+                this.scrollMax = CANVAS_SIZE + 2* CANVAS_BORDER - clientSize;
+                if (this.scrollMax < 0) {
+                    this.scrollMax = 0;
+                    this.scroll = 0;
+                } else {
+                    this.scroll = this.GetScrollTarget();
+                }
+            }
+            GetScrollTarget() {
+                let X = this.value / CANVAS_SIZE;
+                return this.scrollMax * X * X * (3 - 2 * X);  //-- Voir formule de scrolling
+            }
+            Scroll() {
+                let dist2 = this.dist1;
+                this.dist1 = this.dist0;
+                this.dist0 = this.GetScrollTarget() - this.scroll;
+                this.scroll += 0.02 * this.dist0 + 0.05 * this.dist1 + 0.11 * dist2;  //-- Voir Asservissement du scrolling
+            }
+            //-- Se déplace de la longeur spécifiée en avant
+            Move(length) {
+                this.value += this.vector * length;
+            }
+            //-- Se déplace de la longeur spécifiée à angle droit
+            SideMove(length) {
+                this.value += this.other.vector * length;
+            }
+            SetVector(angle) {
+                this.vector = Math.cos(angle);
+            }
+        }
+        class Position {
+            constructor() {
+                this.xCoord = new Coordinate(false);
+                this.yCoord = new Coordinate(true);
+                this.yCoord.SetOther(this.xCoord);
+            }
+            Move(length) {
+                this.xCoord.Move(length);
+                this.yCoord.Move(length);
+            }
+            SideMove(length) {
+                this.xCoord.SideMove(-length);
+                this.yCoord.SideMove(length);
+            }
+            SetAngle(angle) {
+                this.xCoord.SetVector(angle);
+                this.yCoord.SetVector(HALF_PI-angle);
+            }
+            GetValue() {
+                return [this.xCoord.value, this.yCoord.value]
+            }
+            SetMaxScroll(clientWidth, clientHeight) { 
+                this.xCoord.SetMaxScroll(clientWidth);
+                this.yCoord.SetMaxScroll(clientHeight);
+            }
+            Scroll() {
+                this.xCoord.Scroll();
+                this.yCoord.Scroll();
+            }
+        }
+
+
+        let Pos = new Position();
+        Pos.SetAngle(Angle);
+
+
         function OnDragStart(event) {
             document.onmouseup   = OnDragStop;
             document.onmousemove = OnDragPosition;
-            OrigX = event.clientX;
-            OrigY = event.clientY;
+            DragOrigX = event.clientX;
+            DragOrigY = event.clientY;
+            ScrollTimer = setInterval(onScrollUpdate, 100);
         }
 
         function OnDragStop(event) {
-            SetPosition(0, 0);
+            clearInterval(ScrollTimer);
+            ScrollTimer = null;
+            SetCursorPosition(0, 0);
             UpdateMotor(0, 0);
             if (CurTimer != null) {
                 clearInterval(CurTimer);
@@ -73,12 +156,10 @@
         }
 
         function OnDragPosition(event) {
-            const Degree45 = Math.sqrt(2)*MAX_NORM;
-            const MinNorm2 = 5;
-            let DeltaX = event.clientX - OrigX;
-            let DeltaY = OrigY - event.clientY;
+            let DeltaX = event.clientX - DragOrigX;
+            let DeltaY = event.clientY - DragOrigY;
             let Norm = DeltaX*DeltaX + DeltaY*DeltaY;
-            if (Norm < MinNorm2) {
+            if (Norm < MIN_NORM2) {
                 DeltaX = 0;
                 DeltaY = 0;
             } else if (Norm > MAX_NORM*MAX_NORM) {
@@ -86,7 +167,7 @@
                 DeltaX *= Norm;
                 DeltaY *= Norm;
             }
-            SetPosition(DeltaX, DeltaY);
+            SetCursorPosition(DeltaX, DeltaY);
 
             let NegX = (DeltaX < 0);
             let NegY = (DeltaY < 0);
@@ -108,7 +189,7 @@
             MotorRight = Math.round(MotorRight);
             if (NegX)
                 [MotorLeft, MotorRight] = [MotorRight, MotorLeft];
-            if (NegY) 
+            if (!NegY) 
                 [MotorLeft, MotorRight] = [-MotorRight, -MotorLeft];
             UpdateMotor(MotorLeft, MotorRight);
         }
@@ -138,9 +219,9 @@
         var LogText;
         var Cursor;
 
-        function SetPosition(x, y) {
-            Cursor.style.top  = (MAX_NORM - 5 - y) + "px";
-            Cursor.style.left = (MAX_NORM - 5 + x) + "px";
+        function SetCursorPosition(x, y) {
+            Cursor.style.top  = (MAX_NORM - 5 + Math.round(y)) + "px";
+            Cursor.style.left = (MAX_NORM - 5 + Math.round(x)) + "px";
         }
 
         function AddLog(Text) {
@@ -191,16 +272,26 @@
             Canvas2DCtx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
             Canvas2DCtx.beginPath()
             Canvas2DCtx.strokeStyle = "white";
-            Canvas2DCtx.moveTo(PosX, PosY+1);
-            Canvas2DCtx.lineTo(PosX, PosY);
+            Canvas2DCtx.moveTo(Pos.xCoord.value, Pos.yCoord.value + 1);
+            Canvas2DCtx.lineTo(Pos.xCoord.value, Pos.yCoord.value);
             Canvas2DCtx.stroke();
             ClearLog();
-            SetCanvasPosition();
+            SetWindowsSize();
             DrawRobot();
         }
 
-        function SetCanvasPosition() {
-            Frame.scrollTo(PosX - Frame.clientWidth*0.5, PosY - Frame.clientHeight*0.5);
+        function SetWindowsSize() {
+            Pos.SetMaxScroll(Frame.clientWidth, Frame.clientHeight);
+            CanvasScroll();
+        }
+
+        function onScrollUpdate() {
+            Pos.Scroll();
+            CanvasScroll();
+        }
+
+        function CanvasScroll() {
+            Frame.scrollTo(Pos.xCoord.scroll, Pos.yCoord.scroll);
         }
 
         let LastAngle = 0;
@@ -208,8 +299,8 @@
             if (LastAngle != Angle) {
                 LastAngle = Angle;
                 Robot2DCtx.clearRect(0, 0, ROBOT_PX_SIZE, ROBOT_PX_SIZE)
-                let UnitX = VectorX * ROBOT_PX_UNIT;
-                let UnitY = VectorY * ROBOT_PX_UNIT;
+                let UnitX = Pos.xCoord.vector * ROBOT_PX_UNIT;
+                let UnitY = Pos.yCoord.vector * ROBOT_PX_UNIT;
                 let x = ROBOT_PX_SIZE*0.5 - UnitX - UnitY;
                 let y = ROBOT_PX_SIZE*0.5 - UnitY + UnitX;
                 Robot2DCtx.beginPath();
@@ -229,9 +320,9 @@
                 Robot2DCtx.lineTo(x, y);
                 Robot2DCtx.stroke();
             }
-            Robot.style.left = PosX - ROBOT_PX_SIZE*0.5 + CANVAS_BORDER + 'px';
-            Robot.style.top  = PosY - ROBOT_PX_SIZE*0.5 + CANVAS_BORDER + 'px';
-            AddLog("Comp:Reach(x=" + PosX.toFixed(1) + ", y=" + PosY.toFixed(1) + ")");
+            Robot.style.left = Math.round(Pos.xCoord.value) - ROBOT_PX_SIZE*0.5 + CANVAS_BORDER + 'px';
+            Robot.style.top  = Math.round(Pos.yCoord.value) - ROBOT_PX_SIZE*0.5 + CANVAS_BORDER + 'px';
+            AddLog("Comp:Reach(x=" + Pos.xCoord.value.toFixed(1) + ", y=" + Pos.yCoord.value.toFixed(1) + ")");
         }
 
         function ComputeTraj() {
@@ -259,21 +350,18 @@
                         Radius = -Radius;   //-- Désormais le rayon est toujours positif
 						SquareAngle = - SquareAngle;
                     }
+                    Pos.SideMove(SignedRadius);
+                    let Center = Pos.GetValue();
                     Arc += Angle;   //-- Le nouvel angle à la fin du segment
-                    CenterX = PosX - VectorY * SignedRadius;
-                    CenterY = PosY + VectorX * SignedRadius;
-                    VectorX = Math.cos(Arc);
-                    VectorY = Math.sin(Arc);
-                    PosX = CenterX + VectorY * SignedRadius;
-                    PosY = CenterY - VectorX * SignedRadius;
-                    Canvas2DCtx.arc(CenterX, CenterY, Radius, Angle-SquareAngle, Arc-SquareAngle, (Curve<0));
+                    Pos.SetAngle(Arc);
+                    Pos.SideMove(-SignedRadius);
+                    Canvas2DCtx.arc(Center[0], Center[1], Radius, Angle-SquareAngle, Arc-SquareAngle, (Curve<0));
                     Angle = Arc;
                 }
             } else {
-                Canvas2DCtx.moveTo(PosX, PosY);
-                PosX += Speed * VectorX * LastTime * (-1 / MS_PER_S);   //-- pixel/s * ms / 1000 = pixel
-                PosY += Speed * VectorY * LastTime * (-1 / MS_PER_S);
-                Canvas2DCtx.lineTo(PosX, PosY);
+                Canvas2DCtx.moveTo(Pos.xCoord.value, Pos.yCoord.value);
+                Pos.Move(Speed * LastTime * (-1 / MS_PER_S));   //-- pixel/s * ms / 1000 = pixel
+                Canvas2DCtx.lineTo(Pos.xCoord.value, Pos.yCoord.value);
             }
             Canvas2DCtx.stroke();
             DrawRobot();
@@ -291,7 +379,7 @@
 </head>
 <body onload="OnLoad()" style="height: 100%; margin: 0; overflow:hidden;">
     <h1 style="text-align: center; margin: 0px;">Tableau de bord</h1>
-    <div id="Frame" style="width: 100%; height:70%; border:1px solid grey; overflow: auto; position:relative;" onresize="SetCanvasPosition()">
+    <div id="Frame" style="width: 100%; height:70%; border:1px solid grey; overflow: auto; position:relative;" onresize="SetWindowsSize()">
         <canvas id="Canvas" style="display: block; position: relative; border: 8px solid blue"></canvas>
         <canvas id="Robot" style="display: block; position: absolute;"></canvas>
     </div>
@@ -307,7 +395,7 @@
             <p style="text-align:right">Y = <span id="LocY">0000</span></p>
         </div>
         <div id="drive" style="display:inline-block; position:relative; vertical-align: text-top">
-            <svg style="width:150px; height:150px;"
+            <svg style="width:150px; height:150px; margin: 5px;"
             width="40.599998mm"
             height="40.599998mm"
             viewbox="0 0 40.599998 40.599998"
