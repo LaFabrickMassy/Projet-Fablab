@@ -9,6 +9,7 @@
         #bottom div {display:inline-block; vertical-align: text-top; height:100%; margin-right:5px;}
         #bottom div p {text-align:right;}
         #output div a {margin-right: 24px;}
+        #CmdList a { display: block; margin: auto; }
         canvas {display: block; }
         .fill {fill:#000000;fill-opacity:1;stroke:none;}
         .stroke {fill:none;stroke:#000000;stroke-width:0.6;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;stop-color:#000000;}
@@ -44,6 +45,8 @@
         const LYT      = MAX_RATIO*(S1K*SQRT2-S2K);
         const RXT      = -MAX_RATIO*S2K;
         const RYT      = MAX_RATIO*(S2K+S3K*SQRT2);
+
+        const COMMANDS = [ 'Commande 1', 'Commande 2', 'Commande 3' ];
 
         let SpeedL;      //-- Elément HTML où écrire la consigne moteur gauche du robot
         let SpeedR;      //-- Elément HTML où écrire la consigne moteur droit du robot
@@ -224,6 +227,10 @@
             SpeedR.innerText = Intl.NumberFormat('fr', {minimumIntegerDigits: 3}).format(MotorRight);
         }
 
+        function SendCommand(Number) {
+            AddLog("Send:Command(N= "+Number+")");
+        }
+
         var LogText;
         var Cursor;
 
@@ -269,6 +276,7 @@
             LocY     = document.getElementById("LocY");
             Saver    = document.getElementById("Saver");
             let Canvas   = document.getElementById("Canvas");
+            let CmdList  = document.getElementById("CmdList");
             Canvas.width = 
             Canvas.height = CANVAS_SIZE;
             Canvas.style.borderWidth = CANVAS_BORDER;
@@ -283,6 +291,13 @@
             Canvas2DCtx.moveTo(Pos.xCoord.value, Pos.yCoord.value + 1);
             Canvas2DCtx.lineTo(Pos.xCoord.value, Pos.yCoord.value);
             Canvas2DCtx.stroke();
+            for (let i in COMMANDS) {
+                let CmdNode = document.createElement('a');
+                CmdNode.innerHTML = COMMANDS[i];
+                CmdNode.setAttribute('href', '');
+                CmdList.appendChild(CmdNode);
+                CmdNode.onclick = function(){SendCommand(i); return false;}
+            }
             ClearLog();
             SetWindowsSize();
             DrawRobot();
@@ -393,6 +408,9 @@
         <canvas id="Robot" style="position: absolute;"></canvas>
     </div>
     <div id="bottom" style="text-align: center;">
+        <div id="CmdList">
+            <h2>Commandes</h2>
+        </div>
         <div>
             <h2>Vitesse</h2>
             <p>Gauche = <span id="SpeedL">000</span></p>
