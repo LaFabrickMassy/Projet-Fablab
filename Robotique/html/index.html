@@ -228,8 +228,8 @@
         var Cursor;
 
         function SetCursorPosition(x, y) {
-            Cursor.style.top  = (MAX_NORM - 5 + Math.round(y)) + "px";
-            Cursor.style.left = (MAX_NORM - 5 + Math.round(x)) + "px";
+            Cursor.style.top  = (MAX_NORM  + Math.round(y)) + "px";
+            Cursor.style.left = (MAX_NORM  + Math.round(x)) + "px";
         }
 
         function AddLog(Text) {
@@ -286,6 +286,7 @@
             ClearLog();
             SetWindowsSize();
             DrawRobot();
+            SetCursorPosition(0,0);
         }
 
         function SetWindowsSize() {
@@ -402,7 +403,7 @@
             <p>X = <span id="LocX">0000</span></p>
             <p>Y = <span id="LocY">0000</span></p>
         </div>
-        <div id="drive" style="position:relative;">
+        <div title="Tirer le carré bleu pour déplacer le robot" id="drive" style="position:relative;">
             <svg style="width:150px; height:150px; margin: 5px;"
             width="40.599998mm"
             height="40.599998mm"
@@ -440,10 +441,10 @@
                         d="M 59.689834,64.494567 58.803737,62.90391 57.839502,64.494567 Z" />
                 </g>
             </svg>
-            <div onmousedown="OnDragStart(event)" id="Cursor" style="background-color: blue; position: absolute; width:10px; height:10px; top:70px; left:70px"></div>
+            <div onmousedown="OnDragStart(event)" id="Cursor" style="background-color: blue; position: absolute; width:10px; height:10px"></div>
         </div>
         <div id="output" style="border: 1px solid grey;  position:relative; height:150px; width: 40%; text-align: left;">
-            <div id="LogText" style="height: 100%; margin:0; overflow: auto;"></div>
+            <div id="LogText" style="height: 100%; width: 100%; margin:0; overflow: auto;"></div>
             <div style="position: absolute; right: 0; top: 0;">
                 <a href="" onclick="return SaveLog()" >Sauvegarder</a>
                 <a href="" onclick="return ClearLog()" >Effacer</a>
