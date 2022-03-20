@@ -150,7 +150,7 @@
             document.onmousemove = OnDragPosition;
             DragOrigX = event.clientX;
             DragOrigY = event.clientY;
-            ScrollTimer = setInterval(onScrollUpdate, 100);
+            ScrollTimer = setInterval(function () { Pos.Scroll(); CanvasScroll(); }, 100);
         }
 
         function OnDragStop(event) {
@@ -205,8 +205,8 @@
             UpdateMotor(MotorLeft, MotorRight);
         }
 
-        function OnTimer() {
-            ComputeTraj();
+        function FormatInt (Val, Digits) {
+            Intl.NumberFormat('fr', {minimumIntegerDigits: Digits}).format(Val);
         }
 
         function UpdateMotor(Left, Right) {
@@ -218,13 +218,13 @@
             } else {
                 if (!CurTimer) {
                     LastTime = Date.now();
-                    CurTimer = setInterval(OnTimer, INTERVAL*MS_PER_S);
+                    CurTimer = setInterval(ComputeTraj, INTERVAL*MS_PER_S);
                 } else
                     ComputeTraj();
             }
             AddLog("Send:Motor(L= "+MotorLeft+", R= "+MotorRight+")");
-            SpeedL.innerText = Intl.NumberFormat('fr', {minimumIntegerDigits: 3}).format(MotorLeft);
-            SpeedR.innerText = Intl.NumberFormat('fr', {minimumIntegerDigits: 3}).format(MotorRight);
+            SpeedL.innerText = FormatInt(MotorLeft, 3);
+            SpeedR.innerText = FormatInt(MotorRight, 3);
         }
 
         function SendCommand(Number) {
@@ -241,8 +241,7 @@
 
         function AddLog(Text) {
             var Now = new Date();
-            LogText.append(Intl.NumberFormat('fr', {minimumIntegerDigits: 2}).format(Now.getSeconds())+"."
-                            +Intl.NumberFormat('fr', {minimumIntegerDigits: 3}).format(Now.getMilliseconds())+": "+Text, document.createElement("br"));
+            LogText.append(FormatInt(Now.getSeconds(), 2)+"."+FormatInt(Now.getMilliseconds(), 3)+": "+Text, document.createElement("br"));
             LogText.scrollTo(0, 100000);
         }
 
@@ -266,17 +265,13 @@
         }
 
         function OnLoad() {
-            LogText  = document.getElementById("LogText");
-            Cursor   = document.getElementById("Cursor");
-            Frame    = document.getElementById("Frame")
-            Robot    = document.getElementById("Robot")
-            SpeedL   = document.getElementById("SpeedL");
-            SpeedR   = document.getElementById("SpeedR");
-            LocX     = document.getElementById("LocX");
-            LocY     = document.getElementById("LocY");
-            Saver    = document.getElementById("Saver");
-            let Canvas   = document.getElementById("Canvas");
-            let CmdList  = document.getElementById("CmdList");
+            let ElemAry = ["LogText", "Cursor", "Frame", "Robot", "SpeedL", "SpeedR", "LocX", "LocY", "Saver", "Canvas", "CmdList"]
+            for (let i in ElemAry) {
+                ElemAry[i] = document.getElementById(ElemAry[i]);
+            }
+            let Canvas, CmdList;
+            [LogText, Cursor, Frame, Robot, SpeedL, SpeedR, LocX, LocY, Saver, Canvas, CmdList] = ElemAry
+
             Canvas.width = 
             Canvas.height = CANVAS_SIZE;
             Canvas.style.borderWidth = CANVAS_BORDER;
@@ -306,11 +301,6 @@
 
         function SetWindowsSize() {
             Pos.SetMaxScroll(Frame.clientWidth, Frame.clientHeight);
-            CanvasScroll();
-        }
-
-        function onScrollUpdate() {
-            Pos.Scroll();
             CanvasScroll();
         }
 
@@ -367,12 +357,11 @@
                     let SignedRadius = Speed / Curve;  // pixel/s / rad/s = pixel/radian = rayon en pixel (signé pour le moment)
                     Arc = Curve * LastTime * (-1 / MS_PER_S); // rad/s * ms / 1000 = radian
 
-            AddLog("Comp:Arc(Curve=" + Curve.toFixed(3) + ", Radius= " + SignedRadius.toFixed(1) + ", Delta=" + (-LastTime) + ")");
                     let Radius = SignedRadius;
-					let SquareAngle = Math.PI * 0.5;
+                    let SquareAngle = Math.PI * 0.5;
                     if (Radius < 0) {
                         Radius = -Radius;   //-- Désormais le rayon est toujours positif
-						SquareAngle = - SquareAngle;
+                        SquareAngle = - SquareAngle;
                     }
                     Pos.SideMove(SignedRadius);
                     let Center = Pos.GetValue();
@@ -389,7 +378,7 @@
             }
             Canvas2DCtx.stroke();
             DrawRobot();
-			LastTime = NewTime;
+            LastTime = NewTime;
         }
 
         function SaveFile (Data, Filename) {
