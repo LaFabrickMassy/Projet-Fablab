@@ -1,0 +1,38 @@
+#include <D:\user\Documents\01-Sources\RobotC2\Projet-Fablab\Robotique\telemetry\Telemetry.h>
+
+
+class RobotTelemetry : public Telemetry {
+public:
+    void onConnection (bool Connected) override {
+        Serial.println(Connected ? "Le client est connecte" : "Le client est deconnecte");
+    }
+
+    void onSetMotorSpeed (int8_t MotorLeft, int8_t MotorRight) override {
+        Serial.print("Vitesse: ");
+        Serial.print(MotorLeft);
+        Serial.print(", ");
+        Serial.println(MotorRight);
+    }
+    
+    //-- Callback de traitement des commandes
+    void onCommand (enum ECommand Command) override {
+        Serial.print("Commande: ");
+        Serial.println(Command);
+    }
+
+} *theTelemetry;
+
+
+
+void setup() {
+    // put your setup code here, to run once:
+
+    Serial.begin(115200);
+
+    theTelemetry = new RobotTelemetry();
+}
+
+void loop() {
+    // put your main code here, to run repeatedly:
+    theTelemetry->loop();
+}
