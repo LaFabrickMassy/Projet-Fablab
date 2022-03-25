@@ -46,7 +46,7 @@
         const RXT      = -MAX_RATIO*S2K;
         const RYT      = MAX_RATIO*(S2K+S3K*SQRT2);
 
-        const COMMANDS = [ 'Commande 1', 'Commande 2', 'Commande 3' ];
+        const COMMANDS = [ "Arrêt d'urgence", 'Retour Maison', 'Commande 3', 'Commande 4', 'Commande 5' ];
 
         let SpeedL;      //-- Elément HTML où écrire la consigne moteur gauche du robot
         let SpeedR;      //-- Elément HTML où écrire la consigne moteur droit du robot
@@ -64,6 +64,8 @@
         let LastTime;                   //-- Heure à laquelle le robot était à la coordonnée (PosX, PosY)
         let MotorLeft;                  //-- Consigne moteur gauche
         let MotorRight;                 //-- Consigne moteur droit
+
+        let Ws;
 
         //-- Coordinate
         class Coordinate {
@@ -225,10 +227,12 @@
             AddLog("Send:Motor(L= "+MotorLeft+", R= "+MotorRight+")");
             SpeedL.innerText = FormatInt(MotorLeft, 3);
             SpeedR.innerText = FormatInt(MotorRight, 3);
+            Ws.send('M'+SpeedL.innerText+'|'+SpeedR.innerText);
         }
 
         function SendCommand(Number) {
             AddLog("Send:Command(N= "+Number+")");
+            Ws.send('C'+Number);
         }
 
         var LogText;
@@ -240,7 +244,7 @@
         }
 
         function AddLog(Text) {
-            var Now = new Date();
+            let Now = new Date();
             LogText.append(FormatInt(Now.getSeconds(), 2)+"."+FormatInt(Now.getMilliseconds(), 3)+": "+Text, document.createElement("br"));
             LogText.scrollTo(0, 100000);
         }
@@ -272,6 +276,29 @@
             let Canvas, CmdList;
             [LogText, Cursor, Frame, Robot, SpeedL, SpeedR, LocX, LocY, Saver, Canvas, CmdList] = ElemAry
 
+            let WsHost = location.host;
+            if (WsHost == "") WsHost = 'localhost';
+            WsHost = 'ws://' + WsHost + ':81/'; // 
+            Ws = new WebSocket(WsHost);
+            Ws.binaryType = 'arraybuffer';
+            Ws.onopen = function(e) { AddLog("Etat: Socket est connecté"); }
+            Ws.onmessage = function(Event) { 
+                if(Event.data instanceof ArrayBuffer) {
+                    // Données binaires
+                    const view = new DataView(Event.data);
+                    AddLog('Coord: (' + view.getInt16(0, /*littleEndian*/true) 
+                                + ', ' + view.getInt16(2, /*littleEndian*/true) 
+                                + ') ' + view.getInt16(4, /*littleEndian*/true) 
+                                + '/ ' + view.getInt16(6, /*littleEndian*/true) 
+                                + '[ ' + view.getInt16(8, /*littleEndian*/true) );
+                } else {
+                    // Frame textuelle
+                    AddLog('Etat: ' + Event.data); 
+                }
+            }
+            Ws.onclose = function(e) { AddLog('Etat: Déconnecté'); }
+            Ws.onerror = function(Event) { AddLog('Etat: Erreur ') + Event.data; }
+
             Canvas.width = 
             Canvas.height = CANVAS_SIZE;
             Canvas.style.borderWidth = CANVAS_BORDER;
@@ -291,7 +318,7 @@
                 CmdNode.innerHTML = COMMANDS[i];
                 CmdNode.setAttribute('href', '');
                 CmdList.appendChild(CmdNode);
-                CmdNode.onclick = function(){SendCommand(i); return false;}
+                CmdNode.onclick = function(){ SendCommand(i); return false; }
             }
             ClearLog();
             SetWindowsSize();
