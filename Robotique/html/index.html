@@ -206,7 +206,7 @@
         }
 
         function FormatInt (Val, Digits) {
-            Intl.NumberFormat('fr', {minimumIntegerDigits: Digits}).format(Val);
+            return Intl.NumberFormat('fr', {minimumIntegerDigits: Digits}).format(Val);
         }
 
         function UpdateMotor(Left, Right) {

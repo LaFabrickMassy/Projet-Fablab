@@ -26,7 +26,7 @@ DeltaY=-DeltaY;if(DeltaY<=DeltaX){MotorRight=RXT*DeltaX+RYT*DeltaY;MotorLeft=LXT
 MotorLeft=Math.round(MotorLeft);MotorRight=Math.round(MotorRight);if(NegX)
 [MotorLeft,MotorRight]=[MotorRight,MotorLeft];if(!NegY)
 [MotorLeft,MotorRight]=[-MotorRight,-MotorLeft];UpdateMotor(MotorLeft,MotorRight);}
-function FormatInt(Val,Digits){Intl.NumberFormat('fr',{minimumIntegerDigits:Digits}).format(Val);}
+function FormatInt(Val,Digits){return Intl.NumberFormat('fr',{minimumIntegerDigits:Digits}).format(Val);}
 function UpdateMotor(Left,Right){if((Left==0)&&(Right==0)){if(CurTimer){clearInterval(CurTimer);CurTimer=null;}}else{if(!CurTimer){LastTime=Date.now();CurTimer=setInterval(ComputeTraj,INTERVAL*MS_PER_S);}else
 ComputeTraj();}
 AddLog("Send:Motor(L= "+MotorLeft+", R= "+MotorRight+")");SpeedL.innerText=FormatInt(MotorLeft,3);SpeedR.innerText=FormatInt(MotorRight,3);}
