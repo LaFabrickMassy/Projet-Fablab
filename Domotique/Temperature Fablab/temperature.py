@@ -29,13 +29,9 @@ h_data = []
 dt_data= []
 
 for h in history:
-	print(h[0])
 	t_data.append("{:.1f}".format(h[1]))
 	h_data.append("{:.1f}".format(h[2]))
 	dt_data.append(h[0].strftime("'%Y-%m-%d %H:%m'"))
-print(t_data)
-print(h_data)
-print(dt_data)
 
 with open(html_dir + "/" + data_fname, "a") as f:
 	dt = now.strftime("%d/%m/%y %H:%M")
