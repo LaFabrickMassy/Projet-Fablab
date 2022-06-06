@@ -11,6 +11,7 @@ class HMI():
 
     xshift = 2
     yshift = 2
+    update_period = 500 # temporisation between simulation updates, in ms
     
     #######################################################
     def __init__(self, cellnb_x, cellnb_y):
@@ -19,6 +20,8 @@ class HMI():
         self.robot = Robot(self.maze)
         
         self.tkapp = Tk()
+        self.widget_robot = []
+        self.widget_sensors = [] 
         
         self.saved = False
         self.status = ""
@@ -27,20 +30,25 @@ class HMI():
         
         ##### Define menu
         self.tkmenu = Menu(self.tkapp)
-        # File : Save, Load | Exit
+        # File menu
         self.tkmenu_file = Menu(self.tkmenu)
         self.tkmenu.add_cascade(label="File", menu = self.tkmenu_file)
         self.tkmenu_file.add_command(label = "Export", command = self.Menu_File_Export)
         self.tkmenu_file.add_command(label = "Import", command = self.Menu_File_Import)
         self.tkmenu_file.add_separator()
         self.tkmenu_file.add_command(label = "Exit", command = self.tkapp.destroy)
-        # Maze : New, Change size | Explore, Run
+        # Maze menu
         self.tkmenu_maze = Menu(self.tkmenu)
         self.tkmenu.add_cascade(label="Maze", menu = self.tkmenu_maze)
-        self.tkmenu_maze.add_command(label = "New (N)", command = self.NewMaze)
+        self.tkmenu_maze.add_command(label = "New (n)", command = self.NewMaze)
         self.tkmenu_maze.add_command(label = "Change size", command = self.ChangeSize)
         self.tkmenu_maze.add_separator()
-        self.tkmenu_maze.add_command(label = "Solve (S)", command = self.Solve)
+        self.tkmenu_maze.add_command(label = "Solve (s)", command = self.Solve)
+        # Robot menu
+        self.tkmenu_robot = Menu(self.tkmenu)
+        self.tkmenu.add_cascade(label="Robot", menu = self.tkmenu_robot)
+        self.tkmenu_robot.add_command(label = "Explore (e)", command = self.RobotExplore)
+        self.tkmenu_robot.add_command(label = "Run (r)", command = self.RobotRun)
         
         # show menu
         self.tkapp.config(menu=self.tkmenu)
@@ -99,10 +107,14 @@ class HMI():
         bok.grid(row=2, column=0)
         bcancel = Button(self.change_size_window, text = "Cancel", command=self.ChangeSize_Close)
         bcancel.grid(row=2, column=1)
-        self.change_size_window.bind("<Return>", self.ChangeSize_End)
+        self.change_size_window.bind("<Return>", self.ChangeSize_End_Kbd)
         
     #######################################################
-    def ChangeSize_End(self, event):
+    def ChangeSize_End_Kbd(self, event):
+        self.ChangeSize_End()
+        
+    #######################################################
+    def ChangeSize_End(self):
     
         status = False
         
@@ -279,10 +291,34 @@ class HMI():
         
     #######################################################
     def DrawRobot(self):
+        
+        # delete existing robot drawings
+        for w in self.widget_robot:
+            self.canvas.delete(w)
+        for w in self.widget_sensors:
+            if w:
+                self.canvas.delete(w)
+        self.widget_robot = []
+        self.widget_sensors = []
+        
+        self.robot.DistanceSensors()
+        
+        # draw robot body
+        #print(f"Heading = {self.robot.current_heading}")
         (x, y) = self.Real2CanvasCoordinates(self.robot.current_pos_x, self.robot.current_pos_y)
         r = Robot.wheels_distance/2 * self.px_per_mm
-        self.canvas.create_oval(x-r, self.draw_height - (y-r), x+r, self.draw_height - (y+r), outline="black")
+         
+        w = self.canvas.create_oval(x-r, self.draw_height - (y-r), x+r, self.draw_height - (y+r), outline="black", fill="black")
+        self.widget_robot.append(w)
         
+        # draw sensors view
+        for sensor_data in self.robot.sensors_data:
+            if sensor_data:
+                [d, tx, ty] = sensor_data[:3]
+                (tpx, tpy) = self.Real2CanvasCoordinates(tx, ty)
+                w = self.canvas.create_line(x, self.draw_height-y, tpx, self.draw_height-tpy, fill="green")
+                self.widget_sensors.append(w)
+            
     #######################################################
     def Solve(self):
     
@@ -295,6 +331,65 @@ class HMI():
         self.status = f"solved in {len(path)-1} steps"
         self.SetWindowTitle()
 
+    #######################################################
+    # RobotExplore: launch exploration
+    def RobotExplore(self):
+
+        # initialise exploration
+        self.robot.ExploreInit()
+        time.sleep(Robot.simu_time_step)
+        
+        # main loop
+        while self.robot.mode == Robot.MODE_EXPLORE:
+            self.robot.ExploreUpdate()
+            self.DrawRobot()
+            self.tkapp.update()
+            #self.tkapp.after(HMI.update_period, self.RobotUpdate)
+            time.sleep(Robot.simu_time_step)
+        
+    #######################################################
+    # RobotRun: 
+    def RobotRun(self):
+        
+        # initialisations
+        path = self.maze.ShortestPath((0,0), self.maze.end_cell)
+        moves = self.robot.Path2Moves(path)
+        self.robot.StartCellCenter()
+        self.DrawRobot()
+        
+        # main loop
+        steps = 100
+        for move in moves[:-1]: # last move is stop, don't use it
+            if move == Robot.MVT_AHEAD:
+                dx = self.maze.cell_width/steps * math.cos(self.robot.current_heading)
+                dy = self.maze.cell_width/steps * math.sin(self.robot.current_heading)
+                dh = 0
+            elif move == Robot.MVT_TURNR:
+                dx = 0
+                dy = 0
+                dh = -math.pi/2/steps
+            elif move == Robot.MVT_TURNL:
+                dx = 0
+                dy = 0
+                dh = math.pi/2/steps
+            for i in range(steps):
+                self.robot.current_pos_x += dx
+                self.robot.current_pos_y += dy
+                self.robot.current_heading += dh
+                self.DrawRobot()
+                self.tkapp.update()
+                #time.sleep(0.01)
+                    
+                
+            
+        
+    #######################################################
+    def RobotRunUpdate(self):
+        if self.robot.CurrentStatus() == "run":
+            self.robot.RunUpdate()
+            self.DrawRobot()
+            self.tkapp.after(HMI.update_period, self.RobotUpdate)
+    
     #######################################################
     def mainloop(self):
     
@@ -327,11 +422,19 @@ class HMI():
             self.Solve()
         elif key == 't':
             self.Test()
+        elif key == 'r':
+            self.RobotRun()
+        elif key == 'e':
+            self.RobotExplore()
         else:
             pass
             #print(f"<{key}>")
             #print(int(key))
         
+    #######################################################
+    # Test functions
+    #######################################################
+   
     #######################################################
     def TestCreateUnit(self, i, j, rot):
         if rot == 0:
@@ -376,7 +479,7 @@ class HMI():
             self.maze.AddVWall(i  , j-3)
         
     #######################################################
-    def Test(self):
+    def Test_Sensor(self):
         # create a 12x12 maze
         self.status = "Test"
         self.SetWindowTitle()
@@ -416,8 +519,55 @@ class HMI():
         [d,tx,ty] = self.robot.WallDistance_unit_H(-math.pi/2, 5,6)
         print([d, tx, ty])
         """
-        nbsteps = 48*8
-        for angle in np.linspace(0, 2*math.pi, nbsteps, False):
-            [d, tx, ty, imin, ymin] = self.robot.WallDistance(angle)
+        
+        print("Test_Sensor : launching tests")
+        nbsteps = 8
+        for angle in [math.pi/4]: #np.linspace(0, 2*math.pi, nbsteps, False):
+            print(f"Test angle = {math.degrees(angle)}")
+            #[d, tx, ty, imin, ymin] = self.robot.WallDistance(angle)
+            self.robot.current_heading = angle
+            self.robot.DistanceSensors()
+            [d, tx, ty] = self.robot.sensors_data[0][:3]
             self.DrawLine(self.robot.current_pos_x, self.robot.current_pos_y, tx, ty, color = "red")
-       
+
+    #######################################################
+    def Test(self):
+    
+        self.Test_Sensor()
+        """
+        # create a 12x12 maze
+        self.status = "Test"
+        self.robot.current_heading = 0
+        self.DrawRobot()
+        self.tkapp.update()
+        time.sleep(1)
+        self.robot.current_heading = math.radians(30)
+        self.DrawRobot()
+        self.tkapp.update()
+        time.sleep(1)
+        self.robot.current_heading = math.radians(60)
+        self.DrawRobot()
+        self.tkapp.update()
+        time.sleep(1)
+        self.robot.current_heading = math.radians(90)
+        self.DrawRobot()
+        self.tkapp.update()
+        time.sleep(1)
+        self.robot.current_heading = math.radians(120)
+        self.DrawRobot()
+        self.tkapp.update()
+        time.sleep(1)
+        self.robot.current_heading = math.radians(150)
+        self.DrawRobot()
+        self.tkapp.update()
+        time.sleep(1)
+        self.robot.current_heading = math.radians(180)
+        self.DrawRobot()
+        self.tkapp.update()
+        time.sleep(1)
+        
+        """
+        
+        
+
+        

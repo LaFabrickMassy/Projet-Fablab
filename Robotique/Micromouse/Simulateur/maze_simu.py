@@ -6,8 +6,8 @@ from maze import *
 from robot import *
 from hmi import *
 
-default_cellnb_x = 18
-default_cellnb_y = 18
+default_cellnb_x = 9
+default_cellnb_y = 9
 
 
 ###########################################################
@@ -20,4 +20,3 @@ def NoneMatrix(n, m):
 
 hmi = HMI(default_cellnb_x, default_cellnb_y)
 hmi.mainloop()
-
