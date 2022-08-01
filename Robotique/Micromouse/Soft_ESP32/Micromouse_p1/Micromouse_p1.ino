@@ -2,8 +2,8 @@
 #include <WiFi.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include "SPIFFS.h"
 #include <Arduino_JSON.h>
+#include <SPIFFS.h>
 #include "motor.h"
 #include "parameters.h"
 #include "wheel_encoder.h"
@@ -16,14 +16,15 @@ motor_t motorL; // left motor
 motor_t motorR; // right motor
 
 //* Web server definitions ********************************
-const char* ssid = "SSID";
-const char* password = "PASSWORD";
+const char* ssid = "ESP32";
+const char* password = NULL;
+
 // Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
 // Create a WebSocket object
 AsyncWebSocket ws("/ws");
 
-String message = "";
+
 
 // robot status
 double speed;
@@ -96,25 +97,15 @@ void setup()
 		Serial.println("right motor not initialised");
 	
     initWiFi();
-
-    // Start server
-    server.begin();
-
-    initWebSocket();
-  
-    // Web Server Root URL
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-        request->send(SPIFFS, "/index.html", "text/html");
-    });
-  
-    server.serveStatic("/", SPIFFS, "/");
-
+    delay(500);
+    initWebServer();
+    
 	// Setup sensors ******************
 	setup_sensor1(PIN_SENSORL); // Left sensor
 	setup_sensor2(PIN_SENSORSF); // Left slanted sensor
 	setup_sensor3(PIN_SENSORF); // front sensor
 	setup_sensor4(PIN_SENSORSF); // right slanted sensor
-	setup_sensor3(PIN_SENSORR); // right sensor
+	setup_sensor5(PIN_SENSORR); // right sensor
     
     millis_count=millis();
 }
@@ -125,7 +116,8 @@ void setup()
 void loop()
 {
     delay(100);
-    ws.cleanupClients();
+    cleanupClients();
+    
     motorControl();
     //computeMove();
     

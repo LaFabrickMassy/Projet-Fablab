@@ -4,21 +4,50 @@
 //Json Variable to Hold Slider Values
 JSONVar RobotStatus;
 
+/* Put IP Address details */
+IPAddress local_ip(192,168,4,1);
+IPAddress gateway(192,168,4,1);
+IPAddress subnet(255,255,255,0);
+
+String message = "";
+
 
 // Initialize WiFi
 void initWiFi() {
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(ssid, password);
-    Serial.print("Connecting to WiFi ..");
-    while (WiFi.status() != WL_CONNECTED) {
-        Serial.print('.');
-        delay(1000);
+    WiFi.mode(WIFI_AP);
+    if (WiFi.softAP(ssid, password))
+    {
+        Serial.println("Wifi AP launched");
+        if (!WiFi.softAPConfig(local_ip, gateway, subnet))
+            Serial.println("AP Config Failed");
+        else
+            Serial.println(WiFi.localIP()); 
     }
-    Serial.println(WiFi.localIP());
+    else
+        Serial.println("Wifi AP failed");
+}
+
+void initWebServer() {
+    // Start server
+    server.begin();
+
+    initWebSocket();
+  
+    // Web Server Root URL
+    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+        request->send(SPIFFS, "/index.html", "text/html");
+    });
+  
+    server.serveStatic("/", SPIFFS, "/");
 }
 
 void notifyClients(String message) {
     ws.textAll(message);
+}
+
+void cleanupClients()
+{
+    ws.cleanupClients();
 }
 
 //Get Slider Values

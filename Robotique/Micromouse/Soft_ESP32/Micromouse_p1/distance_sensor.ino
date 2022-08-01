@@ -57,12 +57,12 @@ void setup_sensor1(int pin)
 
 //********************************************************************
 // Read measured distance of sensor 1
-int distance_sensor1()
+unsigned long distance_sensor1()
 {
 	if(sensor1.duration > 2000)
 		return 0;
 	else
-		return (int)((sensor1.duration-1000.)*0.75);
+		return (sensor1.duration-1000)*3/4;
 }
 
 //********************************************************************
@@ -79,6 +79,7 @@ void IRAM_ATTR isr_sensor2()
 	{
 		sensor2.duration = micros() - sensor2.rising_time;
 	}
+    Serial.println("Sensor2");
 }
 
 //********************************************************************
@@ -92,12 +93,12 @@ void setup_sensor2(int pin)
 }
 
 //********************************************************************
-int distance_sensor2()
+unsigned long distance_sensor2()
 {
 	if(sensor2.duration > 1800)
 		return 0;
 	else
-		return (int)((sensor2.duration-1000.)*0.75);
+		return (sensor2.duration-1000)*3/4;
 }
 
 //********************************************************************
@@ -125,12 +126,12 @@ void setup_sensor3(int pin)
 }
 
 //********************************************************************
-int distance_sensor3()
+unsigned long distance_sensor3()
 {
 	if(sensor3.duration > 1800)
 		return 0;
 	else
-		return (int)((sensor3.duration-1000.)*0.75);
+		return (sensor3.duration-1000)*3/4;
 }
 
 //********************************************************************
@@ -158,12 +159,12 @@ void setup_sensor4(int pin)
 }
 
 //********************************************************************
-int distance_sensor4()
+unsigned long distance_sensor4()
 {
 	if(sensor4.duration > 1800)
 		return 0;
 	else
-		return (int)((sensor4.duration-1000.)*0.75);
+		return (sensor4.duration-1000)*3/4;
 }
 
 //********************************************************************
@@ -191,11 +192,11 @@ void setup_sensor5(int pin)
 }
 
 //********************************************************************
-int distance_sensor5()
+unsigned long distance_sensor5()
 {
 	if(sensor5.duration > 1800)
 		return 0;
 	else
-		return (int)((sensor5.duration-1000.)*0.75);
+		return (sensor5.duration-1000)*3/4;
 }
 
