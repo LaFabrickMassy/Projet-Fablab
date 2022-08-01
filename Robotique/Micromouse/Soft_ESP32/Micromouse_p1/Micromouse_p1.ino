@@ -16,8 +16,8 @@ motor_t motorL; // left motor
 motor_t motorR; // right motor
 
 //* Web server definitions ********************************
-const char* ssid = "manoir";
-const char* password = "eng1L@T32u4$";
+const char* ssid = "SSID";
+const char* password = "PASSWORD";
 // Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
 // Create a WebSocket object
