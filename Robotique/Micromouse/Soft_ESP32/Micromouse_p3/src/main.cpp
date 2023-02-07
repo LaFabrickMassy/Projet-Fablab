@@ -27,8 +27,8 @@ int current_mode = ROBOT_MODE_STOP;
 const char* ssid = "ESP32";
 const char* password = NULL;
 #else
-const char* ssid = "";
-const char* password = "";
+const char* ssid = "manoir";
+const char* password = "eng1L@T32u4$";
 #endif
 
 
@@ -147,9 +147,9 @@ void loop()
         millis_count_mode = millis_current;
         if (current_mode == ROBOT_MODE_STOP) {
             Serial.println("Mode: STOP");     
-            Serial.println(sensor1.count);
-            Serial.println(sensor2.count);
-            Serial.println(sensor3.count);
+            //Serial.println(sensor1.count);
+            //Serial.println(sensor2.count);
+            //Serial.println(sensor3.count);
         }       
         else if (current_mode == ROBOT_MODE_SIMPLE_RUN)
             Serial.println("Mode: Simple run");

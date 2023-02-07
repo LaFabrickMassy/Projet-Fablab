@@ -37,8 +37,9 @@ void initPIDRun()
 //
 //*****************************************************************************
 void startPIDRun() {
-    motorSetSpeed(&motorL, speed_l);
-    motorSetSpeed(&motorR, speed_r);
+    current_mode == ROBOT_MODE_PID_CAL;
+    motorSetSpeed(&motorL, SPEED_BASE);
+    motorSetSpeed(&motorR, SPEED_BASE);
 }
 
 //*****************************************************************************
@@ -63,7 +64,7 @@ void stepPIDRun() {
     right_wall_distance = distanceSensor3();
 
     // Checl wall collision
-    if ( (left_wall_distance < WALL_DISTANCE_MIN) || (right_wall_distance < WALL_DISTANCE_MIN) || (front_wall_distance < WALL_DISTANCE_MIN) )
+    if ( (left_wall_distance < WALL_DISTANCE_LMIN) || (right_wall_distance < WALL_DISTANCE_LMIN) || (front_wall_distance < WALL_DISTANCE_FMIN) )
         stopPIDRun();
 
     // compute error
@@ -87,6 +88,7 @@ void stepPIDRun() {
 //
 //*****************************************************************************
 void stopPIDRun() {
+    current_mode == ROBOT_MODE_STOP;
     motorSetSpeed(&motorL, 0);
     motorSetSpeed(&motorR, 0);
 }

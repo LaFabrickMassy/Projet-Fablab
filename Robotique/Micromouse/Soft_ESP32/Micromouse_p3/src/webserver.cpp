@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <Arduino_JSON.h>
 #include <ESPAsyncWebServer.h>
+#include <AsyncElegantOTA.h>
 #include <SPIFFS.h>
 #include "Wifi.h"
 #include "parameters.h"
@@ -69,6 +70,7 @@ void initWiFi() {
 //********************************************************************
 void initWebServer() {
     // Start server
+    AsyncElegantOTA.begin(&server);
     server.begin();
 
     initWebSocket();
@@ -242,15 +244,16 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
             if (message == "PC_index") {
                 // Set mode to stop
                 stopPIDRun();
-                current_mode == ROBOT_MODE_STOP;
                 //Serial.println("Mode set to stop");
             }
             if (message == "PC_start") {
                 // start PID run
+                current_mode == ROBOT_MODE_PID_CAL;
                 startPIDRun();
             }
             if (message == "PC_stop") {
                 // stop PID run
+                current_mode == ROBOT_MODE_STOP;
                 stopPIDRun();
             }
             if (message == "PC_kp_up") {

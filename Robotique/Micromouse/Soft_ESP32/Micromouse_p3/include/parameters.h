@@ -6,7 +6,7 @@
 #define NB_OF_SENSORS 3
 
 // Wifi mode
-#define WIFI_MODE_AP 1
+//#define WIFI_MODE_AP 1
 
 // modes
 #define ROBOT_MODE_STOP 0
@@ -27,7 +27,7 @@
 
 // Wall minimal distance for crash detection
 #define WALL_DISTANCE_FMIN 50 // front distance
-#define WALL_DISTANCE_LMIN 10 // border distance
+#define WALL_DISTANCE_LMIN 30 // border distance
 
 // Robot mechanics
 #define WHEEL_DISTANCE 95.
