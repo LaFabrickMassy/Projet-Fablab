@@ -6,7 +6,6 @@ void initWiFi();
 void initWebServer();
 void notifyClients(String message);
 void cleanupClients();
-String getRobotStatus();
 String getPIDCalParameters();
 void initWebSocket();
 

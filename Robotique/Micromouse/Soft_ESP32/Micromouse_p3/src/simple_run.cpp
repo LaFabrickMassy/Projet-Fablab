@@ -6,8 +6,11 @@
 //*****************************************************************************
 //*****************************************************************************
 
+#include <Arduino.h>
 #include "parameters.h"
 #include "motor.h"
+#include "wheel_encoder.h"
+#include "distance_sensor.h"
 #include "micromouse.h"
 #include "simple_run.h"
 
@@ -89,3 +92,61 @@ void stopSimpleRun() {
     motorSetSpeed(&motorL, 0);
     motorSetSpeed(&motorR, 0);
 }
+
+//********************************************************************
+// 
+//********************************************************************
+String getRobotStatus(){
+    String jsonString;
+    
+    jsonString = "{";
+    jsonString += "\"mode\":\""+String(current_mode)+"\"";
+    jsonString += ",";
+    jsonString += "\"state\":\""+String(current_state)+"\"";
+    jsonString += ",";
+    jsonString += "\"speed\":\""+String(speed*100)+"\"";
+    jsonString += ",";
+    jsonString += "\"turn\":\""+String(turn*100)+"\"";
+    jsonString += ",";
+    jsonString += "\"x\":\""+String(pos_x)+"\"";
+    jsonString += ",";
+    jsonString += "\"y\":\""+String(pos_y)+"\"";
+    jsonString += ",";
+    jsonString += "\"h\":\""+String(180*heading/PI)+"\"";
+	
+	// Encoders data
+    jsonString += ",";
+    if (motorL.flag_reverse)
+        jsonString += "\"eL\":\""+String(-encoderL.count)+"\"";
+    else
+        jsonString += "\"eL\":\""+String(encoderL.count)+"\"";
+    jsonString += ",";
+    if (motorR  .flag_reverse)
+        jsonString += "\"eR\":\""+String(-encoderR.count)+"\"";
+    else
+        jsonString += "\"eR\":\""+String(encoderR.count)+"\"";
+	
+	// Sensors data
+    jsonString += ",";
+    jsonString += "\"sens_L\":\""+String(distanceSensor1())+"\"";
+    #if NB_OF_SENSORS >= 2
+    jsonString += ",";
+    jsonString += "\"sens_F\":\""+String(distanceSensor2())+"\"";
+    #endif
+    #if NB_OF_SENSORS >= 3
+    jsonString += ",";
+    jsonString += "\"sens_R\":\""+String(distanceSensor3())+"\"";
+    #endif
+    #if NB_OF_SENSORS >= 4
+    jsonString += ",";
+    jsonString += "\"sensor4\":\""+String(distanceSensor4())+"\"";
+    #endif
+    #if NB_OF_SENSORS >= 5
+    jsonString += ",";
+    jsonString += "\"sensor5\":\""+String(distanceSensor5())+"\"";
+	#endif
+
+    jsonString += "}";
+    return jsonString;
+}
+

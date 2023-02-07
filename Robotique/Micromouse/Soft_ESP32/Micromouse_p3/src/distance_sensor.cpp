@@ -26,8 +26,7 @@ sensor_t sensor1;
 
 //********************************************************************
 // ISR for sensor 1 : read pulse duration
-void IRAM_ATTR isr_sensor1() 
-{
+void IRAM_ATTR isr_sensor1() {
     sensor1.count++;
 	if (digitalRead(sensor1.pin))
 		sensor1.rising_time = micros();
@@ -42,8 +41,7 @@ void IRAM_ATTR isr_sensor1()
 // Set pin of sensor and attach ISR
 //
 // @param pin
-void setupSensor1(int pin)
-{
+void setupSensor1(int pin) {
 	sensor1.pin = pin;
 	sensor1.rising_time = 0;
 	sensor1.duration = 0;
@@ -53,10 +51,9 @@ void setupSensor1(int pin)
 
 //********************************************************************
 // Read measured distance of sensor 1
-long distanceSensor1()
-{
+long distanceSensor1() {
 	if(sensor1.duration > 1850)
-		return -1;
+		return SENSOR_MAX;
 	else if(sensor1.duration < 1000)
 		return 0;
 	else
@@ -70,8 +67,7 @@ long distanceSensor1()
 sensor_t sensor2;
 
 //********************************************************************
-void IRAM_ATTR isr_sensor2() 
-{
+void IRAM_ATTR isr_sensor2() {
     sensor2.count++;
     if (digitalRead(sensor2.pin))
 		sensor2.rising_time = micros();
@@ -82,8 +78,7 @@ void IRAM_ATTR isr_sensor2()
 }
 
 //********************************************************************
-void setupSensor2(int pin)
-{
+void setupSensor2(int pin) {
 	sensor2.pin = pin;
 	sensor2.rising_time = 0;
 	sensor2.duration = 0;
@@ -92,10 +87,9 @@ void setupSensor2(int pin)
 }
 
 //********************************************************************
-long distanceSensor2()
-{
+long distanceSensor2() {
 	if(sensor2.duration > 1850)
-		return -1;
+		return SENSOR_MAX;
 	else if(sensor2.duration < 1000)
 		return 0;
 	else
@@ -110,8 +104,7 @@ long distanceSensor2()
 sensor_t sensor3;
 
 //********************************************************************
-void IRAM_ATTR isr_sensor3() 
-{
+void IRAM_ATTR isr_sensor3() {
     sensor3.count++;    
 	if (digitalRead(sensor3.pin))
 		sensor3.rising_time = micros();
@@ -122,8 +115,7 @@ void IRAM_ATTR isr_sensor3()
 }
 
 //********************************************************************
-void setupSensor3(int pin)
-{
+void setupSensor3(int pin) {
 	sensor3.pin = pin;
 	sensor3.rising_time = 0;
 	sensor3.duration = 0;
@@ -132,10 +124,9 @@ void setupSensor3(int pin)
 }
 
 //********************************************************************
-long distanceSensor3()
-{
+long distanceSensor3() {
 	if(sensor3.duration > 1850)
-		return -1;
+		return SENSOR_MAX;
 	else if(sensor3.duration < 1000)
 		return 0;
 	else
@@ -150,8 +141,7 @@ long distanceSensor3()
 sensor_t sensor4;
 
 //********************************************************************
-void IRAM_ATTR isr_sensor4() 
-{
+void IRAM_ATTR isr_sensor4() {
 	if (digitalRead(sensor4.pin))
 		sensor4.rising_time = micros();
 	else
@@ -161,8 +151,7 @@ void IRAM_ATTR isr_sensor4()
 }
 
 //********************************************************************
-void setupSensor4(int pin)
-{
+void setupSensor4(int pin) {
 	sensor4.pin = pin;
 	sensor4.rising_time = 0;
 	sensor4.duration = 0;
@@ -171,10 +160,9 @@ void setupSensor4(int pin)
 }
 
 //********************************************************************
-long distanceSensor4()
-{
+long distanceSensor4() {
 	if(sensor4.duration > 1850)
-		return -1;
+		return SENSOR_MAX;
 	else if(sensor4.duration < 1000)
 		return 0;
 	else
@@ -189,8 +177,7 @@ long distanceSensor4()
 sensor_t sensor5;
 
 //********************************************************************
-void IRAM_ATTR isr_sensor5() 
-{
+void IRAM_ATTR isr_sensor5() {
 	if (digitalRead(sensor5.pin))
 		sensor5.rising_time = micros();
 	else
@@ -200,8 +187,7 @@ void IRAM_ATTR isr_sensor5()
 }
 
 //********************************************************************
-void setupSensor5(int pin)
-{
+void setupSensor5(int pin) {
 	sensor5.pin = pin;
 	sensor5.rising_time = 0;
 	sensor5.duration = 0;
@@ -210,10 +196,9 @@ void setupSensor5(int pin)
 }
 
 //********************************************************************
-long distanceSensor5()
-{
+long distanceSensor5() {
 	if(sensor5.duration > 1850)
-		return -1;
+		return SENSOR_MAX;
 	else if(sensor5.duration < 1000)
 		return 0;
 	else

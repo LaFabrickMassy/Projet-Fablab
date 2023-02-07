@@ -3,6 +3,8 @@
 #ifndef _DISTANCE_SENSOR
 #define _DISTANCE_SENSOR
 
+#define SENSOR_MAX 1000
+
 //********************************************************************
 // typedef for sensor
 typedef struct {

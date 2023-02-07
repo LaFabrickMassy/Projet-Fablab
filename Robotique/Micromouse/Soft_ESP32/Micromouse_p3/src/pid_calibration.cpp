@@ -24,11 +24,7 @@
 //*****************************************************************************
 void initPIDRun()
 {
-    pid_kp = (double)PID_INITIAL_KP;
-    pid_ki = (double)PID_INITIAL_KI;
-    pid_kd = (double)PID_INITIAL_KD;
-
-    old_error = 0.;
+    initPID();
 }
 
 //*****************************************************************************
@@ -37,7 +33,8 @@ void initPIDRun()
 //
 //*****************************************************************************
 void startPIDRun() {
-    current_mode == ROBOT_MODE_PID_CAL;
+    Serial.println("startPIDRun()");
+    current_state = ROBOT_STATE_RUN;
     motorSetSpeed(&motorL, SPEED_BASE);
     motorSetSpeed(&motorR, SPEED_BASE);
 }
@@ -64,17 +61,28 @@ void stepPIDRun() {
     right_wall_distance = distanceSensor3();
 
     // Checl wall collision
-    if ( (left_wall_distance < WALL_DISTANCE_LMIN) || (right_wall_distance < WALL_DISTANCE_LMIN) || (front_wall_distance < WALL_DISTANCE_FMIN) )
+    if ( (left_wall_distance < WALL_DISTANCE_LMIN) || 
+         (right_wall_distance < WALL_DISTANCE_LMIN) || 
+         (front_wall_distance < WALL_DISTANCE_FMIN) ) {
         stopPIDRun();
+        return;
+    }
 
     // compute error
     error = left_wall_distance - right_wall_distance;
 
     // PID
-    u = PID(error);
+    u = 0.1*PID(error);
 
-    speed_l = SPEED_BASE * (1+u);
-    speed_r = SPEED_BASE * (1-u);
+    if (u> 0) {
+        speed_l = SPEED_BASE * (1-u);
+        speed_r = SPEED_BASE;
+    }
+    else {
+        speed_l = SPEED_BASE;
+        speed_r = SPEED_BASE * (1+u);
+    }
+
     motorSetSpeed(&motorL, speed_l);
     motorSetSpeed(&motorR, speed_r);
 
@@ -88,7 +96,8 @@ void stepPIDRun() {
 //
 //*****************************************************************************
 void stopPIDRun() {
-    current_mode == ROBOT_MODE_STOP;
+    Serial.println("stopPIDRun()");
+    current_state = ROBOT_STATE_STOP;
     motorSetSpeed(&motorL, 0);
     motorSetSpeed(&motorR, 0);
 }
@@ -102,13 +111,27 @@ String getPIDStatus() {
     String jsonString;
     
     jsonString = "{";
+    jsonString += "\"mode\":\""+String(current_mode)+"\"";
+    jsonString += ",";
+    jsonString += "\"state\":\""+String(current_state)+"\"";
+    jsonString += ",";
     jsonString += "\"kp\":\""+String(pid_kp)+"\"";
     jsonString += ",";
     jsonString += "\"ki\":\""+String(pid_ki)+"\"";
     jsonString += ",";
     jsonString += "\"kd\":\""+String(pid_kd)+"\"";
+    jsonString += ",";
+    jsonString += "\"sens_L\":\""+String(distanceSensor1())+"\"";
+    #if NB_OF_SENSORS >= 2
+    jsonString += ",";
+    jsonString += "\"sens_F\":\""+String(distanceSensor2())+"\"";
+    #endif
+    #if NB_OF_SENSORS >= 3
+    jsonString += ",";
+    jsonString += "\"sens_R\":\""+String(distanceSensor3())+"\"";
+    #endif
 
     jsonString += "}";
-    return jsonString;
 
+    return jsonString;
 }

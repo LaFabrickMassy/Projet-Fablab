@@ -5,5 +5,6 @@ void initSimpleRun();
 void stopSimpleRun();
 void resetSimpleRun();
 void stepSimpleRun();
+String getRobotStatus();
 
 #endif

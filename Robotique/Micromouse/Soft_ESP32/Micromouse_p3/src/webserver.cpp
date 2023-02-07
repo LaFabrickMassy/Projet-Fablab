@@ -101,59 +101,6 @@ void cleanupClients()
 //********************************************************************
 // 
 //********************************************************************
-String getRobotStatus(){
-    String jsonString;
-    
-    jsonString = "{";
-    jsonString += "\"speed\":\""+String(speed*100)+"\"";
-    jsonString += ",";
-    jsonString += "\"turn\":\""+String(turn*100)+"\"";
-    jsonString += ",";
-    jsonString += "\"x\":\""+String(pos_x)+"\"";
-    jsonString += ",";
-    jsonString += "\"y\":\""+String(pos_y)+"\"";
-    jsonString += ",";
-    jsonString += "\"h\":\""+String(180*heading/PI)+"\"";
-	
-	// Encoders data
-    jsonString += ",";
-    if (motorL.flag_reverse)
-        jsonString += "\"eL\":\""+String(-encoderL.count)+"\"";
-    else
-        jsonString += "\"eL\":\""+String(encoderL.count)+"\"";
-    jsonString += ",";
-    if (motorR  .flag_reverse)
-        jsonString += "\"eR\":\""+String(-encoderR.count)+"\"";
-    else
-        jsonString += "\"eR\":\""+String(encoderR.count)+"\"";
-	
-	// Sensors data
-    jsonString += ",";
-    jsonString += "\"sens_L\":\""+String(distanceSensor1())+"\"";
-    #if NB_OF_SENSORS >= 2
-    jsonString += ",";
-    jsonString += "\"sens_F\":\""+String(distanceSensor2())+"\"";
-    #endif
-    #if NB_OF_SENSORS >= 3
-    jsonString += ",";
-    jsonString += "\"sens_R\":\""+String(distanceSensor3())+"\"";
-    #endif
-    #if NB_OF_SENSORS >= 4
-    jsonString += ",";
-    jsonString += "\"sensor4\":\""+String(distanceSensor4())+"\"";
-    #endif
-    #if NB_OF_SENSORS >= 5
-    jsonString += ",";
-    jsonString += "\"sensor5\":\""+String(distanceSensor5())+"\"";
-	#endif
-
-    jsonString += "}";
-    return jsonString;
-}
-
-//********************************************************************
-// 
-//********************************************************************
 String getPIDCalParameters() {
     String jsonString;
 
@@ -197,10 +144,10 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
         // Simple run ********************************
         if ( current_mode == ROBOT_MODE_SIMPLE_RUN)
         {
+            Serial.println("Message mode simple run");
             if (message == "SR_index") {
                 // Set mode to stop
                 stopSimpleRun();
-                current_mode == ROBOT_MODE_STOP;
                 //Serial.println("Mode set to stop");
             }
             if (message == "SR_su") {
@@ -241,19 +188,19 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
         // PID calibration *****************************
         if ( current_mode == ROBOT_MODE_PID_CAL)
         {
+            Serial.println("Message mode PID cal");
             if (message == "PC_index") {
                 // Set mode to stop
                 stopPIDRun();
+                current_mode = ROBOT_MODE_STOP;
                 //Serial.println("Mode set to stop");
             }
             if (message == "PC_start") {
                 // start PID run
-                current_mode == ROBOT_MODE_PID_CAL;
                 startPIDRun();
             }
             if (message == "PC_stop") {
                 // stop PID run
-                current_mode == ROBOT_MODE_STOP;
                 stopPIDRun();
             }
             if (message == "PC_kp_up") {

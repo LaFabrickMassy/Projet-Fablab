@@ -21,6 +21,7 @@ motor_t motorL; // left motor
 motor_t motorR; // right motor
 
 int current_mode = ROBOT_MODE_STOP;
+int current_state = ROBOT_STATE_STOP;
 
 #ifdef WIFI_MODE_AP
 //* Web server definitions ********************************
@@ -158,10 +159,13 @@ void loop()
         else
             Serial.println("Mode: UNKNOWN");
     }
-    if (millis_current - millis_count_status > 500) {
+    if (millis_current - millis_count_status > 1000) {
         millis_count_status = millis_current;        
         //motorControl();
-        notifyClients(getRobotStatus());
+        if (current_mode == ROBOT_MODE_SIMPLE_RUN)
+            notifyClients(getRobotStatus());
+        if (current_mode == ROBOT_MODE_PID_CAL)
+            notifyClients(getPIDStatus());
 
         #ifdef DEBUG_SENSORS
         // print measured distance for sensor 1
@@ -202,9 +206,13 @@ void loop()
     }
 
     if (current_mode == ROBOT_MODE_SIMPLE_RUN) {
-        stepSimpleRun();
+        if (current_state == ROBOT_STATE_RUN) {
+            stepSimpleRun();
+        }
     }
     if (current_mode == ROBOT_MODE_PID_CAL) {
-        stepPIDRun();
+        if (current_state == ROBOT_STATE_RUN) {
+            stepPIDRun();
+        }
     }
 }

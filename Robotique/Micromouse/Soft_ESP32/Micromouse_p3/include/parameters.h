@@ -6,12 +6,15 @@
 #define NB_OF_SENSORS 3
 
 // Wifi mode
-//#define WIFI_MODE_AP 1
+#define WIFI_MODE_AP 1
 
 // modes
 #define ROBOT_MODE_STOP 0
 #define ROBOT_MODE_SIMPLE_RUN 1
 #define ROBOT_MODE_PID_CAL 2
+// States
+#define ROBOT_STATE_STOP 0
+#define ROBOT_STATE_RUN 1
 
 // Simple run parameters
 #define SPEED_MIN 0.1
@@ -22,8 +25,8 @@
 #define PID_INITIAL_KP 0
 #define PID_INITIAL_KI 0
 #define PID_INITIAL_KD 0
-#define PID_MIN 1
-#define PID_STEP 1.5 // Step for up/down commands
+#define PID_MIN 0.1
+#define PID_STEP 1.2 // Step for up/down commands
 
 // Wall minimal distance for crash detection
 #define WALL_DISTANCE_FMIN 50 // front distance

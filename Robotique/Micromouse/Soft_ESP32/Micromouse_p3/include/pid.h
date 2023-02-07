@@ -14,6 +14,7 @@ extern double pid_ki;
 extern double pid_kd;
 extern double old_error;
 
+void initPID();
 double PID(double error);
 
 #endif
