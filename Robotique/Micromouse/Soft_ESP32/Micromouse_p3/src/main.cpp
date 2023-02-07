@@ -27,8 +27,8 @@ int current_mode = ROBOT_MODE_STOP;
 const char* ssid = "ESP32";
 const char* password = NULL;
 #else
-const char* ssid = "manoir";
-const char* password = "eng1L@T32u4$";
+const char* ssid = "";
+const char* password = "";
 #endif
 
 
