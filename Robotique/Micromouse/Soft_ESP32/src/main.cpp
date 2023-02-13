@@ -206,13 +206,16 @@ void loop()
     }
 
     if (current_mode == ROBOT_MODE_SIMPLE_RUN) {
-        if (current_state == ROBOT_STATE_RUN) {
-            stepSimpleRun();
+        if (current_state == ROBOT_STATE_SR_RUN) {
+            simpleRunStep();
         }
     }
     if (current_mode == ROBOT_MODE_PID_CAL) {
-        if (current_state == ROBOT_STATE_RUN) {
-            stepPIDRun();
+        if (current_state == ROBOT_STATE_PID_CAL_RUN) {
+            PIDRunStep();
+        }
+        if (current_state == ROBOT_STATE_PID_CAL_END) {
+            PIDRunGoToWall();
         }
     }
 }

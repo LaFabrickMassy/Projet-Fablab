@@ -1,0 +1,85 @@
+<!-- Complete project details: https://randomnerdtutorials.com/esp32-web-server-websocket-sliders/ -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Micromouse Exploration</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script src="explore.js"></script>
+</head>
+<body>
+    <div class="topnav">
+        <h1>Micromouse Exploration</h1>
+    </div>
+    <div class="content">
+        <div class="card-grid3">
+            <div class="card">
+                <p><button id="but_start" class="button_green">START</button></p>
+            </div>
+            <div class="card">
+            </div>
+            <div class="card">
+                <p><button id="but_stop" class="button_red">STOP</button></p>
+            </div>
+        </div>
+        <div class="card-grid3">
+            <div class="card">
+                <p><button id="but_kp_up" class="button_blue">+</button></p>
+            </div>
+            <div class="card">
+                <p><button id="but_ki_up" class="button_blue">+</button></p>
+            </div>
+            <div class="card">
+                <p><button id="but_kd_up" class="button_blue">+</button></p>
+            </div>
+        </div>
+        <div class="card-grid3">
+            <div class="card">
+                <p class="state">kp=<span id="val_kp"></span></p>
+            </div>
+            <div class="card">
+                <p class="state">ki=<span id="val_ki"></span></p>
+            </div>
+            <div class="card">
+                <p class="state">kd=<span id="val_kd"></span></p>
+            </div>
+            <div class="card">
+            </div>
+        </div>
+        <div class="card-grid3">
+            <div class="card">
+                <p><button id="but_kp_dn" class="button_blue">-</button></p>
+            </div>
+            <div class="card">
+                <p><button id="but_ki_dn" class="button_blue">-</button></p>
+            </div>
+            <div class="card">
+                <p><button id="but_kd_dn" class="button_blue">-</button></p>
+            </div>
+        </div>
+        <div class="card-grid3">
+            <div class="card">
+                <p class="state">dL=<span id="sens_L"></span></p>
+            </div>
+            <div class="card">
+                <p class="state">dF=<span id="sens_F"></span></p>
+            </div>
+            <div class="card">
+                <p class="state">dR=<span id="sens_R"></span></p>
+            </div>
+        </div>
+        <div class="card-grid3">
+            <div class="card">
+            </div>
+            <div class="card">
+            </div>
+            <div class="card">
+                <p><button id="but_index" class="button_orange">Index</button></p>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

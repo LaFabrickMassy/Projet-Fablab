@@ -2,6 +2,7 @@
 // Motor : library to handle motors
 //******************************************************
 
+#include <Arduino.h>
 #include "motor.h"
 
 #define MOTOR_DIR_FWD 1
@@ -27,10 +28,12 @@ int motorSetup(motor_t *motor, int pin_speed, int pin_dir, int flag_reverse, int
 	motor->pin_dir = pin_dir;
 	motor->flag_reverse = flag_reverse;
 	motor->channel = channel;
+    motor->cur_dir = flag_reverse;
 	
 	// Set pin mode
 	pinMode(pin_speed, OUTPUT);
 	pinMode(pin_dir, OUTPUT);
+    delay(100);
 	digitalWrite(pin_dir, flag_reverse);
 	
 	// initialise PWM
@@ -88,6 +91,8 @@ int motorSetDir(motor_t *motor, int reverse)
             #endif
             return 1; // change dir allowed only when stopped
         }
+    else
+        return 0;
 }
 
 //********************************************************************

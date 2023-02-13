@@ -93,27 +93,8 @@ void notifyClients(String message) {
 //********************************************************************
 // 
 //********************************************************************
-void cleanupClients()
-{
+void cleanupClients() {
     ws.cleanupClients();
-}
-
-//********************************************************************
-// 
-//********************************************************************
-String getPIDCalParameters() {
-    String jsonString;
-
-    jsonString =  "{";
-    jsonString += "\"kp\":"+String(pid_kp)+"\"";
-    jsonString += ",";
-    jsonString += "\"ki\":"+String(pid_ki)+"\"";
-    jsonString += ",";
-    jsonString += "\"ki\":"+String(pid_ki)+"\"";
-    jsonString += ",";
-
-    jsonString += "}";
-    return jsonString;
 }
 
 //********************************************************************
@@ -131,14 +112,15 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
         if (message == "IDX_SR") {
             // set mode to simple run
             current_mode = ROBOT_MODE_SIMPLE_RUN;
+            current_state = ROBOT_STATE_SR_RUN;
             Serial.println("Mode simple run");
-            initSimpleRun();
+            simpleRunInit();
         }
         else if (message == "IDX_PC") {
             // set mode toPID calibration
             current_mode = ROBOT_MODE_PID_CAL;
             //Serial.println("Mode PID Calibration");
-            initPIDRun();
+            PIDRunInit();
         }
 
         // Simple run ********************************
@@ -147,7 +129,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
             Serial.println("Message mode simple run");
             if (message == "SR_index") {
                 // Set mode to stop
-                stopSimpleRun();
+                simpleRunStop();
                 //Serial.println("Mode set to stop");
             }
             if (message == "SR_su") {
@@ -173,10 +155,10 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
                     turn -= TURN_STEP;
             }
             if (message == "SR_stop") {
-                stopSimpleRun();
+                simpleRunStop();
             }
             if (message == "SR_reset") {
-                resetSimpleRun();
+                simpleRunReset();
             }
             if (message == "SR_home") {
                 // TODO
@@ -191,19 +173,19 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
             Serial.println("Message mode PID cal");
             if (message == "PC_index") {
                 // Set mode to stop
-                stopPIDRun();
+                PIDRunStop();
                 current_mode = ROBOT_MODE_STOP;
                 //Serial.println("Mode set to stop");
             }
-            if (message == "PC_start") {
+            else if (message == "PC_start") {
                 // start PID run
-                startPIDRun();
+                PIDRunStart();
             }
-            if (message == "PC_stop") {
+            else if (message == "PC_stop") {
                 // stop PID run
-                stopPIDRun();
+                PIDRunStop();
             }
-            if (message == "PC_kp_up") {
+            else if (message == "PC_kp_up") {
                 // 
                 //Serial.println("kp_up");
                 if (pid_kp > 0)
@@ -216,7 +198,20 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
                     pid_kp = pid_kp / PID_STEP;
                 //Serial.println(pid_kp);
             }
-            if (message == "PC_ki_up") {
+            else if (message == "PC_kp_up+") {
+                // 
+                //Serial.println("kp_up");
+                if (pid_kp > 0)
+                    pid_kp = pid_kp * 2*PID_STEP;
+                else if (pid_kp == 0)
+                    pid_kp = PID_MIN;
+                else if (pid_kp >= -PID_MIN)
+                    pid_kp = 0;
+                else
+                    pid_kp = pid_kp / (2*PID_STEP);
+                //Serial.println(pid_kp);
+            }
+            else if (message == "PC_ki_up") {
                 // 
                 //Serial.println("ki_up");
                 if (pid_ki > 0)
@@ -229,7 +224,20 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
                     pid_ki = pid_ki / PID_STEP;
                 //Serial.println(pid_ki);
             }
-            if (message == "PC_kd_up") {
+            else if (message == "PC_ki_up+") {
+                // 
+                //Serial.println("ki_up");
+                if (pid_ki > 0)
+                    pid_ki = pid_ki * 2*PID_STEP;
+                else if (pid_ki == 0)
+                    pid_ki = PID_MIN;
+                else if (pid_ki >= -PID_MIN)
+                    pid_ki = 0;
+                else
+                    pid_ki = pid_ki / (2*PID_STEP);
+                //Serial.println(pid_ki);
+            }
+            else if (message == "PC_kd_up") {
                 // 
                 //Serial.println("kd_up");
                 if (pid_kd > 0)
@@ -242,7 +250,20 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
                     pid_kd = pid_kd / PID_STEP;
                 //Serial.println(pid_kd);
             }
-            if (message == "PC_kp_dn") {
+            else if (message == "PC_kd_up+") {
+                // 
+                //Serial.println("kd_up");
+                if (pid_kd > 0)
+                    pid_kd = pid_kd * (2*PID_STEP);
+                else if (pid_kd == 0)
+                    pid_kd = PID_MIN;
+                else if (pid_kd >= -PID_MIN)
+                    pid_kd = 0;
+                else
+                    pid_kd = pid_kd / (2*PID_STEP);
+                //Serial.println(pid_kd);
+            }
+            else if (message == "PC_kp_dn") {
                 // 
                 //Serial.println("kp_dn");
                 if (pid_kp < 0)
@@ -255,20 +276,46 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
                     pid_kp = pid_kp / PID_STEP;
                 //Serial.println(pid_kp);
             }
-            if (message == "PC_ki_dn") {
+            else if (message == "PC_kp_dn-") {
+                // 
+                //Serial.println("kp_dn");
+                if (pid_kp < 0)
+                    pid_kp = pid_kp * (2*PID_STEP);
+                else if (pid_kp == 0)
+                    pid_kp = -PID_MIN;
+                else if (pid_kp <= PID_MIN)
+                    pid_kp = 0;
+                else
+                    pid_kp = pid_kp / (2*PID_STEP);
+                //Serial.println(pid_kp);
+            }
+            else if (message == "PC_ki_dn") {
                 // 
                 //Serial.println("ki_dn");
                 if (pid_ki < 0)
-                    pid_ki = pid_ki * PID_STEP;
+                    pid_ki = pid_ki * (PID_STEP);
                 else if (pid_ki == 0)
                     pid_ki = -PID_MIN;
                 else if (pid_ki <= PID_MIN)
                     pid_ki = 0;
                 else
-                    pid_ki = pid_ki / PID_STEP;
+                    pid_ki = pid_ki / (PID_STEP);
                 //Serial.println(pid_ki);
             }
-            if (message == "PC_kd_dn") {
+            else if (message == "PC_ki_dn-") {
+                // 
+                //Serial.println("ki_dn");
+                if (pid_ki < 0)
+                    pid_ki = pid_ki * (2*PID_STEP);
+                else if (pid_ki == 0)
+                    pid_ki = -PID_MIN;
+                else if (pid_ki <= PID_MIN)
+                    pid_ki = 0;
+                else
+                    pid_ki = pid_ki / (2*PID_STEP);
+                //Serial.println(pid_ki);
+            }
+            else if (message == "PC_kd_dn") {
                 // 
                 //Serial.println("kd_dn");
                 if (pid_kd < 0)
@@ -279,6 +326,19 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
                     pid_kd = 0;
                 else
                     pid_kd = pid_kd / PID_STEP;
+                //Serial.println(pid_kd);
+            }
+            else if (message == "PC_kd_dn-") {
+                // 
+                //Serial.println("kd_dn");
+                if (pid_kd < 0)
+                    pid_kd = pid_kd * (2*PID_STEP);
+                else if (pid_kd == 0)
+                    pid_kd = -PID_MIN;
+                else if (pid_kd <= PID_MIN)
+                    pid_kd = 0;
+                else
+                    pid_kd = pid_kd / (2*PID_STEP);
                 //Serial.println(pid_kd);
             }
             notifyClients(getPIDStatus());

@@ -1,4 +1,4 @@
-// Javascript for PID calibration
+// Javascript for exploration
 
 var gateway = `ws://${window.location.hostname}/ws`;
 var websocket;
@@ -33,10 +33,7 @@ function onClose(event) {
 }
 
 function onMessage(event) {
-	var val_kp;
-	var val_ki;
-	var val_kd;
-    
+
 	console.log("PID_Cal onMessage");
     console.log(event.data);
 
@@ -46,8 +43,8 @@ function onMessage(event) {
 
     for (var i = 0; i < keys.length; i++){
         var key = keys[i];
+         val = myObj[key];
         if (key == "kp") {
-            val = myObj[key];
 			document.getElementById("val_"+key).innerHTML = val;
         }
         if (key == "ki") {
@@ -58,7 +55,31 @@ function onMessage(event) {
             val = myObj[key];
 			document.getElementById("val_"+key).innerHTML = val;
         }
-    }
+		if (key == "sens_L"){
+			val = myObj[key];
+			document.getElementById("sens_L").innerHTML = val;
+        }
+        if (key == "sens_F"){
+			val = myObj[key];
+			document.getElementById("sens_F").innerHTML = val;
+        }
+		if (key == "sens_R"){
+			val = myObj[key];
+			document.getElementById("sens_R").innerHTML = val;
+        }
+        if (key == "ticks_L"){
+			val = myObj[key];
+			document.getElementById("ticks_L").innerHTML = val;
+        }
+        if (key == "ticks_R"){
+			val = myObj[key];
+			document.getElementById("ticks_R").innerHTML = val;
+        }
+        if (key == "err"){
+			val = myObj[key];
+			document.getElementById("total_error").innerHTML = val;
+        }
+	}
 }
 
 function initButton() {
@@ -72,6 +93,15 @@ function initButton() {
     document.getElementById('but_index').addEventListener('click', (e) => {
 		window.open("/index.html", "_self");
 		websocket.send("PC_home");
+	});
+    document.getElementById('but_kp_up+').addEventListener('click', (e) => {
+		websocket.send("PC_kp_up+");
+	});
+    document.getElementById('but_ki_up+').addEventListener('click', (e) => {
+		websocket.send("PC_ki_up+");
+	});
+    document.getElementById('but_kd_up+').addEventListener('click', (e) => {
+		websocket.send("PC_kd_up+");
 	});
     document.getElementById('but_kp_up').addEventListener('click', (e) => {
 		websocket.send("PC_kp_up");
@@ -90,6 +120,15 @@ function initButton() {
 	});
     document.getElementById('but_kd_dn').addEventListener('click', (e) => {
 		websocket.send("PC_kd_dn");
+	});
+    document.getElementById('but_kp_dn-').addEventListener('click', (e) => {
+		websocket.send("PC_kp_dn-");
+	});
+    document.getElementById('but_ki_dn-').addEventListener('click', (e) => {
+		websocket.send("PC_ki_dn-");
+	});
+    document.getElementById('but_kd_dn-').addEventListener('click', (e) => {
+		websocket.send("PC_kd_dn-");
 	});
 }
 

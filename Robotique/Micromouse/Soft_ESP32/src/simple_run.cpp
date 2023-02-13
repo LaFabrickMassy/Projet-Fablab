@@ -19,11 +19,11 @@
 // Initialise simple run
 //
 //*****************************************************************************
-void initSimpleRun() {
+void simpleRunInit() {
     ;
 }
 
-void stepSimpleRun() {
+void simpleRunStep() {
     // relative left and right speeds from turn value
     float rel_speedL;
     float rel_speedR;
@@ -75,7 +75,7 @@ void stepSimpleRun() {
 // set origin to current robot position
 //
 //*****************************************************************************
-void resetSimpleRun() {
+void simpleRunReset() {
     pos_x = 0.;
     pos_y = 0.;
     heading = 0.;
@@ -86,7 +86,7 @@ void resetSimpleRun() {
 // Stop robot
 //
 //*****************************************************************************
-void stopSimpleRun() {
+void simpleRunStop() {
     speed = 0.0;
     turn = 0.0;
     motorSetSpeed(&motorL, 0);
@@ -96,7 +96,7 @@ void stopSimpleRun() {
 //********************************************************************
 // 
 //********************************************************************
-String getRobotStatus(){
+String getRobotStatus() {
     String jsonString;
     
     jsonString = "{";
@@ -116,15 +116,21 @@ String getRobotStatus(){
 	
 	// Encoders data
     jsonString += ",";
+    #ifdef TOTO
     if (motorL.flag_reverse)
         jsonString += "\"eL\":\""+String(-encoderL.count)+"\"";
     else
         jsonString += "\"eL\":\""+String(encoderL.count)+"\"";
+    jsonString += "\"eL\":\""+String(encoderL.count)+"\"";
     jsonString += ",";
-    if (motorR  .flag_reverse)
+    if (motorR.flag_reverse)
         jsonString += "\"eR\":\""+String(-encoderR.count)+"\"";
     else
         jsonString += "\"eR\":\""+String(encoderR.count)+"\"";
+    #endif
+    jsonString += "\"eL\":\""+String(encoderL.count)+"\"";
+    jsonString += ",";
+    jsonString += "\"eR\":\""+String(encoderR.count)+"\"";
 	
 	// Sensors data
     jsonString += ",";
