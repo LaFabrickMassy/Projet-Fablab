@@ -32,7 +32,12 @@ long refticks_Lwheel;
 long refticks_Rwheel;
 long fwall_refticks_Lwheel;
 long fwall_refticks_Rwheel;
-double ticks_per_mm;
+double ticksL_per_mm;
+double ticksR_per_mm;
+
+double lwall_dist;
+double rwall_dist;
+double fwall_dist;
 
 //*****************************************************************************
 //
@@ -78,9 +83,6 @@ void PIDRunStart() {
 //*****************************************************************************
 void PIDRunStep() {
 
-    double left_wall_distance;
-    double right_wall_distance;
-    double front_wall_distance;
     double error;
     double u;
     double speed_l, speed_r;
@@ -89,20 +91,20 @@ void PIDRunStep() {
     nb_steps ++;
 
     // get wall distance
-    left_wall_distance  = distanceSensor1();
-    front_wall_distance = distanceSensor2();
-    right_wall_distance = distanceSensor3();
+    lwall_dist = distanceSensor1();
+    fwall_dist = distanceSensor2();
+    rwall_dist = distanceSensor3();
 
     // Checl wall collision
-    if ( (left_wall_distance < WALL_DISTANCE_LMIN) || 
-         (right_wall_distance < WALL_DISTANCE_LMIN) || 
-         (front_wall_distance < WALL_DISTANCE_FMIN) ) {
+    if ( (lwall_dist < WALL_DISTANCE_LMIN) || 
+         (fwall_dist < WALL_DISTANCE_LMIN) || 
+         (fwall_dist < WALL_DISTANCE_FMIN) ) {
         PIDRunStop();
         return;
     }
 
     // compute error
-    error = left_wall_distance - right_wall_distance;
+    error = lwall_dist - rwall_dist;
 
     // update error array and compute total error
     total_error -= errors[0];
@@ -115,19 +117,20 @@ void PIDRunStep() {
     if ((nb_steps > NB_ERRORS) && (total_error < NB_ERRORS*PID_MAX_ERROR) && (stabilised == 0)) {
         stabilised = 1;
         total_error = 0;
-        refticks_Lwheel = -encoderL.count;
-        refticks_Rwheel = encoderR.count;
     }
     if (stabilised) {
-        if ((fwall_found == 0) && (front_wall_distance < 1000)) {
+        if ((fwall_found == 0) && (fwall_dist < 1000)) {
             fwall_found = 1;
-            fwall_refdist = front_wall_distance;
+            fwall_refdist = fwall_dist;
             fwall_refticks_Lwheel = -encoderL.count;
-            fwall_refticks_Rwheel = -encoderL.count;
+            fwall_refticks_Rwheel = -encoderR.count;
         }
-        ticks_Lwheel = -encoderL.count - refticks_Lwheel;
-        ticks_Rwheel = encoderR.count - refticks_Rwheel;
-        ticks_per_mm = 100*(fwall_refdist-front_wall_distance) * 2/(-encoderL.count - fwall_refticks_Lwheel + encoderR.count - fwall_refticks_Rwheel);
+        if (fwall_found == 1) {
+            ticks_Lwheel = -encoderL.count - fwall_refticks_Lwheel;
+            ticks_Rwheel =  encoderR.count - fwall_refticks_Rwheel;
+            ticksL_per_mm = 100*(fwall_refdist-fwall_dist) / ticks_Lwheel;
+            ticksR_per_mm = 100*(fwall_refdist-fwall_dist) / ticks_Rwheel;
+        }
     }
     
 
@@ -211,8 +214,15 @@ String getPIDStatus() {
     jsonString += ",";
     jsonString += "\"enc_R\":\""+String(encoderR.count)+"\"";
     jsonString += ",";
-    jsonString += "\"tick_pmm\":\""+String(ticks_per_mm)+"\"";
-    
+    jsonString += "\"fdist\":\""+String(fwall_dist)+"\"";
+    jsonString += ",";
+    jsonString += "\"ref_fdist\":\""+String(fwall_refdist)+"\"";
+    jsonString += ",";
+    jsonString += "\"tickL_pmm\":\""+String(ticksL_per_mm)+"\"";
+    jsonString += ",";
+    jsonString += "\"tickR_pmm\":\""+String(ticksR_per_mm)+"\"";
+    jsonString += ",";
+    jsonString += "\"tickR\":\""+String(ticksR_per_mm)+"\"";
     jsonString += "}";
 
     return jsonString;
