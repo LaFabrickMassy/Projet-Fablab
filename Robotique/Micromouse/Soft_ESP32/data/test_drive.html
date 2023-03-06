@@ -1,0 +1,413 @@
+<!-- Complete project details: https://randomnerdtutorials.com/esp32-web-server-websocket-sliders/ -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Micromouse simple run</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <script type = "text/JavaScript">
+		var gateway = `ws://${window.location.hostname}/ws`;
+		var websocket;
+		window.addEventListener('load', onLoad);
+
+		function onLoad(event) {
+			console.log('onLoad function');
+			initWebSocket();
+			initButton();
+		}
+
+		function getValues(){
+			websocket.send("getValues");
+		}
+
+		function initWebSocket() {
+			console.log('Trying to open a WebSocket connection...');
+			websocket = new WebSocket(gateway);
+			websocket.onopen = onOpen;
+			websocket.onclose = onClose;
+			websocket.onmessage = onMessage;
+		}
+
+		function onOpen(event) {
+			console.log('Connection opened');
+			getValues();
+		}
+
+		function onClose(event) {
+			console.log('Connection closed');
+			setTimeout(initWebSocket, 2000);
+		}
+
+		function onMessage(event) {
+			var speed;
+			var turn;
+			var pos_x;
+			var pos_y;
+			var heading;
+			var enc_L;
+			var enc_R;
+			var sens_L;
+			var sens_F;
+			var sens_R;
+			
+			console.log(event.data);
+			var myObj = JSON.parse(event.data);
+			var keys = Object.keys(myObj);
+
+			for (var i = 0; i < keys.length; i++){
+				var key = keys[i];
+				if (key == "speed"){
+					speed = myObj[key];
+					document.getElementById("speed").innerHTML = speed;
+				}
+				if (key == "turn"){
+					turn = myObj[key];
+					document.getElementById("turn").innerHTML = turn;
+				}
+				if (key == "x"){
+					pos_x = myObj[key];
+					document.getElementById("pos_x").innerHTML = "x: "+pos_x;
+				}
+				if (key == "y"){
+					pos_y = myObj[key];
+					document.getElementById("pos_y").innerHTML = "y: "+pos_y;
+				}
+				if (key == "h"){
+					heading = myObj[key];
+					document.getElementById("heading").innerHTML = "h: "+heading;
+				}
+				if (key == "eL"){
+					enc_L = myObj[key];
+					document.getElementById("enc_L").innerHTML = "EncL: "+enc_L;
+				}
+				if (key == "eR"){
+					enc_R = myObj[key];
+					document.getElementById("enc_R").innerHTML = "EncR: "+enc_R;
+				}
+				if (key == "sens_L"){
+					sens_L = myObj[key];
+					document.getElementById("sens_L").innerHTML = "dL: <br>"+sens_L;
+				}
+				if (key == "sens_F"){
+					sens_F = myObj[key];
+					document.getElementById("sens_F").innerHTML = "dF: <br>"+sens_F;
+				}
+				if (key == "sens_R"){
+					sens_R = myObj[key];
+					document.getElementById("sens_R").innerHTML = "dR: <br>"+sens_R;
+				}
+			}
+		}
+
+		function initButton() {
+			console.log("function initButton");
+			document.getElementById('butt_rccw').addEventListener('click', click_butt_rccw);
+			document.getElementById('butt_rcw').addEventListener('click', click_butt_rcw);
+			document.getElementById('butt_run').addEventListener('click', click_butt_run);
+			document.getElementById('butt_up').addEventListener('click', click_butt_up);
+			document.getElementById('butt_down').addEventListener('click', click_butt_down);
+			document.getElementById('butt_left').addEventListener('click', click_butt_left);
+			document.getElementById('butt_right').addEventListener('click', click_butt_right);
+			document.getElementById('butt_stop').addEventListener('click', click_butt_stop);
+			document.getElementById('butt_home').addEventListener('click', click_butt_home);
+			document.getElementById('butt_index').addEventListener('click', click_butt_index);
+		}
+
+		function click_butt_rccw(){
+			console.log('TD_rccw');
+			websocket.send('TD_rccw');
+		}
+
+		function click_butt_rcw(){
+			console.log('TD_rccw');
+			websocket.send('TD_rcw');
+		}
+
+		function click_butt_run(){
+			console.log('TD_run');
+			websocket.send('TD_run');
+		}
+
+		function click_butt_up(){
+			websocket.send('TD_su');
+		}
+
+		function click_butt_down(){
+			websocket.send('TD_sd');
+		}
+
+		function click_butt_left(){
+			websocket.send('TD_tl');
+		}
+
+		function click_butt_right(){
+			websocket.send('TD_tr');
+		}
+
+		function click_butt_stop(){
+			websocket.send('TD_stop');
+		}
+
+		function click_butt_index(){
+			console.log('TD_index');
+			window.open("/index.html", "_self");
+			websocket.send('TD_index');
+		}
+
+		function click_butt_home(){
+			websocket.send('TD_home');
+		}
+
+	</script>
+	<style type="text/css">
+		html {
+			font-family: Arial, Helvetica, sans-serif;
+			display: inline-block;
+			text-align: center;
+		  }
+		  h1 {
+			font-size: 1.8rem;
+			color: white;
+		  }
+		  p {
+			font-size: 1.4rem;
+		  }
+		  .topnav {
+			overflow: hidden;
+			background-color: #0A1128;
+		  }
+		  body {
+			margin: 0;
+		  }
+		  .button_blue {
+			padding: 15px 30px;
+			font-size: 24px;
+			text-align: center;
+			outline: none;
+			color: #FFF;
+			background-color: #0f8b8d;
+			border: none;
+			border-radius: 5px;
+			-webkit-touch-callout: none;
+			-webkit-user-select: none;
+			-khtml-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+			user-select: none;
+			-webkit-tap-highlight-color: rgba(0,0,0,0);
+		   }
+		  .button_green {
+			padding: 15px 30px;
+			font-size: 24px;
+			text-align: center;
+			outline: none;
+			color: #FFF;
+			background-color: #00CC00;
+			border: none;
+			border-radius: 5px;
+			-webkit-touch-callout: none;
+			-webkit-user-select: none;
+			-khtml-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+			user-select: none;
+			-webkit-tap-highlight-color: rgba(0,0,0,0);
+		   }
+		  .button_red {
+			padding: 15px 30px;
+			font-size: 24px;
+			text-align: center;
+			outline: none;
+			color: #fff;
+			background-color: #CC0000;
+			border: none;
+			border-radius: 5px;
+			-webkit-touch-callout: none;
+			-webkit-user-select: none;
+			-khtml-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+			user-select: none;
+			-webkit-tap-highlight-color: rgba(0,0,0,0);
+		   }
+		  .button_orange {
+			padding: 15px 30px;
+			font-size: 24px;
+			text-align: center;
+			outline: none;
+			color: #fff;
+			background-color: #FF9933;
+			border: none;
+			border-radius: 5px;
+			-webkit-touch-callout: none;
+			-webkit-user-select: none;
+			-khtml-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+			user-select: none;
+			-webkit-tap-highlight-color: rgba(0,0,0,0);
+		   }
+		   /*.button:hover {background-color: #0f8b8d}*/
+		   .button:active {
+			 background-color: #0f8b8d;
+			 box-shadow: 2 2px #CDCDCD;
+			 transform: translateY(2px);
+		   }
+		  .content {
+			padding: 30px;
+		  }
+		  .card-grid3 {
+			max-width: 600px;
+			margin: 0 auto;
+			display: grid;
+			grid-gap: 0rem;
+			grid-template-columns: 1fr 1fr 1fr;
+		  }
+		  .card-grid5 {
+			max-width: 600px;
+			margin: 0 auto;
+			display: grid;
+			grid-gap: 0rem;
+			grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+		  }
+		  .card {
+			background-color: white;
+		  }
+		  .card-title {
+			font-size: 1.2rem;
+			font-weight: bold;
+			color: #034078
+		  }
+		  .state {
+			font-size: 1.2rem;
+			color:#1282A2;
+		  }
+		  .slider {
+			-webkit-appearance: none;
+			margin: 0 auto;
+			width: 100%;
+			height: 15px;
+			border-radius: 10px;
+			background: #FFD65C;
+			outline: none;
+		  }
+		  .slider::-webkit-slider-thumb {
+			-webkit-appearance: none;
+			appearance: none;
+			width: 30px;
+			height: 30px;
+			border-radius: 50%;
+			background: #034078;
+			cursor: pointer;
+		  }
+		  .slider::-moz-range-thumb {
+			width: 30px;
+			height: 30px;
+			border-radius: 50% ;
+			background: #034078;
+			cursor: pointer;
+		  }
+		  .switch {
+			padding-left: 5%;
+			padding-right: 5%;
+		  }
+
+
+	</style>
+</head>
+<body>
+    <div class="topnav">
+        <h1>Micromouse simple run</h1>
+    </div>
+    <div class="content">
+        <div class="card-grid3">
+            <div class="card">
+                <p><button id="butt_rccw" class="button_orange">Rot CCW</button></p>
+            </div>
+            <div class="card">
+                <p><button id="butt_run" class="button_green">Run</button></p>
+            </div>
+            <div class="card">
+                <p><button id="butt_rcw" class="button_orange">Rot CCW</button></p>
+            </div>
+        </div>
+        <div class="card-grid3">
+            <div class="card">
+                <p class="state">Speed:</p>
+                <p><span id="speed"></span> &percnt;</p>
+            </div>
+            <div class="card">
+                <p><button id="butt_up" class="button_green">^</button></p>
+            </div>
+            <div class="card">
+                <p class="state">Turn:</p>
+                <p><span id="turn"></span> &percnt;</p>
+            </div>
+        </div>
+        <div class="card-grid3">
+            <div class="card">
+                <p><button id="butt_right" class="button_green"><</button></p>
+            </div>
+            <div class="card">
+                <p><button id="butt_stop" class="button_red">STOP</button></p>
+            </div>
+            <div class="card">
+                <p><button id="butt_left" class="button_green">></button></p>
+            </div>
+        </div>
+        <div class="card-grid">
+            <div class="card">
+            </div>
+            <div class="card">
+                <p><button id="butt_down" class="button_green">v</button></p>
+            </div>
+            <div class="card">
+            </div>
+        </div>
+        <div class="card-grid3">
+            <div class="card">
+                <p><button id="butt_home" class="button_orange">HOME</button></p>
+            </div>
+            <div class="card">
+            </div>
+            <div class="card">
+                <p><button id="butt_index" class="button_orange">Index</button></p>
+            </div>
+        </div>
+        <div class="card-grid3">
+            <div class="card">
+                <p class="state"><span id="pos_x"></span></p>
+            </div>
+            <div class="card">
+                <p class="state"><span id="pos_y"></span></p>
+            </div>
+            <div class="card">
+                <p class="state"><span id="heading"></span></p>
+            </div>
+        </div>
+        <div class="card-grid3">
+            <div class="card">
+                <p class="state"><span id="enc_L"></span></p>
+            </div>
+            <div class="card">
+                <p></p>
+            </div>
+            <div class="card">
+                <p class="state"><span id="enc_R"></span></p>
+            </div>
+        </div>
+        <div class="card-grid3">
+            <div class="card">
+                <p class="state"><span id="sens_L"></span></p>
+            </div>
+            <div class="card">
+                <p class="state"><span id="sens_F"></span></p>
+            </div>
+            <div class="card">
+                <p class="state"><span id="sens_R"></span></p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

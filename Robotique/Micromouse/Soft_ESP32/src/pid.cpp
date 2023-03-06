@@ -10,21 +10,27 @@
 #include "parameters.h"
 #include "pid.h"
 
-double pid_kp;
-double pid_ki;
-double pid_kd;
+double pidSensors_kp;
+double pidSensors_ki;
+double pidSensors_kd;
 
-double old_error;
+double old_errorSensors;
+
+double pidMotors_kp;
+double pidMotors_ki;
+double pidMotors_kd;
+
+double old_errorMotors;
 
 //*****************************************************************************
 //
 //*****************************************************************************
-void initPID() {
-    pid_kp = (double)PID_INITIAL_KP;
-    pid_ki = (double)PID_INITIAL_KI;
-    pid_kd = (double)PID_INITIAL_KD;
+void initPIDSensors() {
+    pidSensors_kp = (double)PIDSENSORS_KP;
+    pidSensors_ki = (double)PIDSENSORS_KI;
+    pidSensors_kd = (double)PIDSENSORS_KD;
 
-    old_error = 0.;
+    old_errorSensors = 0.;
 }
 
 //*****************************************************************************
@@ -34,15 +40,47 @@ void initPID() {
 // y: ouput
 // w: setpoint 
 //*****************************************************************************
-double PID(double error) {
+double PIDSensors(double error) {
     double up;
     double ui;
     double ud;
 
     // Correction factors
-    up = pid_kp * error;
-    ui = pid_ki * (error + old_error);
-    ud = pid_kd * (error - old_error);
+    up = pidSensors_kp * error;
+    ui = pidSensors_ki * (error + old_errorSensors);
+    ud = pidSensors_kd * (error - old_errorSensors);
+
+    // command
+    return up + ui + ud;
+}
+
+//*****************************************************************************
+//
+//*****************************************************************************
+void initPIDMotors() {
+    pidMotors_kp = (double)PIDMOTORS_KP;
+    pidMotors_ki = (double)PIDMOTORS_KI;
+    pidMotors_kd = (double)PIDMOTORS_KD;
+
+    old_errorMotors = 0.;
+}
+
+//*****************************************************************************
+//
+// PID
+// parameters:
+// y: ouput
+// w: setpoint 
+//*****************************************************************************
+double PIDMotors(double error) {
+    double up;
+    double ui;
+    double ud;
+
+    // Correction factors
+    up = pidMotors_kp * error;
+    ui = pidMotors_ki * (error + old_errorMotors);
+    ud = pidMotors_kd * (error - old_errorMotors);
 
     // command
     return up + ui + ud;

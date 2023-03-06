@@ -6,31 +6,31 @@
 #include "wheel_encoder.h"
 #include "micromouse.h"
 
+
 //********************************************************************
 // Left Encoder
 //********************************************************************
 encoder_t encoderL;
 long lastCountL;
+long micL;
 
 //********************************************************************
-void IRAM_ATTR isrEncoderL() 
-{
-    if (digitalRead(encoderL.pinB))
-    {
+void IRAM_ATTR isrEncoderL() {
+    micL = micros();
+    encoderL.elapsed_micros = micL - encoderL.last_micros;
+    encoderL.last_micros = micL;
+    if (digitalRead(encoderL.pinB)) {
         // B was up, reverse
         encoderL.count--; 
-        //encoderL.count++; 
     }
-    else
-    {
+    else {
         // B was not yet up, forward
         encoderL.count++;
     }
 }
 
 //********************************************************************
-void setupEncoderL(int pinA, int pinB, int flag_reverse)
-{
+void setupEncoderL(int pinA, int pinB, int flag_reverse) {
 	encoderL.pinA = pinA;
     encoderL.pinB = pinB;
     encoderL.flag_reverse = flag_reverse;
@@ -42,14 +42,12 @@ void setupEncoderL(int pinA, int pinB, int flag_reverse)
 }
 
 //********************************************************************
-int countEncoderL()
-{
+int countEncoderL() {
 	return encoderL.count;
 }
 
 //********************************************************************
-void resetEncoderL()
-{
+void resetEncoderL() {
 	encoderL.count = 0;
 }
 
@@ -58,26 +56,25 @@ void resetEncoderL()
 //********************************************************************
 encoder_t encoderR;
 long lastCountR;
+long micR;
 
 //********************************************************************
-void IRAM_ATTR isrEncoderR() 
-{
-    if (digitalRead(encoderR.pinB))
-    {
+void IRAM_ATTR isrEncoderR()  {
+    micR = micros();
+    encoderR.elapsed_micros = micR - encoderR.last_micros;
+    encoderR.last_micros = micR;
+    if (digitalRead(encoderR.pinB)) {
         // B was up, reverse
         encoderR.count--; 
-        //encoderR.count++; 
     }
-    else
-    {
+    else {
         // B was not yet up, forward
         encoderR.count++;
     }
 }
 
 //********************************************************************
-void setupEncoderR(int pinA, int pinB, int flag_reverse)
-{
+void setupEncoderR(int pinA, int pinB, int flag_reverse) {
 	encoderR.pinA = pinA;
 	encoderR.pinB = pinB;
     encoderR.flag_reverse = flag_reverse;
@@ -89,14 +86,12 @@ void setupEncoderR(int pinA, int pinB, int flag_reverse)
 }
 
 //********************************************************************
-int countEncoderR()
-{
+int countEncoderR() {
 	return encoderR.count;
 }
 
 //********************************************************************
-void resetEncoderR()
-{
+void resetEncoderR() {
 	encoderR.count = 0;
 
 }
@@ -104,8 +99,7 @@ void resetEncoderR()
 //********************************************************************
 // ComputeMove
 //********************************************************************
-void computeMove()
-{
+void computeMove() {
     double dL, dR;
 
     double rL, rR, r; // curvature radius for left wheel, right wheel and center of robot
@@ -120,14 +114,14 @@ void computeMove()
     
 
     if (encoderL.flag_reverse)
-        dL = (double)(encoderL.count - lastCountL) * MM_PER_TICK;
+        dL = (double)(encoderL.count - lastCountL) * ENCL_RESOL;
     else
-        dL = -(double)(encoderL.count - lastCountL) * MM_PER_TICK;
+        dL = -(double)(encoderL.count - lastCountL) * ENCL_RESOL;
     lastCountL = encoderL.count;
     if (encoderR.flag_reverse)
-        dR = (double)(encoderR.count - lastCountR) * MM_PER_TICK;
+        dR = (double)(encoderR.count - lastCountR) * ENCR_RESOL;
     else
-        dR = -(double)(encoderR.count - lastCountR) * MM_PER_TICK;
+        dR = -(double)(encoderR.count - lastCountR) * ENCR_RESOL;
     lastCountR = encoderR.count;
     
     
@@ -150,6 +144,7 @@ void computeMove()
                 mov_x = -r * (sh*(1.-ca) - ch*sa);
                 mov_y = -r * (ch*(1.-ca) - sh*sa);
 				
+                #ifdef DEBUG_MOVE
 				Serial.println("+++ Case 01");
                 Serial.print(" dL=");
 				Serial.print(dL);
@@ -168,6 +163,7 @@ void computeMove()
 				Serial.print(" my=");
 				Serial.print(mov_y);
 				Serial.println("");
+                #endif
             }
             else if (dL == dR) // Case 2
             {
@@ -179,6 +175,7 @@ void computeMove()
                 mov_x = r*ch;
                 mov_y = r*sh;
 
+                #ifdef DEBUG_MOVE
 				Serial.println("+++ Case 02");
 				Serial.print("dL=");
 				Serial.print(dL);
@@ -193,6 +190,7 @@ void computeMove()
 				Serial.print(" my=");
 				Serial.print(mov_y);
 				Serial.println("");
+                #endif
             }
             else // dL < dR Case 3
             {
@@ -209,6 +207,7 @@ void computeMove()
                 mov_x = -r * (sh*(1.-ca) + ch*sa);
                 mov_y =  r * (ch*(1.-ca) + sh*sa);
 
+                #ifdef DEBUG_MOVE
 				Serial.println("+++ Case 03");
 				Serial.print("dL=");
 				Serial.print(dL);
@@ -223,6 +222,7 @@ void computeMove()
 				Serial.print(" my=");
 				Serial.print(mov_y);
 				Serial.println("");
+                #endif
             }
         }
         else if (dR == 0.) // Case 4
@@ -238,6 +238,7 @@ void computeMove()
             mov_x = -r * (sh*(1.-ca) - ch*sa);
             mov_y = -r * (ch*(1.-ca) - sh*sa);
 
+                #ifdef DEBUG_MOVE
 				Serial.println("+++ Case 042");
 				Serial.print("dL=");
 				Serial.print(dL);
@@ -252,6 +253,7 @@ void computeMove()
 				Serial.print(" my=");
 				Serial.print(mov_y);
 				Serial.println("");
+                #endif
         }
         else // dR < 0
         {
@@ -270,6 +272,7 @@ void computeMove()
                 mov_x = -r * (sh*(1.-ca) - ch*sa);
                 mov_y = -r * (ch*(1.-ca) - sh*sa);
 
+                #ifdef DEBUG_MOVE
 				Serial.println("+++ Case 05");
 				Serial.print("dL=");
 				Serial.print(dL);
@@ -284,6 +287,7 @@ void computeMove()
 				Serial.print(" my=");
 				Serial.print(mov_y);
 				Serial.println("");
+                #endif
             }
             else if (dL = -dR) // Case 6
             {
@@ -292,6 +296,7 @@ void computeMove()
                 mov_x = 0.;
                 mov_y = 0.;
                 
+                #ifdef DEBUG_MOVE
 				Serial.println("+++ Case 06");
 				Serial.print("dL=");
 				Serial.print(dL);
@@ -306,6 +311,7 @@ void computeMove()
 				Serial.print(" my=");
 				Serial.print(mov_y);
 				Serial.println("");
+                #endif
 
             }
             else // dL > -dR Case 7
@@ -323,6 +329,7 @@ void computeMove()
                 mov_x = -r * (sh*(1.-ca) + ch*sa);
                 mov_y =  r * (ch*(1.-ca) + sh*sa);
 
+                #ifdef DEBUG_MOVE
 				Serial.println("+++ Case 07");
 				Serial.print("dL=");
 				Serial.print(dL);
@@ -337,6 +344,7 @@ void computeMove()
 				Serial.print(" my=");
 				Serial.print(mov_y);
 				Serial.println("");
+                #endif
             }
         }
     }
@@ -355,6 +363,7 @@ void computeMove()
             mov_x = -r * (sh*(1.-ca) + ch*sa);
             mov_y =  r * (ch*(1.-ca) + sh*sa);
 
+                #ifdef DEBUG_MOVE
 				Serial.println("+++ Case 08");
 				Serial.print("dL=");
 				Serial.print(dL);
@@ -369,6 +378,7 @@ void computeMove()
 				Serial.print(" my=");
 				Serial.print(mov_y);
 				Serial.println("");
+                #endif
         }
         else if (dR == 0) // Case 9
         {
@@ -377,8 +387,7 @@ void computeMove()
             mov_x = 0.;
             mov_y = 0.;
                 
-                #ifdef TOTO
-
+                #ifdef DEBUG_MOVE
 				Serial.println("+++ Case 09");
 				Serial.print("dL=");
 				Serial.print(dL);
@@ -409,6 +418,7 @@ void computeMove()
             mov_x = -r * (sh*(1.-ca) + ch*sa);
             mov_y =  r * (ch*(1.-ca) + sh*sa);
 
+                #ifdef DEBUG_MOVE
 				Serial.println("+++ Case 10");
 				Serial.print("dL=");
 				Serial.print(dL);
@@ -423,6 +433,7 @@ void computeMove()
 				Serial.print(" my=");
 				Serial.print(mov_y);
 				Serial.println("");
+                #endif
         }
     }
     else // dL < 0
@@ -444,6 +455,7 @@ void computeMove()
                 mov_x = -r * (sh*(1.-ca) + ch*sa);
                 mov_y =  r * (ch*(1.-ca) + sh*sa);
 
+                #ifdef DEBUG_MOVE
 				Serial.println("+++ Case 11");
 				Serial.print("dL=");
 				Serial.print(dL);
@@ -458,6 +470,7 @@ void computeMove()
 				Serial.print(" my=");
 				Serial.print(mov_y);
 				Serial.println("");
+                #endif
             }
             else if (-dL == dR) // Case 12
             {
@@ -466,6 +479,7 @@ void computeMove()
                 mov_x = 0.;
                 mov_y = 0.;
                 
+                #ifdef DEBUG_MOVE
 				Serial.println("+++ Case 12");
 				Serial.print("dL=");
 				Serial.print(dL);
@@ -480,6 +494,7 @@ void computeMove()
 				Serial.print(" my=");
 				Serial.print(mov_y);
 				Serial.println("");
+                #endif
             }
             else // -dL > dR Case 13
             {
@@ -496,6 +511,7 @@ void computeMove()
                 mov_x = -r * (sh*(1.-ca) - ch*sa);
                 mov_y = -r * (ch*(1.-ca) - sh*sa);
 
+                #ifdef DEBUG_MOVE
 				Serial.println("+++ Case 13");
 				Serial.print("dL=");
 				Serial.print(dL);
@@ -510,6 +526,7 @@ void computeMove()
 				Serial.print(" my=");
 				Serial.print(mov_y);
 				Serial.println("");
+                #endif
             }
         }
         else if (dR == 0) // Case 14
@@ -525,6 +542,7 @@ void computeMove()
             mov_x = -r * (sh*(1.-ca) - ch*sa);
             mov_y = -r * (ch*(1.-ca) - sh*sa);
 
+                #ifdef DEBUG_MOVE
 				Serial.println("+++ Case 14");
 				Serial.print("dL=");
 				Serial.print(dL);
@@ -539,6 +557,7 @@ void computeMove()
 				Serial.print(" my=");
 				Serial.print(mov_y);
 				Serial.println("");
+                #endif
         }
         else // dR < 0 
         {
@@ -557,6 +576,7 @@ void computeMove()
                 mov_x = -r * (sh*(1.-ca) - ch*sa);
                 mov_y = -r * (ch*(1.-ca) - sh*sa);
 
+                #ifdef DEBUG_MOVE
 				Serial.println("+++ Case 15");
 				Serial.print("dL=");
 				Serial.print(dL);
@@ -571,6 +591,7 @@ void computeMove()
 				Serial.print(" my=");
 				Serial.print(mov_y);
 				Serial.println("");
+                #endif
             }
             else if (dL = dR) // Case 16
             {
@@ -582,6 +603,7 @@ void computeMove()
                 mov_x = -r*ch;
                 mov_y = -r*sh;
 
+                #ifdef DEBUG_MOVE
 				Serial.println("+++ Case 16");
 				Serial.print("dL=");
 				Serial.print(dL);
@@ -596,6 +618,7 @@ void computeMove()
 				Serial.print(" my=");
 				Serial.print(mov_y);
 				Serial.println("");
+                #endif
             }
             else // dL > dR Case 17
             {
@@ -612,6 +635,7 @@ void computeMove()
                 mov_x = -r * (sh*(1.-ca) + ch*sa);
                 mov_y =  r * (ch*(1.-ca) + sh*sa);
 
+                #ifdef DEBUG_MOVE
 				Serial.println("+++ Case 17");
 				Serial.print("dL=");
 				Serial.print(dL);
@@ -626,6 +650,7 @@ void computeMove()
 				Serial.print(" my=");
 				Serial.print(mov_y);
 				Serial.println("");
+                #endif
             }
         }
     }
@@ -635,7 +660,7 @@ void computeMove()
     pos_x += mov_x;
     pos_y += mov_y;
 
-	/*
+	#ifdef DEBUG_MOVE
     Serial.println("########## Compute move");
     Serial.print(" h=");
     Serial.print(heading*180/PI);
@@ -644,7 +669,7 @@ void computeMove()
     Serial.print(" y=");
     Serial.print(pos_y);
     Serial.println("");
-	*/
+	#endif
 }
 
 #undef W

@@ -9,9 +9,11 @@
 #include "wheel_encoder.h"
 #include "distance_sensor.h"
 #include "pid.h"
-#include "pid_calibration.h"
+#include "parameters_calibration.h"
+#include "robot_controller.h" 
 #include "webserver.h"
-#include "simple_run.h"
+#include "test_drive.h"
+#include "logutils.h"
 #include "micromouse.h"
 
 //Json Variable to Hold Slider Values
@@ -37,31 +39,31 @@ void initWiFi() {
     #ifdef WIFI_MODE_AP
     if (WiFi.softAP(ssid, password))
     {
-		Serial.println("*******************************");	
-        Serial.println("Wifi AP launched");
+		logWrite("*******************************");	
+        logWrite("Wifi AP launched");
         if (!WiFi.softAPConfig(local_ip, gateway, subnet))
-            Serial.println("AP Config Failed");
+            logWrite("AP Config Failed");
         else
-			Serial.print("IP Address: ");
-            Serial.println(WiFi.localIP()); 
+			logWrite("IP Address: ");
+            logWrite(String(WiFi.localIP().toString())); 
     }
     else
-        Serial.println("Wifi AP failed");
+        logWrite("Wifi AP failed");
     #else	// WIFI station
 	WiFi.begin(ssid, password);
-	Serial.print("Connecting to WiFi <");
-	Serial.print(ssid);
-	Serial.print("> with password <");
-	Serial.print(password);
-	Serial.println(">");
+	logWrite("Connecting to WiFi \'");
+	logWrite(ssid);
+	logWrite("\' with password \'");
+	logWrite(password);
+	logWrite("\'");
 	while (WiFi.status() != WL_CONNECTED) {
-		Serial.print('.');
+		logWrite('.');
 		delay(1000);
 	}
-	Serial.print("Connected, IP=");
-	Serial.print(WiFi.localIP());	
-	Serial.print(" with signal stength ");
-	Serial.println(WiFi.RSSI());
+	logWrite("Connected, IP=");
+	logWrite(WiFi.localIP());	
+	logWrite(" with signal stength ");
+	logWrite(WiFi.RSSI());
     #endif
 }
 
@@ -81,6 +83,7 @@ void initWebServer() {
     });
   
     server.serveStatic("/", SPIFFS, "/");
+    logWrite("Webserver launched");
 }
 
 //********************************************************************
@@ -105,34 +108,54 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
     if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) {
         data[len] = 0;
         message = (char*)data;
-        Serial.print("Received:<");
-        Serial.print(message);
-        Serial.println(">");
-        // index **************************************
-        if (message == "IDX_SR") {
-            // set mode to simple run
-            current_mode = ROBOT_MODE_SIMPLE_RUN;
-            current_state = ROBOT_STATE_SR_RUN;
-            Serial.println("Mode simple run");
-            simpleRunInit();
+        logWrite("WS: msg=\'" + message + "\'");
+
+        if (message == "") {
+            // emty messae, do nothing
+            ;
         }
-        else if (message == "IDX_PC") {
-            // set mode toPID calibration
-            current_mode = ROBOT_MODE_PID_CAL;
-            //Serial.println("Mode PID Calibration");
-            PIDRunInit();
+        // index -> Test Drive ****************************
+        else if (message == "IDX_TD") {
+            // set mode to simple run
+            current_mode = ROBOT_MODE_TEST_DRIVE;
+            current_state = ROBOT_STATE_STOP;
+            testDriveInit();
+            #if TRACE_LEVEL >= 2
+            logWrite("WS: testDriveInit()");
+            logRobotState();
+            #endif
         }
 
+        // index -> Parameter Calibration *****************
+        else if (message == "IDX_PC") {
+            // set mode toPID calibration
+            current_mode = ROBOT_MODE_PARAM;
+            current_state = ROBOT_STATE_STOP;
+            #if TRACE_LEVEL >= 2
+            logWrite("WS: IDX_PC -> ParamCalInit()");
+            #endif
+            ParamCalInit();
+            #if TRACE_LEVEL >= 2
+            logWrite("WS: ParamCalInit()");
+            #endif
+        }
+ 
         // Simple run ********************************
-        if ( current_mode == ROBOT_MODE_SIMPLE_RUN)
-        {
-            Serial.println("Message mode simple run");
-            if (message == "SR_index") {
+        else if ( current_mode == ROBOT_MODE_TEST_DRIVE ) {
+            logWrite("WS: Mode TEST_DRIVE");
+            if (message == "TD_index") {
                 // Set mode to stop
-                simpleRunStop();
-                //Serial.println("Mode set to stop");
+                #if TRACE_LEVEL >= 2
+                logWrite("WS: Index, testDriveStop() === START");
+                logRobotState();
+                #endif
+                testDriveStop();
+                #if TRACE_LEVEL >= 2
+                logWrite("WS: testDriveStop() === DONE");
+                logRobotState();
+                #endif
             }
-            if (message == "SR_su") {
+            else if (message == "TD_su") {
                 if(speed < SPEED_MIN)
                     speed = SPEED_MIN;
                 else
@@ -141,207 +164,267 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
                 if(speed > 1.)
                     speed = 1.;
             }
-            if (message == "SR_sd") {
+            else if (message == "TD_sd") {
                 speed = speed / SPEED_FACTOR;
                 if(speed < SPEED_MIN)
                     speed = 0.;
             }    
-            if (message == "SR_tl") {
+            else if (message == "TD_tl") {
                 if (turn <= (1.-TURN_STEP))
                     turn += TURN_STEP;
             }
-            if (message == "SR_tr") {
+            else if (message == "TD_tr") {
                 if (turn >= (-1.+TURN_STEP))
                     turn -= TURN_STEP;
             }
-            if (message == "SR_stop") {
-                simpleRunStop();
+            else if (message == "TD_stop") {
+                #if TRACE_LEVEL >= 2
+                logWrite("WS: TD_Stop -> testDriveStop() === START");
+                logRobotState();
+                #endif
+                testDriveStop();
+                #if TRACE_LEVEL >= 2
+                logWrite("WS: testDriveStop() ended");
+                logRobotState();
+                #endif
             }
-            if (message == "SR_reset") {
-                simpleRunReset();
+            else if (message == "TD_run") {
+                #if TRACE_LEVEL >= 2
+                logWrite("WS: TD_Run -> testDriveRun()");
+                logRobotState();
+                #endif
+                testDriveRunInit();
+                #if TRACE_LEVEL >= 2
+                logWrite("WS: testDriveRun() ended");
+                logRobotState();
+                #endif
             }
-            if (message == "SR_home") {
+            else if (message == "TD_reset") {
+                #if TRACE_LEVEL >= 2
+                logWrite("WS: TD_reset -> testDriveInit()");
+                logRobotState();
+                #endif
+                testDriveInit();
+                #if TRACE_LEVEL >= 2
+                logWrite("WS: testDriveInit() ended");
+                logRobotState();
+                #endif
+            }
+            else if (message == "TD_rccw") {
+                #if TRACE_LEVEL >= 2
+                logWrite("WS: TD_rccw -> testDriveRotateInitCCW()");
+                logRobotState();
+                #endif
+                testDriveRotateInitCCW();
+                #if TRACE_LEVEL >= 2
+                logWrite("WS: testDriveRotateInitCCW() ended");
+                logRobotState();
+                #endif
+            }
+            else if (message == "TD_rcw") {
+                #if TRACE_LEVEL >= 2
+                logWrite("WS: TD_rcw -> testDriveRotateInitCW()");
+                logRobotState();
+                #endif
+                testDriveRotateInitCW();
+                #if TRACE_LEVEL >= 2
+                logWrite("WS: testDriveRotateInitCW() ended");
+                logRobotState();
+                #endif
+            }
+            else if (message == "TD_home") {
                 // TODO
                 ;
+            }
+            else {
+                logWrite("WS: command \'"+message+"\' not available in TD mode");
             }
             notifyClients(getRobotStatus());
         } // Simple run commands
 
         // PID calibration *****************************
-        if ( current_mode == ROBOT_MODE_PID_CAL)
+        if ( current_mode == ROBOT_MODE_PARAM)
         {
-            Serial.println("Message mode PID cal");
+            logWrite("WS: Mode PARAM");
             if (message == "PC_index") {
                 // Set mode to stop
-                PIDRunStop();
-                current_mode = ROBOT_MODE_STOP;
-                //Serial.println("Mode set to stop");
+                ParamCalStop();
+                #if TRACE_LEVEL >= 2
+                logWrite("WS: PC Index, ParamCalStop()");
+                logRobotState();
+                #endif
             }
             else if (message == "PC_start") {
+                #if TRACE_LEVEL >= 2
+                logWrite("WS: ParamCalRunInit() === START");
+                logRobotState();
+                #endif
                 // start PID run
-                PIDRunStart();
+                ParamCalRunInit();
+                #if TRACE_LEVEL >= 2
+                logWrite("WS: ParamCalRunInit() === DONE");
+                logRobotState();
+                #endif
+            }
+            else if (message == "PC_uturn") {
+                #if TRACE_LEVEL >= 2
+                logWrite("WS: ParamCalRotateInit() === START");
+                logRobotState();
+                #endif
+                // start PID run
+                ParamCalRotateInit();
+                #if TRACE_LEVEL >= 2
+                logWrite("WS: ParamCalRotateInit() === DONE");
+                logRobotState();
+                #endif
             }
             else if (message == "PC_stop") {
+                #if TRACE_LEVEL >= 2
+                logWrite("WS: ParamCalStop() === START");
+                logRobotState();
+                #endif
                 // stop PID run
-                PIDRunStop();
+                ParamCalStop();
+                #if TRACE_LEVEL >= 2
+                logWrite("WS: ParamCalStop() === DONE");
+                logRobotState();
+                #endif
             }
             else if (message == "PC_kp_up") {
                 // 
-                //Serial.println("kp_up");
-                if (pid_kp > 0)
-                    pid_kp = pid_kp * PID_STEP;
-                else if (pid_kp == 0)
-                    pid_kp = PID_MIN;
-                else if (pid_kp >= -PID_MIN)
-                    pid_kp = 0;
+                if (pidSensors_kp > 0)
+                    pidSensors_kp = pidSensors_kp * PIDSENSORS_STEP;
+                else if (pidSensors_kp == 0)
+                    pidSensors_kp = PIDSENSORS_MIN;
+                else if (pidSensors_kp >= -PIDSENSORS_MIN)
+                    pidSensors_kp = 0;
                 else
-                    pid_kp = pid_kp / PID_STEP;
-                //Serial.println(pid_kp);
+                    pidSensors_kp = pidSensors_kp / PIDSENSORS_STEP;
             }
             else if (message == "PC_kp_up+") {
                 // 
-                //Serial.println("kp_up");
-                if (pid_kp > 0)
-                    pid_kp = pid_kp * 2*PID_STEP;
-                else if (pid_kp == 0)
-                    pid_kp = PID_MIN;
-                else if (pid_kp >= -PID_MIN)
-                    pid_kp = 0;
+                if (pidSensors_kp > 0)
+                    pidSensors_kp = pidSensors_kp * 2*PIDSENSORS_STEP;
+                else if (pidSensors_kp == 0)
+                    pidSensors_kp = PIDSENSORS_MIN;
+                else if (pidSensors_kp >= -PIDSENSORS_MIN)
+                    pidSensors_kp = 0;
                 else
-                    pid_kp = pid_kp / (2*PID_STEP);
-                //Serial.println(pid_kp);
+                    pidSensors_kp = pidSensors_kp / (2*PIDSENSORS_STEP);
             }
             else if (message == "PC_ki_up") {
                 // 
-                //Serial.println("ki_up");
-                if (pid_ki > 0)
-                    pid_ki = pid_ki * PID_STEP;
-                else if (pid_ki == 0)
-                    pid_ki = PID_MIN;
-                else if (pid_ki >= -PID_MIN)
-                    pid_ki = 0;
+                if (pidSensors_ki > 0)
+                    pidSensors_ki = pidSensors_ki * PIDSENSORS_STEP;
+                else if (pidSensors_ki == 0)
+                    pidSensors_ki = PIDSENSORS_MIN;
+                else if (pidSensors_ki >= -PIDSENSORS_MIN)
+                    pidSensors_ki = 0;
                 else
-                    pid_ki = pid_ki / PID_STEP;
-                //Serial.println(pid_ki);
+                    pidSensors_ki = pidSensors_ki / PIDSENSORS_STEP;
             }
             else if (message == "PC_ki_up+") {
                 // 
-                //Serial.println("ki_up");
-                if (pid_ki > 0)
-                    pid_ki = pid_ki * 2*PID_STEP;
-                else if (pid_ki == 0)
-                    pid_ki = PID_MIN;
-                else if (pid_ki >= -PID_MIN)
-                    pid_ki = 0;
+                if (pidSensors_ki > 0)
+                    pidSensors_ki = pidSensors_ki * 2*PIDSENSORS_STEP;
+                else if (pidSensors_ki == 0)
+                    pidSensors_ki = PIDSENSORS_MIN;
+                else if (pidSensors_ki >= -PIDSENSORS_MIN)
+                    pidSensors_ki = 0;
                 else
-                    pid_ki = pid_ki / (2*PID_STEP);
-                //Serial.println(pid_ki);
+                    pidSensors_ki = pidSensors_ki / (2*PIDSENSORS_STEP);
             }
             else if (message == "PC_kd_up") {
                 // 
-                //Serial.println("kd_up");
-                if (pid_kd > 0)
-                    pid_kd = pid_kd * PID_STEP;
-                else if (pid_kd == 0)
-                    pid_kd = PID_MIN;
-                else if (pid_kd >= -PID_MIN)
-                    pid_kd = 0;
+                if (pidSensors_kd > 0)
+                    pidSensors_kd = pidSensors_kd * PIDSENSORS_STEP;
+                else if (pidSensors_kd == 0)
+                    pidSensors_kd = PIDSENSORS_MIN;
+                else if (pidSensors_kd >= -PIDSENSORS_MIN)
+                    pidSensors_kd = 0;
                 else
-                    pid_kd = pid_kd / PID_STEP;
-                //Serial.println(pid_kd);
+                    pidSensors_kd = pidSensors_kd / PIDSENSORS_STEP;
             }
             else if (message == "PC_kd_up+") {
                 // 
-                //Serial.println("kd_up");
-                if (pid_kd > 0)
-                    pid_kd = pid_kd * (2*PID_STEP);
-                else if (pid_kd == 0)
-                    pid_kd = PID_MIN;
-                else if (pid_kd >= -PID_MIN)
-                    pid_kd = 0;
+                if (pidSensors_kd > 0)
+                    pidSensors_kd = pidSensors_kd * (2*PIDSENSORS_STEP);
+                else if (pidSensors_kd == 0)
+                    pidSensors_kd = PIDSENSORS_MIN;
+                else if (pidSensors_kd >= -PIDSENSORS_MIN)
+                    pidSensors_kd = 0;
                 else
-                    pid_kd = pid_kd / (2*PID_STEP);
-                //Serial.println(pid_kd);
+                    pidSensors_kd = pidSensors_kd / (2*PIDSENSORS_STEP);
             }
             else if (message == "PC_kp_dn") {
                 // 
-                //Serial.println("kp_dn");
-                if (pid_kp < 0)
-                    pid_kp = pid_kp * PID_STEP;
-                else if (pid_kp == 0)
-                    pid_kp = -PID_MIN;
-                else if (pid_kp <= PID_MIN)
-                    pid_kp = 0;
+                if (pidSensors_kp < 0)
+                    pidSensors_kp = pidSensors_kp * PIDSENSORS_STEP;
+                else if (pidSensors_kp == 0)
+                    pidSensors_kp = -PIDSENSORS_MIN;
+                else if (pidSensors_kp <= PIDSENSORS_MIN)
+                    pidSensors_kp = 0;
                 else
-                    pid_kp = pid_kp / PID_STEP;
-                //Serial.println(pid_kp);
+                    pidSensors_kp = pidSensors_kp / PIDSENSORS_STEP;
             }
             else if (message == "PC_kp_dn-") {
                 // 
-                //Serial.println("kp_dn");
-                if (pid_kp < 0)
-                    pid_kp = pid_kp * (2*PID_STEP);
-                else if (pid_kp == 0)
-                    pid_kp = -PID_MIN;
-                else if (pid_kp <= PID_MIN)
-                    pid_kp = 0;
+                if (pidSensors_kp < 0)
+                    pidSensors_kp = pidSensors_kp * (2*PIDSENSORS_STEP);
+                else if (pidSensors_kp == 0)
+                    pidSensors_kp = -PIDSENSORS_MIN;
+                else if (pidSensors_kp <= PIDSENSORS_MIN)
+                    pidSensors_kp = 0;
                 else
-                    pid_kp = pid_kp / (2*PID_STEP);
-                //Serial.println(pid_kp);
+                    pidSensors_kp = pidSensors_kp / (2*PIDSENSORS_STEP);
             }
             else if (message == "PC_ki_dn") {
                 // 
-                //Serial.println("ki_dn");
-                if (pid_ki < 0)
-                    pid_ki = pid_ki * (PID_STEP);
-                else if (pid_ki == 0)
-                    pid_ki = -PID_MIN;
-                else if (pid_ki <= PID_MIN)
-                    pid_ki = 0;
+                if (pidSensors_ki < 0)
+                    pidSensors_ki = pidSensors_ki * (PIDSENSORS_STEP);
+                else if (pidSensors_ki == 0)
+                    pidSensors_ki = -PIDSENSORS_MIN;
+                else if (pidSensors_ki <= PIDSENSORS_MIN)
+                    pidSensors_ki = 0;
                 else
-                    pid_ki = pid_ki / (PID_STEP);
-                //Serial.println(pid_ki);
+                    pidSensors_ki = pidSensors_ki / (PIDSENSORS_STEP);
             }
             else if (message == "PC_ki_dn-") {
                 // 
-                //Serial.println("ki_dn");
-                if (pid_ki < 0)
-                    pid_ki = pid_ki * (2*PID_STEP);
-                else if (pid_ki == 0)
-                    pid_ki = -PID_MIN;
-                else if (pid_ki <= PID_MIN)
-                    pid_ki = 0;
+                if (pidSensors_ki < 0)
+                    pidSensors_ki = pidSensors_ki * (2*PIDSENSORS_STEP);
+                else if (pidSensors_ki == 0)
+                    pidSensors_ki = -PIDSENSORS_MIN;
+                else if (pidSensors_ki <= PIDSENSORS_MIN)
+                    pidSensors_ki = 0;
                 else
-                    pid_ki = pid_ki / (2*PID_STEP);
-                //Serial.println(pid_ki);
+                    pidSensors_ki = pidSensors_ki / (2*PIDSENSORS_STEP);
             }
             else if (message == "PC_kd_dn") {
                 // 
-                //Serial.println("kd_dn");
-                if (pid_kd < 0)
-                    pid_kd = pid_kd * PID_STEP;
-                else if (pid_kd == 0)
-                    pid_kd = -PID_MIN;
-                else if (pid_kd <= PID_MIN)
-                    pid_kd = 0;
+                if (pidSensors_kd < 0)
+                    pidSensors_kd = pidSensors_kd * PIDSENSORS_STEP;
+                else if (pidSensors_kd == 0)
+                    pidSensors_kd = -PIDSENSORS_MIN;
+                else if (pidSensors_kd <= PIDSENSORS_MIN)
+                    pidSensors_kd = 0;
                 else
-                    pid_kd = pid_kd / PID_STEP;
-                //Serial.println(pid_kd);
+                    pidSensors_kd = pidSensors_kd / PIDSENSORS_STEP;
             }
             else if (message == "PC_kd_dn-") {
                 // 
-                //Serial.println("kd_dn");
-                if (pid_kd < 0)
-                    pid_kd = pid_kd * (2*PID_STEP);
-                else if (pid_kd == 0)
-                    pid_kd = -PID_MIN;
-                else if (pid_kd <= PID_MIN)
-                    pid_kd = 0;
+                if (pidSensors_kd < 0)
+                    pidSensors_kd = pidSensors_kd * (2*PIDSENSORS_STEP);
+                else if (pidSensors_kd == 0)
+                    pidSensors_kd = -PIDSENSORS_MIN;
+                else if (pidSensors_kd <= PIDSENSORS_MIN)
+                    pidSensors_kd = 0;
                 else
-                    pid_kd = pid_kd / (2*PID_STEP);
-                //Serial.println(pid_kd);
+                    pidSensors_kd = pidSensors_kd / (2*PIDSENSORS_STEP);
             }
-            notifyClients(getPIDStatus());
+            else {
+                logWrite("WS: command \'"+message+"\' available only in PC mode");
+            }
         }        
         
         cleanupClients();
@@ -355,6 +438,7 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
     switch (type) {
         case WS_EVT_CONNECT:
             Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+            logWrite("WebSocket client " + String(client->id()) + " connected from " + client->remoteIP().toString().c_str());
             break;
         case WS_EVT_DISCONNECT:
             Serial.printf("WebSocket client #%u disconnected\n", client->id());

@@ -12,15 +12,15 @@ typedef struct
     int flag_reverse;
     int channel;
     int speed_full_res_coeff;
-    float cur_speed;
+    double cur_speed;
     int cur_dir;
 }
 motor_t;
 
 
 int motorSetup(motor_t *motor, int pin_speed, int pin_dir, int flag_reverse, int channel);
-void motorSetSpeed(motor_t *motor, float relspeed);
-int motorSetDir(motor_t *motor, int reverse);
-int motorChangeDir(motor_t *motor);
+void motorSetSpeed(motor_t *motor, double relspeed);
+int motorSetDir_OLD(motor_t *motor, int reverse);
+int motorChangeDir_OLD(motor_t *motor);
 
 #endif

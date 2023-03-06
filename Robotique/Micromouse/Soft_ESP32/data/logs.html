@@ -43,18 +43,14 @@
 
 	</style>
     <script type = "text/JavaScript">
-		//var gateway = `ws://${window.location.hostname}/ws`;
+		var gateway = `ws://${window.location.hostname}/ws`;
 		var websocket;
 		var trailtext = "";
 		window.addEventListener('load', onLoad);
 
 		function onLoad(event) {
 			console.log('onLoad function');
-			//initWebSocket();
-		}
-
-		function getValues(){
-			websocket.send("getValues");
+			initWebSocket();
 		}
 
 		function initWebSocket() {
@@ -67,7 +63,6 @@
 
 		function onOpen(event) {
 			console.log('Connection opened');
-			getValues();
 		}
 
 		function onClose(event) {
@@ -105,14 +100,6 @@
     <div class="content">
 		<div>
 		<span id="logbox"></span>
-		cjdk lckdsj lckjds lckjdsc lsdkjc cdkjcskdjs<br>
-		cjdk lckdsj lckjds lckjdsc lsdkjc <br>
-		cjdk lckdsj lckjds lckjdsc lsdkjc <br>
-		cjdk lckdsj lckjds lckjdsc lsdkjc <br>
-		cjdk lckdsj lckjds lckjdsc lsdkjc <br>
-		cjdk lckdsj lckjds lckjdsc lsdkjc <br>
-		cjdk lckdsj lckjds lckjdsc lsdkjc <br>
-		cjdk lckdsj lckjds lckjdsc lsdkjc <br>
 		</div>
     </div>
 	<div id="bottom">

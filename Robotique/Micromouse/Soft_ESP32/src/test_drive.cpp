@@ -12,18 +12,50 @@
 #include "wheel_encoder.h"
 #include "distance_sensor.h"
 #include "micromouse.h"
-#include "simple_run.h"
+#include "robot_controller.h"
+#include "test_drive.h"
 
 //*****************************************************************************
 //
 // Initialise simple run
 //
 //*****************************************************************************
-void simpleRunInit() {
-    ;
+void testDriveInit() {
+
+    speed = 0.0;
+    turn = 0.0;
+    pos_x = 0.;
+    pos_y = 0.;
+    heading = 0.;
+
+    motorSetSpeed(&motorL, 0.);
+    motorSetSpeed(&motorR, 0.);
+
+    current_state = ROBOT_STATE_STOP;
 }
 
-void simpleRunStep() {
+//*****************************************************************************
+//
+// Reset simple run :
+// set origin to current robot position
+//
+//*****************************************************************************
+void testDriveRunInit() {
+
+    speed = 0.0;
+    turn = 0.0;
+
+    current_state = ROBOT_STATE_RUN;
+
+}
+
+
+//*****************************************************************************
+//
+// Initialise simple run
+//
+//*****************************************************************************
+void testDriveRunStep() {
     // relative left and right speeds from turn value
     float rel_speedL;
     float rel_speedR;
@@ -47,6 +79,7 @@ void simpleRunStep() {
         rel_speedR = 1.;
     }
 
+    /*
     if (rel_speedL < 0)
     {
         reverseL = 1;
@@ -62,23 +95,48 @@ void simpleRunStep() {
     }
     else
         reverseR = 0;
-    
-    motorSetDir(&motorL, reverseL);
+    */
+   
     motorSetSpeed(&motorL, speed*rel_speedL);
-    motorSetDir(&motorR, reverseR);
     motorSetSpeed(&motorR, speed*rel_speedR);
 }
 
 //*****************************************************************************
 //
-// Reset simple run :
-// set origin to current robot position
+// 
 //
 //*****************************************************************************
-void simpleRunReset() {
-    pos_x = 0.;
-    pos_y = 0.;
-    heading = 0.;
+void testDriveRotateInitCW() {
+
+    rotationInit(170., 0.5);
+    current_state = ROBOT_STATE_ROTATE;
+}
+
+//*****************************************************************************
+//
+// 
+//
+//*****************************************************************************
+void testDriveRotateInitCCW() {
+
+    rotationInit(-170., 0.5);
+    current_state = ROBOT_STATE_ROTATE;
+}
+
+//*****************************************************************************
+//
+// 
+//
+//*****************************************************************************
+void testDriveRotateStep() {
+    int status;
+
+    status = rotationStep();
+
+    if (status) {
+        // target angle reached, stop rotation
+        current_state = ROBOT_STATE_ROTATE_END;
+    }
 }
 
 //*****************************************************************************
@@ -86,11 +144,13 @@ void simpleRunReset() {
 // Stop robot
 //
 //*****************************************************************************
-void simpleRunStop() {
+void testDriveStop() {
     speed = 0.0;
     turn = 0.0;
     motorSetSpeed(&motorL, 0);
     motorSetSpeed(&motorR, 0);
+
+    current_state = ROBOT_STATE_STOP;
 }
 
 //********************************************************************

@@ -56,15 +56,27 @@ int motorSetup(motor_t *motor, int pin_speed, int pin_dir, int flag_reverse, int
 // Set speed of motor 
 //
 // @param relspeed speed between 0 and 1
-void motorSetSpeed(motor_t *motor, float relspeed)
+void motorSetSpeed(motor_t *motor, double relspeed)
 {
 	uint32_t val;
+    int reverse;
+    double speed;
 	
-	motor->cur_speed = relspeed;
+    if (relspeed < 0) {
+        reverse = 1;
+        speed = -relspeed;
+    }
+    else {
+        reverse = 0;
+        speed = relspeed;
+    }
+    digitalWrite(motor->pin_dir, reverse ^ motor->flag_reverse);
+	motor->cur_speed = speed;
+    motor->cur_dir = reverse;
 	
-	val = (uint32_t)(relspeed * motor->speed_full_res_coeff);
+	val = (uint32_t)(speed * motor->speed_full_res_coeff);
 	
-	ledcWrite(motor->channel, val);
+	//ledcWrite(motor->channel, val);
 }
 
 //********************************************************************
@@ -72,7 +84,7 @@ void motorSetSpeed(motor_t *motor, float relspeed)
 // 
 // @param dir direction (0 ahead, 1 reverse)
 // @return 1 if motor speed was not 0
-int motorSetDir(motor_t *motor, int reverse)
+int motorSetDir_OLD(motor_t *motor, int reverse)
 {
     if (reverse != motor->cur_dir)
         if (motor->cur_speed == 0)
@@ -99,7 +111,7 @@ int motorSetDir(motor_t *motor, int reverse)
 // Change directon of motor. Speed shall be 0.
 // 
 // @return 1 if motor speed was not 0
-int motorChangeDir(motor_t *motor)
+int motorChangeDir_OLD(motor_t *motor)
 {
 	if (motor->cur_speed == 0)
 	{

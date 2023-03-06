@@ -5,9 +5,104 @@
 <head>
     <title>Micromouse control</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="index.js"></script>
+    <script type = "text/JavaScript">
+		var gateway = `ws://${window.location.hostname}/ws`;
+		var websocket;
+		window.addEventListener('load', onLoad);
+
+		function onLoad(event) {
+			console.log('onLoad function');
+			initWebSocket();
+			initButton();
+		}
+
+		function initWebSocket() {
+			console.log('Trying to open a WebSocket connection...');
+			websocket = new WebSocket(gateway);
+			websocket.onopen = onOpen;
+			websocket.onclose = onClose;
+			websocket.onmessage = onMessage;
+		}
+
+		function onOpen(event) {
+			console.log('Connection opened');
+		}
+
+		function onClose(event) {
+			console.log('Connection closed');
+			setTimeout(initWebSocket, 2000);
+		}
+
+		function onMessage(event) {
+			console.log("Index onMessage");
+			console.log(event.data);
+		}
+
+		function initButton() {
+			console.log("function initButton");
+			document.getElementById('but_menu_td').addEventListener('click', click_test_drive);
+			document.getElementById('but_menu_pcal').addEventListener('click', click_param_cal);
+		}
+
+		function click_test_drive(){
+			console.log('click_test_drive');
+			websocket.send('IDX_TD');
+			window.open("test_drive.html", "_self");
+		}
+
+		function click_param_cal(){
+			console.log('click_param_cal');
+			websocket.send('IDX_PC');
+			window.open("param_cal.html", "_self");
+		}
+
+	</script>
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" type="text/css" href="style.css">
+	<style type="text/css">
+	html {
+		font-family: Arial, Helvetica, sans-serif;
+		display: inline-block;
+		text-align: center;
+	}
+	h1 {
+		font-size: 1.8rem;
+		color: white;
+	}
+	p {
+		font-size: 1.4rem;
+	}
+	body {
+		margin: 0;
+	}
+	.topnav {
+		overflow: hidden;
+		background-color: #0A1128;
+	}
+	.button_green {
+		padding: 15px 30px;
+		font-size: 24px;
+		text-align: center;
+		outline: none;
+		color: #FFF;
+		background-color: #00CC00;
+		border: none;
+		border-radius: 5px;
+		-webkit-touch-callout: none;
+		-webkit-user-select: none;
+		-khtml-user-select: none;
+		-moz-user-select: none;
+		-ms-user-select: none;
+		user-select: none;
+		-webkit-tap-highlight-color: rgba(0,0,0,0);
+	}
+	.card-grid3 {
+		max-width: 600px;
+		margin: 0 auto;
+		display: grid;
+		grid-gap: 0rem;
+		grid-template-columns: 1fr 1fr 1fr;
+	}
+	</style>
 </head>
 <body>
     <div class="topnav">
@@ -18,7 +113,7 @@
             <div class="card">
             </div>
             <div class="card">
-                <p><button id="but_menu_run" class="button_green">Simple run</button></p>
+                <p><button id="but_menu_td" class="button_green">Test drive</button></p>
             </div>
             <div class="card">
             </div>
@@ -27,7 +122,7 @@
             <div class="card">
             </div>
             <div class="card">
-                <p><button id="but_menu_pid" class="button_green">PID calibration</button></p>
+                <p><button id="but_menu_pcal" class="button_green">Param calibration</button></p>
             </div>
             <div class="card">
             </div>

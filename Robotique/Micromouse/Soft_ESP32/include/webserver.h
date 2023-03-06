@@ -2,6 +2,9 @@
 
 #define _WEBSERVER_H_
 
+#define PIDSENSORS_MIN 0.01
+#define PIDSENSORS_STEP 1.2 // Step for up/down commands
+
 void initWiFi();
 void initWebServer();
 void notifyClients(String message);

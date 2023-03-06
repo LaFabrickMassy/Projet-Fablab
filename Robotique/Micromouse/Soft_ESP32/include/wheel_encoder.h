@@ -1,13 +1,15 @@
 
 
-#ifndef WHEEL_ENCODER_H
-#define WHEEL_ENCODER_H
+#ifndef _WHEEL_ENCODER_H
+#define _WHEEL_ENCODER_H
 
 typedef struct {
 	int pinA;
     int pinB;
     int flag_reverse;
 	long count;
+    long last_micros;
+    long elapsed_micros;
 }
 encoder_t;
 

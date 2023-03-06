@@ -9,12 +9,11 @@
 #include "wheel_encoder.h"
 #include "distance_sensor.h"
 #include "webserver.h"
-#include "simple_run.h"
-#include "pid_calibration.h"
+#include "test_drive.h"
+#include "parameters_calibration.h"
+#include "robot_controller.h"
+#include "logutils.h"
 #include "micromouse.h"
-
-
-#define DEBUG
 
 
 motor_t motorL; // left motor
@@ -22,6 +21,7 @@ motor_t motorR; // right motor
 
 int current_mode = ROBOT_MODE_STOP;
 int current_state = ROBOT_STATE_STOP;
+String debug_message;
 
 #ifdef WIFI_MODE_AP
 //* Web server definitions ********************************
@@ -50,12 +50,12 @@ long millis_current;
 
 // Initialize SPIFFS
 void initFS() {
-  if (!SPIFFS.begin()) {
-    Serial.println("An error has occurred while mounting SPIFFS");
-  }
-  else {
-   Serial.println("SPIFFS mounted successfully");
-  }
+    if (!SPIFFS.begin()) {
+        Serial.println("An error has occurred while mounting SPIFFS");  
+    }
+    else {
+        Serial.println("SPIFFS mounted successfully");
+    }
 }
 
 /**********************************************************
@@ -85,27 +85,26 @@ void setup() {
     setupEncoderL(PIN_R_MOTOR_SA, PIN_R_MOTOR_SB, 0);
 
     Serial.begin(115200);
+    Serial.println("Started");
 
     initFS();
 
 	  // Setup motors *******************
-	Serial.println("Setup Motors ******************");
+	logWrite("Setup Motors ******************");
   	err = motorSetup(&motorL, PIN_L_MOTOR_SPEED, PIN_L_MOTOR_DIR, 1, PWMCH_L_MOTOR);
-	Serial.print(err);
 	if (!err) {
-        Serial.println("Left motor initialised OK");
+        logWrite("Left motor initialised OK");
     }
     else {
-		Serial.println("Left motor not initialised");
+		logWrite("Left motor not initialised");
     }
 
 	err = motorSetup(&motorR, PIN_R_MOTOR_SPEED, PIN_R_MOTOR_DIR, 1, PWMCH_R_MOTOR);
-	Serial.print(err);
 	if (!err) {
-		Serial.println("right motor initialised OK");
+		logWrite("right motor initialised OK");
 	}
 	else
-		Serial.println("right motor not initialised");
+		logWrite("right motor not initialised");
 	
     initWiFi();
     delay(500);
@@ -128,11 +127,12 @@ void setup() {
     pos_y = 0;
     heading = 0;
 
-
-
     millis_current=millis();
     millis_count_mode = millis_current;
     millis_count_status = millis_current;
+
+    dumpToSerial();
+    logWrite("End of setup");
 }
 
 /**********************************************************
@@ -140,82 +140,232 @@ void setup() {
 **********************************************************/
 void loop()
 {
+    delay(250);
     millis_current = millis();
 
-    
-    // print mode on console
-    if (millis_current - millis_count_mode > 2000) {
-        millis_count_mode = millis_current;
-        if (current_mode == ROBOT_MODE_STOP) {
-            Serial.println("Mode: STOP");     
-            //Serial.println(sensor1.count);
-            //Serial.println(sensor2.count);
-            //Serial.println(sensor3.count);
-        }       
-        else if (current_mode == ROBOT_MODE_SIMPLE_RUN)
-            Serial.println("Mode: Simple run");
-        else if (current_mode == ROBOT_MODE_PID_CAL)
-            Serial.println("Mode: PID Calibration");
-        else
-            Serial.println("Mode: UNKNOWN");
-    }
-    if (millis_current - millis_count_status > 1000) {
+    if (millis_current - millis_count_status > 5000) {
         millis_count_status = millis_current;        
-        //motorControl();
+
+        logRobotState();
+        /*
         if (current_mode == ROBOT_MODE_SIMPLE_RUN)
             notifyClients(getRobotStatus());
-        if (current_mode == ROBOT_MODE_PID_CAL)
+        if (current_mode == ROBOT_MODE_PARAM)
             notifyClients(getPIDStatus());
-
+            //notifyClients("{\"trailtext\":\""+String(current_mode)+"/"+String(current_state)+" "+debug_message+"\"}");
+        */
         #ifdef DEBUG_SENSORS
         // print measured distance for sensor 1
-        Serial.print(distanceSensor1());
-        Serial.print(" - ");
-        Serial.print(sensor1.duration);
-        Serial.print(" | ");
+        logWrite(distanceSensor1());
+        logWrite(" - ");
+        logWrite(sensor1.duration);
+        logWrite(" | ");
         #if NB_OF_SENSORS >= 2
         // print measured distance for sensor 2
-        Serial.print(distanceSensor2());
-        Serial.print(" - ");
-        Serial.print(sensor2.Duration);
-        Serial.print(" | ");
+        logWrite(distanceSensor2());
+        logWrite(" - ");
+        logWrite(sensor2.Duration);
+        logWrite(" | ");
         #endif
         #if NB_OF_SENSORS >= 3
         // print measured distance for sensor 3
-        Serial.print(distanceSensor3());
-        Serial.print(" - ");
-        Serial.print(sensor3.duration);
-        Serial.print(" | ");
+        logWrite(distanceSensor3());
+        logWrite(" - ");
+        logWrite(sensor3.duration);
+        logWrite(" | ");
         #endif
         #if NB_OF_SENSORS >= 4
         // print measured distance for sensor 4
-        Serial.print(distanceSensor4());
-        Serial.print(" - ");
-        Serial.print(sensor4.duration);
-        Serial.print(" | ");
+        logWrite(distanceSensor4());
+        logWrite(" - ");
+        logWrite(sensor4.duration);
+        logWrite(" | ");
         #endif
         #if NB_OF_SENSORS >= 5
         // print measured distance for sensor 5
-        Serial.print(distanceSensor5());
-        Serial.print(" - ");
-        Serial.print(sensor5.duration);
+        logWrite(distanceSensor5());
+        logWrite(" - ");
+        logWrite(sensor5.duration);
         #endif
-        Serial.println("");
+        logWrite("");
 
         #endif // DEBUG_SENSORS
     }
 
-    if (current_mode == ROBOT_MODE_SIMPLE_RUN) {
-        if (current_state == ROBOT_STATE_SR_RUN) {
-            simpleRunStep();
+    switch(current_mode) {
+        case ROBOT_MODE_STOP:
+            break;
+        case ROBOT_MODE_TEST_DRIVE:
+            switch(current_state) {
+                case ROBOT_STATE_STOP:
+                    // Stopped, do nothing
+                    break;
+                case ROBOT_STATE_CRASH:
+                case ROBOT_STATE_RUN_END:
+                case ROBOT_STATE_ROTATE_END:
+                    #if TRACE_LEVEL >= 2
+                    logWrite("loop: CRASH/END, testDriveStop() == START");
+                    #endif
+                    testDriveStop();
+                    #if TRACE_LEVEL >= 2
+                    logWrite("loop: testDriveStop() == END");
+                    #endif
+                    break;
+                case ROBOT_STATE_RUN:
+                    #if TRACE_LEVEL >= 2
+                    logWrite("loop: RUN, testDriveRunStep() == START");
+                    #endif
+                    testDriveRunStep();
+                    delay(1000);
+                    #if TRACE_LEVEL >= 2
+                    logWrite("loop: testDriveRunStep() == END");
+                    #endif
+                    break;
+                case ROBOT_STATE_ROTATE:
+                    #if TRACE_LEVEL >= 2
+                    logWrite("loop: RUN, testDriveRotateStep() == START");
+                    #endif
+                    testDriveRotateStep();
+                    delay(1000);
+                    #if TRACE_LEVEL >= 2
+                    logWrite("loop: testDriveRotateStep() == END");
+                    #endif
+                    break;
+                default:
+                    #if TRACE_LEVEL >= 2
+                    logWrite("loop: Unknown state in mode TEST_DRIVE: "+String(current_state));
+                    #endif
+                    break;
+            }
+            break;
+        case ROBOT_MODE_PARAM:
+            switch(current_state) {
+                case ROBOT_STATE_STOP:
+                    break;
+                case ROBOT_STATE_CRASH:
+                    break;
+                case ROBOT_STATE_RUN:
+                    ParamCalRunStep();
+                    break;
+                case ROBOT_STATE_RUN_END:
+                    #if LOG_SENSORPID_ERRORS > 0
+                    //logSensorErrorsTab();
+                    #endif
+                    #if TRACE_LEVEL >= 2
+                    logWrite("loop: RunEnd, ParamCalRotateInit() == START");
+                    #endif
+                    ParamCalRotateInit();
+                    current_state = ROBOT_STATE_STOP;
+                    #if TRACE_LEVEL >= 2
+                    logWrite("loop: ParamCalRotateInit() == END");
+                    #endif
+                    break;
+                case ROBOT_STATE_ROTATE:
+                ParamCalRotateStep();
+                    break;
+                case ROBOT_STATE_ROTATE_END:
+                    #if TRACE_LEVEL >= 2
+                    logWrite("loop: RotateEnd, ParamCalRunInit() == START");
+                    logRobotState();
+                    #endif
+                    ParamCalRunInit();
+                    #if TRACE_LEVEL >= 2
+                    logWrite("loop: ParamCalRunInit() == END");
+                    #endif
+                    break;
+                default:
+                    #if TRACE_LEVEL >= 2
+                    logWrite("loop: Unknown state in mode PARAM: "+String(current_state));
+                    #endif
+                    break;
+            }
+            break;
+        default:
+            #if TRACE_LEVEL >= 2
+            logWrite("loop: Unknown mode: "+String(current_mode));
+            #endif
+            break;
+    }
+    #ifdef TO_REMOVE
+    if (current_mode == ROBOT_MODE_TEST_DRIVE) {
+        if (current_state == ROBOT_STATE_RUN) {
+            testDriveRunStep();
+        }
+        else if (current_state == ROBOT_STATE_RUN_END) {
+            #if TRACE_LEVEL >= 2
+            logWrite("loop: RunEnd, testDriveStop() == START");
+            #endif
+            testDriveStop();
+            #if TRACE_LEVEL >= 2
+            logWrite("loop: testDriveStop() == END");
+            #endif
+        }
+        else if (current_state == ROBOT_STATE_ROTATE) {
+            testDriveRotateStep();
+        }
+        else if (current_state == ROBOT_STATE_ROTATE_END) {
+            #if TRACE_LEVEL >= 2
+            logWrite("loop: RotateEnd, testDriveStop() == START");
+            #endif
+            testDriveStop();
+            #if TRACE_LEVEL >= 2
+            logWrite("loop: testDriveStop() == END");
+            #endif
         }
     }
-    if (current_mode == ROBOT_MODE_PID_CAL) {
-        if (current_state == ROBOT_STATE_PID_CAL_RUN) {
-            PIDRunStep();
+    if (current_mode == ROBOT_MODE_PARAM) {
+        if (current_state == ROBOT_STATE_RUN) {
+            // Run step
+            // RunStep set state to RUN_END when wall 
+            ParamCalRunStep();
         }
-        if (current_state == ROBOT_STATE_PID_CAL_END) {
-            PIDRunGoToWall();
+        else if (current_state == ROBOT_STATE_RUN_END) {
+            // end of run, start rotate
+            // RotateInit set state to ROTATION
+            #if LOG_SENSORPID_ERRORS > 0
+            //logSensorErrorsTab();
+            #endif
+            #if TRACE_LEVEL >= 2
+            logWrite("loop: RunEnd, ParamCalRotateInit() == START");
+            #endif
+            ParamCalRotateInit();
+            current_state = ROBOT_STATE_STOP;
+            #if TRACE_LEVEL >= 2
+            logWrite("loop: ParamCalRotateInit() == END");
+            #endif
+
+        }
+        else if (current_state == ROBOT_STATE_ROTATE) {
+            #ifdef DEBUG
+            debug_nbticksL += (abs(speed_targetL)*0.0033);
+            debug_nbticksR += (abs(speed_targetR)*0.0033);
+            #endif
+            // Rotation step
+            // RotationStep set state to ROTATION_END when target angle reached
+            ParamCalRotateStep();
+        }
+        else if (current_state == ROBOT_STATE_ROTATE_END) {
+            // end of rotation, start run
+            // RunInit set state to RUN
+            #if TRACE_LEVEL >= 2
+            logWrite("loop: RotateEnd, ParamCalRunInit() == START");
+            logRobotState();
+            #endif
+            ParamCalRunInit();
+            #if TRACE_LEVEL >= 2
+            logWrite("loop: ParamCalRunInit() == END");
+            #endif
+        }
+        else if (current_state == ROBOT_STATE_CRASH) {
+            // Crash
+            #if TRACE_LEVEL >= 2
+            logWrite("loop: Crash, ParamCalStop() == START");
+            #endif
+            ParamCalStop();
+            #if TRACE_LEVEL >= 2
+            logWrite("loop: ParamCalStop() == END");
+            #endif
         }
     }
+    #endif
 }
