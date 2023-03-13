@@ -290,6 +290,22 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
                 logRobotState();
                 #endif
             }
+            else if (message == "PC_auto_on") {
+                // stop PID run
+                pcFlagAuto = 1;
+                #if TRACE_LEVEL >= 2
+                logWrite("WS: PC flag_auto set to "+String(pcFlagAuto)+" =======");
+                logRobotState();
+                #endif
+            }
+            else if (message == "PC_auto_off") {
+                // stop PID run
+                pcFlagAuto = 0;
+                #if TRACE_LEVEL >= 2
+                logWrite("WS: PC flag_auto set to "+String(pcFlagAuto)+" =======");
+                logRobotState();
+                #endif
+            }
             else if (message == "PC_kp_up") {
                 // 
                 if (pidSensors_kp > 0)

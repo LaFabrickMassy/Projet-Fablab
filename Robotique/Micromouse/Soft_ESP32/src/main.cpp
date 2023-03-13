@@ -140,12 +140,12 @@ void setup() {
 **********************************************************/
 void loop()
 {
-    delay(250);
     millis_current = millis();
 
     if (millis_current - millis_count_status > 5000) {
         millis_count_status = millis_current;        
 
+        logWrite("Loop ----------------");
         logRobotState();
         /*
         if (current_mode == ROBOT_MODE_SIMPLE_RUN)
@@ -216,7 +216,6 @@ void loop()
                     logWrite("loop: RUN, testDriveRunStep() == START");
                     #endif
                     testDriveRunStep();
-                    delay(1000);
                     #if TRACE_LEVEL >= 2
                     logWrite("loop: testDriveRunStep() == END");
                     #endif
@@ -226,7 +225,6 @@ void loop()
                     logWrite("loop: RUN, testDriveRotateStep() == START");
                     #endif
                     testDriveRotateStep();
-                    delay(1000);
                     #if TRACE_LEVEL >= 2
                     logWrite("loop: testDriveRotateStep() == END");
                     #endif
@@ -251,27 +249,40 @@ void loop()
                     #if LOG_SENSORPID_ERRORS > 0
                     //logSensorErrorsTab();
                     #endif
+                    notifyClients(getDispErrorsTab());
                     #if TRACE_LEVEL >= 2
                     logWrite("loop: RunEnd, ParamCalRotateInit() == START");
                     #endif
                     ParamCalRotateInit();
-                    current_state = ROBOT_STATE_STOP;
+                    current_state = ROBOT_STATE_ROTATE;
                     #if TRACE_LEVEL >= 2
                     logWrite("loop: ParamCalRotateInit() == END");
                     #endif
                     break;
                 case ROBOT_STATE_ROTATE:
-                ParamCalRotateStep();
+                    ParamCalRotateStep();
                     break;
                 case ROBOT_STATE_ROTATE_END:
-                    #if TRACE_LEVEL >= 2
-                    logWrite("loop: RotateEnd, ParamCalRunInit() == START");
-                    logRobotState();
-                    #endif
-                    ParamCalRunInit();
-                    #if TRACE_LEVEL >= 2
-                    logWrite("loop: ParamCalRunInit() == END");
-                    #endif
+                    if (pcFlagAuto) {
+                        #if TRACE_LEVEL >= 2
+                        logWrite("loop: RotateEnd, ParamCalRunInit() == START");
+                        logRobotState();
+                        #endif
+                        ParamCalRunInit();
+                        #if TRACE_LEVEL >= 2
+                        logWrite("loop: ParamCalRunInit() == END");
+                        #endif
+                    }
+                    else {
+                        #if TRACE_LEVEL >= 2
+                        logWrite("loop: RotateEnd, ParamCalRunInit() == START");
+                        logRobotState();
+                        #endif
+                        current_state = ROBOT_STATE_STOP;
+                        #if TRACE_LEVEL >= 2
+                        logWrite("loop: ParamCalRunInit() == END");
+                        #endif
+                    }
                     break;
                 default:
                     #if TRACE_LEVEL >= 2

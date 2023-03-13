@@ -76,7 +76,7 @@ void motorSetSpeed(motor_t *motor, double relspeed)
 	
 	val = (uint32_t)(speed * motor->speed_full_res_coeff);
 	
-	//ledcWrite(motor->channel, val);
+	ledcWrite(motor->channel, val);
 }
 
 //********************************************************************

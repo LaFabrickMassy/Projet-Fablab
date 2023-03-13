@@ -25,12 +25,15 @@
 
 // error tab used to check if stabilised
 double stabErrorsTab[STAB_ERRTAB_SIZE];
-double dispErrorsTab[DISP_ERRTAB_SIZE];
 double total_error;
 // error tab used to display error
+double dispErrorsTab[DISP_ERRTAB_SIZE];
+int dispErrorsNb;
+
 int step;
 int stabilised;
 int fwall_found;
+int pcFlagAuto = 0; // re-run after U-turn if set
 
 long ticks_Lwheel;
 long ticks_Rwheel;
@@ -95,9 +98,12 @@ void ParamCalStop() {
 void ParamCalRunInit() {
     int i;
 
-    // Initialise error array to 0
+    // Initialise stabilisation error array to 0
     for (i=0;i<STAB_ERRTAB_SIZE;i++)
         stabErrorsTab[i] = 0.0;
+    // Initialise display error array
+    dispErrorsNb = 0;
+
     step = 0;
     stabilised = 0;
     total_error = 0.;
@@ -172,7 +178,10 @@ void ParamCalRunStep() {
     stabErrorsTab[STAB_ERRTAB_SIZE-1] = abs(error);
     total_error += abs(error);
 
-    dispErrorsTab[step] = error;
+    if (dispErrorsNb < DISP_ERRTAB_SIZE) {
+        dispErrorsTab[dispErrorsNb] = error;
+        dispErrorsNb++;
+    }
 
     // check if now stabilised
     if ((step > STAB_ERRTAB_SIZE) && (total_error < STAB_ERRTAB_SIZE*PIDSENSORS_MAX_ERROR) && (stabilised == 0)) {
@@ -381,11 +390,16 @@ String getParamCalEncoderResolution() {
 //********************************************************************
 // 
 //********************************************************************
-void logSensorErrorsTab() {
+String getDispErrorsTab() {
     int i;
 
-    logWrite("### Sensors PID errors ########################");
-    //for (i=0;i<step;i++)
-    //    logWrite(String(i)+":"+String(dispErrorsTab[i]));
-    logWrite("###");
+    String s;
+
+    logWrite("### getDispErrorsTab START ########################");
+    s = "{\"errGraph\":[";
+    for (i=0;i<dispErrorsNb-1;i++)
+        s += "\""+ String(dispErrorsTab[i])+ "\",";
+    s += "\""+ String(dispErrorsTab[i])+ "\"]}";
+    logWrite("### getDispErrorsTab END ########################");
+    return s;
 }
