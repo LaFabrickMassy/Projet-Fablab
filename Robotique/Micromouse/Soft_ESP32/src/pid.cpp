@@ -26,9 +26,9 @@ double old_errorMotors;
 //
 //*****************************************************************************
 void initPIDSensors() {
-    pidSensors_kp = (double)PIDSENSORS_KP;
-    pidSensors_ki = (double)PIDSENSORS_KI;
-    pidSensors_kd = (double)PIDSENSORS_KD;
+    //pidSensors_kp = (double)PIDSENSORS_KP;
+    //pidSensors_ki = (double)PIDSENSORS_KI;
+    //pidSensors_kd = (double)PIDSENSORS_KD;
 
     old_errorSensors = 0.;
 }

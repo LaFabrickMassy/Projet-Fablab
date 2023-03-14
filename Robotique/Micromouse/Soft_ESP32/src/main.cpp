@@ -146,7 +146,7 @@ void loop()
         millis_count_status = millis_current;        
 
         logWrite("Loop ----------------");
-        logRobotState();
+        //logRobotState();
         if (current_mode == ROBOT_MODE_TEST_DRIVE)
             notifyClients(getRobotStatus());
         if (current_mode == ROBOT_MODE_PARAM)

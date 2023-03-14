@@ -21,7 +21,7 @@
 #define SPEED_BASE 0.4
 
 #define STAB_ERRTAB_SIZE 10
-#define DISP_ERRTAB_SIZE 100
+#define DISP_ERRTAB_SIZE 1000
 
 // error tab used to check if stabilised
 double stabErrorsTab[STAB_ERRTAB_SIZE];
@@ -178,7 +178,7 @@ void ParamCalRunStep() {
     stabErrorsTab[STAB_ERRTAB_SIZE-1] = abs(error);
     total_error += abs(error);
 
-    if (dispErrorsNb < DISP_ERRTAB_SIZE) {
+    if ((dispErrorsNb < DISP_ERRTAB_SIZE) && ((step & 0x1FF) == 0)) {
         dispErrorsTab[dispErrorsNb] = error;
         dispErrorsNb++;
     }
@@ -269,11 +269,11 @@ String getPIDStatus() {
     jsonString += ",";
     jsonString += "\"state\":\""+String(current_state)+"\"";
     jsonString += ",";
-    jsonString += "\"kp\":\""+String(pidSensors_kp)+"\"";
+    jsonString += "\"kp\":\""+String(100*pidSensors_kp)+"\"";
     jsonString += ",";
-    jsonString += "\"ki\":\""+String(pidSensors_ki)+"\"";
+    jsonString += "\"ki\":\""+String(100*pidSensors_ki)+"\"";
     jsonString += ",";
-    jsonString += "\"kd\":\""+String(pidSensors_kd)+"\"";
+    jsonString += "\"kd\":\""+String(100*pidSensors_kd)+"\"";
     jsonString += ",";
     jsonString += "\"sens_L\":\""+String(distanceSensor1())+"\"";
     #if NB_OF_SENSORS >= 2

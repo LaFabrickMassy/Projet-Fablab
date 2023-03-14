@@ -308,135 +308,159 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
             }
             else if (message == "PC_kp_up") {
                 // 
-                if (pidSensors_kp > 0)
-                    pidSensors_kp = pidSensors_kp * PIDSENSORS_STEP;
-                else if (pidSensors_kp == 0)
-                    pidSensors_kp = PIDSENSORS_MIN;
-                else if (pidSensors_kp >= -PIDSENSORS_MIN)
-                    pidSensors_kp = 0;
-                else
-                    pidSensors_kp = pidSensors_kp / PIDSENSORS_STEP;
+                if (current_state == ROBOT_MODE_STOP) {
+                    if (pidSensors_kp > 0)
+                        pidSensors_kp = pidSensors_kp * PIDSENSORS_STEP;
+                    else if (pidSensors_kp == 0)
+                        pidSensors_kp = PIDSENSORS_MIN;
+                    else if (pidSensors_kp >= -PIDSENSORS_MIN)
+                        pidSensors_kp = 0;
+                    else
+                        pidSensors_kp = pidSensors_kp / PIDSENSORS_STEP;
+                }
             }
             else if (message == "PC_kp_up+") {
                 // 
-                if (pidSensors_kp > 0)
-                    pidSensors_kp = pidSensors_kp * 2*PIDSENSORS_STEP;
-                else if (pidSensors_kp == 0)
-                    pidSensors_kp = PIDSENSORS_MIN;
-                else if (pidSensors_kp >= -PIDSENSORS_MIN)
-                    pidSensors_kp = 0;
-                else
-                    pidSensors_kp = pidSensors_kp / (2*PIDSENSORS_STEP);
+                if (current_state == ROBOT_MODE_STOP) {
+                    if (pidSensors_kp > 0)
+                        pidSensors_kp = pidSensors_kp * 2*PIDSENSORS_STEP;
+                    else if (pidSensors_kp == 0)
+                        pidSensors_kp = PIDSENSORS_MIN;
+                    else if (pidSensors_kp >= -PIDSENSORS_MIN)
+                        pidSensors_kp = 0;
+                    else
+                        pidSensors_kp = pidSensors_kp / (2*PIDSENSORS_STEP);
+                }
             }
             else if (message == "PC_ki_up") {
                 // 
-                if (pidSensors_ki > 0)
-                    pidSensors_ki = pidSensors_ki * PIDSENSORS_STEP;
-                else if (pidSensors_ki == 0)
-                    pidSensors_ki = PIDSENSORS_MIN;
-                else if (pidSensors_ki >= -PIDSENSORS_MIN)
-                    pidSensors_ki = 0;
-                else
-                    pidSensors_ki = pidSensors_ki / PIDSENSORS_STEP;
+                if (current_state == ROBOT_MODE_STOP) {
+                    if (pidSensors_ki > 0)
+                        pidSensors_ki = pidSensors_ki * PIDSENSORS_STEP;
+                    else if (pidSensors_ki == 0)
+                        pidSensors_ki = PIDSENSORS_MIN;
+                    else if (pidSensors_ki >= -PIDSENSORS_MIN)
+                        pidSensors_ki = 0;
+                    else
+                        pidSensors_ki = pidSensors_ki / PIDSENSORS_STEP;
+                }
             }
             else if (message == "PC_ki_up+") {
                 // 
-                if (pidSensors_ki > 0)
-                    pidSensors_ki = pidSensors_ki * 2*PIDSENSORS_STEP;
-                else if (pidSensors_ki == 0)
-                    pidSensors_ki = PIDSENSORS_MIN;
-                else if (pidSensors_ki >= -PIDSENSORS_MIN)
-                    pidSensors_ki = 0;
-                else
-                    pidSensors_ki = pidSensors_ki / (2*PIDSENSORS_STEP);
+                if (current_state == ROBOT_MODE_STOP) {
+                    if (pidSensors_ki > 0)
+                        pidSensors_ki = pidSensors_ki * 2*PIDSENSORS_STEP;
+                    else if (pidSensors_ki == 0)
+                        pidSensors_ki = PIDSENSORS_MIN;
+                    else if (pidSensors_ki >= -PIDSENSORS_MIN)
+                        pidSensors_ki = 0;
+                    else
+                        pidSensors_ki = pidSensors_ki / (2*PIDSENSORS_STEP);
+                }
             }
             else if (message == "PC_kd_up") {
                 // 
-                if (pidSensors_kd > 0)
-                    pidSensors_kd = pidSensors_kd * PIDSENSORS_STEP;
-                else if (pidSensors_kd == 0)
-                    pidSensors_kd = PIDSENSORS_MIN;
-                else if (pidSensors_kd >= -PIDSENSORS_MIN)
-                    pidSensors_kd = 0;
-                else
-                    pidSensors_kd = pidSensors_kd / PIDSENSORS_STEP;
+                if (current_state == ROBOT_MODE_STOP) {
+                    if (pidSensors_kd > 0)
+                        pidSensors_kd = pidSensors_kd * PIDSENSORS_STEP;
+                    else if (pidSensors_kd == 0)
+                        pidSensors_kd = PIDSENSORS_MIN;
+                    else if (pidSensors_kd >= -PIDSENSORS_MIN)
+                        pidSensors_kd = 0;
+                    else
+                        pidSensors_kd = pidSensors_kd / PIDSENSORS_STEP;
+                }
             }
             else if (message == "PC_kd_up+") {
                 // 
-                if (pidSensors_kd > 0)
-                    pidSensors_kd = pidSensors_kd * (2*PIDSENSORS_STEP);
-                else if (pidSensors_kd == 0)
-                    pidSensors_kd = PIDSENSORS_MIN;
-                else if (pidSensors_kd >= -PIDSENSORS_MIN)
-                    pidSensors_kd = 0;
-                else
-                    pidSensors_kd = pidSensors_kd / (2*PIDSENSORS_STEP);
+                if (current_state == ROBOT_MODE_STOP) {
+                    if (pidSensors_kd > 0)
+                        pidSensors_kd = pidSensors_kd * (2*PIDSENSORS_STEP);
+                    else if (pidSensors_kd == 0)
+                        pidSensors_kd = PIDSENSORS_MIN;
+                    else if (pidSensors_kd >= -PIDSENSORS_MIN)
+                        pidSensors_kd = 0;
+                    else
+                        pidSensors_kd = pidSensors_kd / (2*PIDSENSORS_STEP);
+                }
             }
             else if (message == "PC_kp_dn") {
                 // 
-                if (pidSensors_kp < 0)
-                    pidSensors_kp = pidSensors_kp * PIDSENSORS_STEP;
-                else if (pidSensors_kp == 0)
-                    pidSensors_kp = -PIDSENSORS_MIN;
-                else if (pidSensors_kp <= PIDSENSORS_MIN)
-                    pidSensors_kp = 0;
-                else
-                    pidSensors_kp = pidSensors_kp / PIDSENSORS_STEP;
+                if (current_state == ROBOT_MODE_STOP) {
+                    if (pidSensors_kp < 0)
+                        pidSensors_kp = pidSensors_kp * PIDSENSORS_STEP;
+                    else if (pidSensors_kp == 0)
+                        pidSensors_kp = -PIDSENSORS_MIN;
+                    else if (pidSensors_kp <= PIDSENSORS_MIN)
+                        pidSensors_kp = 0;
+                    else
+                        pidSensors_kp = pidSensors_kp / PIDSENSORS_STEP;
+                }
             }
             else if (message == "PC_kp_dn-") {
                 // 
-                if (pidSensors_kp < 0)
-                    pidSensors_kp = pidSensors_kp * (2*PIDSENSORS_STEP);
-                else if (pidSensors_kp == 0)
-                    pidSensors_kp = -PIDSENSORS_MIN;
-                else if (pidSensors_kp <= PIDSENSORS_MIN)
-                    pidSensors_kp = 0;
-                else
-                    pidSensors_kp = pidSensors_kp / (2*PIDSENSORS_STEP);
+                if (current_state == ROBOT_MODE_STOP) {
+                    if (pidSensors_kp < 0)
+                        pidSensors_kp = pidSensors_kp * (2*PIDSENSORS_STEP);
+                    else if (pidSensors_kp == 0)
+                        pidSensors_kp = -PIDSENSORS_MIN;
+                    else if (pidSensors_kp <= PIDSENSORS_MIN)
+                        pidSensors_kp = 0;
+                    else
+                        pidSensors_kp = pidSensors_kp / (2*PIDSENSORS_STEP);
+                }
             }
             else if (message == "PC_ki_dn") {
                 // 
-                if (pidSensors_ki < 0)
-                    pidSensors_ki = pidSensors_ki * (PIDSENSORS_STEP);
-                else if (pidSensors_ki == 0)
-                    pidSensors_ki = -PIDSENSORS_MIN;
-                else if (pidSensors_ki <= PIDSENSORS_MIN)
-                    pidSensors_ki = 0;
-                else
-                    pidSensors_ki = pidSensors_ki / (PIDSENSORS_STEP);
+                if (current_state == ROBOT_MODE_STOP) {
+                    if (pidSensors_ki < 0)
+                        pidSensors_ki = pidSensors_ki * (PIDSENSORS_STEP);
+                    else if (pidSensors_ki == 0)
+                        pidSensors_ki = -PIDSENSORS_MIN;
+                    else if (pidSensors_ki <= PIDSENSORS_MIN)
+                        pidSensors_ki = 0;
+                    else
+                        pidSensors_ki = pidSensors_ki / (PIDSENSORS_STEP);
+                }
             }
             else if (message == "PC_ki_dn-") {
                 // 
-                if (pidSensors_ki < 0)
-                    pidSensors_ki = pidSensors_ki * (2*PIDSENSORS_STEP);
-                else if (pidSensors_ki == 0)
-                    pidSensors_ki = -PIDSENSORS_MIN;
-                else if (pidSensors_ki <= PIDSENSORS_MIN)
-                    pidSensors_ki = 0;
-                else
-                    pidSensors_ki = pidSensors_ki / (2*PIDSENSORS_STEP);
+                if (current_state == ROBOT_MODE_STOP) {
+                    if (pidSensors_ki < 0)
+                        pidSensors_ki = pidSensors_ki * (2*PIDSENSORS_STEP);
+                    else if (pidSensors_ki == 0)
+                        pidSensors_ki = -PIDSENSORS_MIN;
+                    else if (pidSensors_ki <= PIDSENSORS_MIN)
+                        pidSensors_ki = 0;
+                    else
+                        pidSensors_ki = pidSensors_ki / (2*PIDSENSORS_STEP);
+                }
             }
             else if (message == "PC_kd_dn") {
                 // 
-                if (pidSensors_kd < 0)
-                    pidSensors_kd = pidSensors_kd * PIDSENSORS_STEP;
-                else if (pidSensors_kd == 0)
-                    pidSensors_kd = -PIDSENSORS_MIN;
-                else if (pidSensors_kd <= PIDSENSORS_MIN)
-                    pidSensors_kd = 0;
-                else
-                    pidSensors_kd = pidSensors_kd / PIDSENSORS_STEP;
+                if (current_state == ROBOT_MODE_STOP) {
+                    if (pidSensors_kd < 0)
+                        pidSensors_kd = pidSensors_kd * PIDSENSORS_STEP;
+                    else if (pidSensors_kd == 0)
+                        pidSensors_kd = -PIDSENSORS_MIN;
+                    else if (pidSensors_kd <= PIDSENSORS_MIN)
+                        pidSensors_kd = 0;
+                    else
+                        pidSensors_kd = pidSensors_kd / PIDSENSORS_STEP;
+                }
             }
             else if (message == "PC_kd_dn-") {
                 // 
-                if (pidSensors_kd < 0)
-                    pidSensors_kd = pidSensors_kd * (2*PIDSENSORS_STEP);
-                else if (pidSensors_kd == 0)
-                    pidSensors_kd = -PIDSENSORS_MIN;
-                else if (pidSensors_kd <= PIDSENSORS_MIN)
-                    pidSensors_kd = 0;
-                else
-                    pidSensors_kd = pidSensors_kd / (2*PIDSENSORS_STEP);
+                if (current_state == ROBOT_MODE_STOP) {
+                    if (pidSensors_kd < 0)
+                        pidSensors_kd = pidSensors_kd * (2*PIDSENSORS_STEP);
+                    else if (pidSensors_kd == 0)
+                        pidSensors_kd = -PIDSENSORS_MIN;
+                    else if (pidSensors_kd <= PIDSENSORS_MIN)
+                        pidSensors_kd = 0;
+                    else
+                        pidSensors_kd = pidSensors_kd / (2*PIDSENSORS_STEP);
+                }
             }
             else {
                 logWrite("WS: command \'"+message+"\' available only in PC mode");
