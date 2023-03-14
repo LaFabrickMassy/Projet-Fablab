@@ -199,51 +199,61 @@
         </div>
         <div class="card-grid3">
             <div class="card">
-                <p><button id="but_sel_kp" class="button_blue">kP</button></p>
+                <p><button id="but_kp_up+" class="button_blue">++</button></p>
             </div>
             <div class="card">
-                <p><button id="but_sel_ki" class="button_off">kI</button></p>
+                <p><button id="but_ki_up+" class="button_blue">++</button></p>
             </div>
             <div class="card">
-                <p><button id="but_sel_kd" class="button_off">kD</button></p>
+                <p><button id="but_kd_up+" class="button_blue">++</button></p>
             </div>
         </div>
         <div class="card-grid3">
             <div class="card">
-                <p class="state">kP=<span id="val_kp"></span></p>
+                <p><button id="but_kp_up" class="button_blue">+</button></p>
             </div>
             <div class="card">
-                <p class="state">kI=<span id="val_ki"></span></p>
+                <p><button id="but_ki_up" class="button_blue">+</button></p>
             </div>
             <div class="card">
-                <p class="state">kD=<span id="val_kd"></span></p>
+                <p><button id="but_kd_up" class="button_blue">+</button></p>
+            </div>
+        </div>
+        <div class="card-grid3">
+            <div class="card">
+                <p class="state">kp=<span id="val_kp"></span></p>
+            </div>
+            <div class="card">
+                <p class="state">ki=<span id="val_ki"></span></p>
+            </div>
+            <div class="card">
+                <p class="state">kd=<span id="val_kd"></span></p>
             </div>
             <div class="card">
             </div>
         </div>
         <div class="card-grid3">
             <div class="card">
-                <p><button id="but_+3" class="button_green">+1</button></p>
+                <p><button id="but_kp_dn" class="button_blue">-</button></p>
             </div>
             <div class="card">
-                <p><button id="but_+2" class="button_green">+0.1</button></p>
+                <p><button id="but_ki_dn" class="button_blue">-</button></p>
             </div>
             <div class="card">
-                <p><button id="but_+1" class="button_green">+0.01</button></p>
+                <p><button id="but_kd_dn" class="button_blue">-</button></p>
             </div>
         </div>
         <div class="card-grid3">
             <div class="card">
-                <p><button id="but_-3" class="button_green">-1</button></p>
+                <p><button id="but_kp_dn-" class="button_blue">--</button></p>
             </div>
             <div class="card">
-                <p><button id="but_-2" class="button_green">-0.1</button></p>
+                <p><button id="but_ki_dn-" class="button_blue">--</button></p>
             </div>
             <div class="card">
-                <p><button id="but_-1" class="button_green">-0.01</button></p>
+                <p><button id="but_kd_dn-" class="button_blue">--</button></p>
             </div>
         </div>
-
         <div class="card-grid3">
             <div class="card">
                 <p class="state">dL=<span id="sens_L"></span></p>
@@ -287,10 +297,6 @@
 		var trailtext = "";
 		window.addEventListener('load', onLoad);
 		var mode_auto = 0;
-		const selMode_kp = 0;
-		const selMode_ki = 1;
-		const selMode_kd = 2;
-		var selMode = selMode_kp;
 		canvas = document.getElementById("errorsGraph")
 		chart = new Chart(canvas, {
 			type : 'line',
@@ -426,44 +432,6 @@
 					websocket.send("PC_auto_on");
 				}
 			});
-
-			document.getElementById('but_sel_kp').addEventListener('click', (e) => {
-				console.log('button kP');
-				selMode = selMode_kp;
-				document.getElementById('but_sel_kp').classList.add('button_green');
-				document.getElementById('but_sel_kp').classList.remove('button_off');
-				document.getElementById('but_sel_ki').classList.add('button_off');
-				document.getElementById('but_sel_ki').classList.remove('button_green');
-				document.getElementById('but_sel_kd').classList.add('button_off');
-				document.getElementById('but_sel_kd').classList.remove('button_green');
-				websocket.send("PC_sel_kp");
-			});
-
-
-			document.getElementById('but_sel_ki').addEventListener('click', (e) => {
-				console.log('button kI');
-				selMode = selMode_kp;
-				document.getElementById('but_sel_ki').classList.add('button_green');
-				document.getElementById('but_sel_ki').classList.remove('button_off');
-				document.getElementById('but_sel_kp').classList.add('button_off');
-				document.getElementById('but_sel_kp').classList.remove('button_green');
-				document.getElementById('but_sel_kd').classList.add('button_off');
-				document.getElementById('but_sel_kd').classList.remove('button_green');
-				websocket.send("PC_sel_ki");
-			});
-
-			document.getElementById('but_sel_kd').addEventListener('click', (e) => {
-				console.log('button kD');
-				selMode = selMode_kp;
-				document.getElementById('but_sel_kd').classList.add('button_green');
-				document.getElementById('but_sel_kd').classList.remove('button_off');
-				document.getElementById('but_sel_kp').classList.add('button_off');
-				document.getElementById('but_sel_kp').classList.remove('button_green');
-				document.getElementById('but_sel_ki').classList.add('button_off');
-				document.getElementById('but_sel_ki').classList.remove('button_green');
-				websocket.send("PC_sel_kd");
-			});
-
 			document.getElementById('but_kp_up+').addEventListener('click', (e) => {
 				console.log('button kp_up+');
 				websocket.send("PC_kp_up+");

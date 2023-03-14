@@ -178,7 +178,8 @@ void ParamCalRunStep() {
     stabErrorsTab[STAB_ERRTAB_SIZE-1] = abs(error);
     total_error += abs(error);
 
-    if ((dispErrorsNb < DISP_ERRTAB_SIZE) && ((step & 0x1FF) == 0)) {
+    // Sample errors to draw graph. 0x3FF -> 1 sample per 1024 loops
+    if ((dispErrorsNb < DISP_ERRTAB_SIZE) && ((step & 0x3FF) == 0)) {
         dispErrorsTab[dispErrorsNb] = error;
         dispErrorsNb++;
     }

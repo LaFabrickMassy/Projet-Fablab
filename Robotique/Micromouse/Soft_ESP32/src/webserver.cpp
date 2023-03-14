@@ -31,6 +31,11 @@ AsyncWebSocket ws("/ws");
 
 String message = "";
 
+#define PC_SELPARAMMODE_KP 0
+#define PC_SELPARAMMODE_KI 1
+#define PC_SELPARAMMODE_KD 2
+
+int pcSelParamMode = PC_SELPARAMMODE_KP;
 
 //********************************************************************
 // Initialize WiFi
@@ -243,8 +248,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
         } // Simple run commands
 
         // PID calibration *****************************
-        if ( current_mode == ROBOT_MODE_PARAM)
-        {
+        else if ( current_mode == ROBOT_MODE_PARAM) {
             logWrite("WS: Mode PARAM");
             if (message == "PC_index") {
                 // Set mode to stop
@@ -462,6 +466,68 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
                         pidSensors_kd = pidSensors_kd / (2*PIDSENSORS_STEP);
                 }
             }
+            else if (message == "PC_sel_kp") {
+                pcSelParamMode = PC_SELPARAMMODE_KP;
+            }
+            else if (message == "PC_sel_ki") {
+                pcSelParamMode = PC_SELPARAMMODE_KI;
+            }
+            else if (message == "PC_sel_kd") {
+                pcSelParamMode = PC_SELPARAMMODE_KD;
+            }
+            else if (message == "PC_+3") {
+                if (pcSelParamMode == PC_SELPARAMMODE_KD)
+                    pidSensors_kd += 1.0;
+                else if (pcSelParamMode == PC_SELPARAMMODE_KI)
+                    pidSensors_ki += 1.0;
+                else
+                    pidSensors_kd += 1.0;
+                notifyClients(getPIDStatus());            
+            }
+            else if (message == "PC_+2") {
+                if (pcSelParamMode == PC_SELPARAMMODE_KD)
+                    pidSensors_kd += 0.1;
+                else if (pcSelParamMode == PC_SELPARAMMODE_KI)
+                    pidSensors_ki += 0.1;
+                else
+                    pidSensors_kd += 0.1;
+                notifyClients(getPIDStatus());            
+            }
+            else if (message == "PC_+1") {
+                if (pcSelParamMode == PC_SELPARAMMODE_KD)
+                    pidSensors_kd += 0.01;
+                else if (pcSelParamMode == PC_SELPARAMMODE_KI)
+                    pidSensors_ki += 0.01;
+                else
+                    pidSensors_kd += 0.01;
+                notifyClients(getPIDStatus());            
+            }
+            else if (message == "PC_-3") {
+                if (pcSelParamMode == PC_SELPARAMMODE_KD)
+                    pidSensors_kd -= 1.0;
+                else if (pcSelParamMode == PC_SELPARAMMODE_KI)
+                    pidSensors_ki -= 1.0;
+                else
+                    pidSensors_kd -= 1.0;
+                notifyClients(getPIDStatus());            
+            }
+            else if (message == "PC_-2") {
+                if (pcSelParamMode == PC_SELPARAMMODE_KD)
+                    pidSensors_kd -= 0.1;
+                else if (pcSelParamMode == PC_SELPARAMMODE_KI)
+                    pidSensors_ki -= 0.1;
+                else
+                    pidSensors_kd -= 0.1;
+                notifyClients(getPIDStatus());            
+            }
+            else if (message == "PC_-1") {
+                if (pcSelParamMode == PC_SELPARAMMODE_KD)
+                    pidSensors_kd -= 0.01;
+                else if (pcSelParamMode == PC_SELPARAMMODE_KI)
+                    pidSensors_ki -= 0.01;
+                else
+                    pidSensors_kd -= 0.01;
+                notifyClients(getPIDStatus());            
             else {
                 logWrite("WS: command \'"+message+"\' available only in PC mode");
             }

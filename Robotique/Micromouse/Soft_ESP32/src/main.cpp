@@ -145,13 +145,15 @@ void loop()
     if (millis_current - millis_count_status > 5000) {
         millis_count_status = millis_current;        
 
-        logWrite("Loop ----------------");
+        //logWrite("Loop ----------------");
         //logRobotState();
+        /*
         if (current_mode == ROBOT_MODE_TEST_DRIVE)
             notifyClients(getRobotStatus());
         if (current_mode == ROBOT_MODE_PARAM)
             notifyClients(getPIDStatus());
             //notifyClients("{\"trailtext\":\""+String(current_mode)+"/"+String(current_state)+" "+debug_message+"\"}");
+        */
         #ifdef DEBUG_SENSORS
         // print measured distance for sensor 1
         logWrite(distanceSensor1());
