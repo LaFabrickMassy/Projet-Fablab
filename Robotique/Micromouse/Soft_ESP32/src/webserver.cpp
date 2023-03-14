@@ -481,7 +481,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
                 else if (pcSelParamMode == PC_SELPARAMMODE_KI)
                     pidSensors_ki += 1.0;
                 else
-                    pidSensors_kd += 1.0;
+                    pidSensors_kp += 1.0;
                 notifyClients(getPIDStatus());            
             }
             else if (message == "PC_+2") {
@@ -490,7 +490,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
                 else if (pcSelParamMode == PC_SELPARAMMODE_KI)
                     pidSensors_ki += 0.1;
                 else
-                    pidSensors_kd += 0.1;
+                    pidSensors_kp += 0.1;
                 notifyClients(getPIDStatus());            
             }
             else if (message == "PC_+1") {
@@ -499,7 +499,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
                 else if (pcSelParamMode == PC_SELPARAMMODE_KI)
                     pidSensors_ki += 0.01;
                 else
-                    pidSensors_kd += 0.01;
+                    pidSensors_kp += 0.01;
                 notifyClients(getPIDStatus());            
             }
             else if (message == "PC_-3") {
@@ -508,7 +508,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
                 else if (pcSelParamMode == PC_SELPARAMMODE_KI)
                     pidSensors_ki -= 1.0;
                 else
-                    pidSensors_kd -= 1.0;
+                    pidSensors_kp -= 1.0;
                 notifyClients(getPIDStatus());            
             }
             else if (message == "PC_-2") {
@@ -517,7 +517,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
                 else if (pcSelParamMode == PC_SELPARAMMODE_KI)
                     pidSensors_ki -= 0.1;
                 else
-                    pidSensors_kd -= 0.1;
+                    pidSensors_kp -= 0.1;
                 notifyClients(getPIDStatus());            
             }
             else if (message == "PC_-1") {
@@ -526,7 +526,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
                 else if (pcSelParamMode == PC_SELPARAMMODE_KI)
                     pidSensors_ki -= 0.01;
                 else
-                    pidSensors_kd -= 0.01;
+                    pidSensors_kp -= 0.01;
                 notifyClients(getPIDStatus());            
             else {
                 logWrite("WS: command \'"+message+"\' available only in PC mode");
