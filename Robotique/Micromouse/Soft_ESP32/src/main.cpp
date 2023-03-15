@@ -146,14 +146,12 @@ void loop()
         millis_count_status = millis_current;        
 
         //logWrite("Loop ----------------");
-        //logRobotState();
-        /*
+        logRobotState();
         if (current_mode == ROBOT_MODE_TEST_DRIVE)
             notifyClients(getRobotStatus());
         if (current_mode == ROBOT_MODE_PARAM)
             notifyClients(getPIDStatus());
             //notifyClients("{\"trailtext\":\""+String(current_mode)+"/"+String(current_state)+" "+debug_message+"\"}");
-        */
         #ifdef DEBUG_SENSORS
         // print measured distance for sensor 1
         logWrite(distanceSensor1());
@@ -241,6 +239,8 @@ void loop()
                 case ROBOT_STATE_STOP:
                     break;
                 case ROBOT_STATE_CRASH:
+                    ParamCalStop();
+                    current_state = ROBOT_MODE_STOP;
                     break;
                 case ROBOT_STATE_RUN:
                     ParamCalRunStep();

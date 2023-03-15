@@ -477,24 +477,6 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
             }
             else if (message == "PC_+3") {
                 if (pcSelParamMode == PC_SELPARAMMODE_KD)
-                    pidSensors_kd += 1.0;
-                else if (pcSelParamMode == PC_SELPARAMMODE_KI)
-                    pidSensors_ki += 1.0;
-                else
-                    pidSensors_kp += 1.0;
-                notifyClients(getPIDStatus());            
-            }
-            else if (message == "PC_+2") {
-                if (pcSelParamMode == PC_SELPARAMMODE_KD)
-                    pidSensors_kd += 0.1;
-                else if (pcSelParamMode == PC_SELPARAMMODE_KI)
-                    pidSensors_ki += 0.1;
-                else
-                    pidSensors_kp += 0.1;
-                notifyClients(getPIDStatus());            
-            }
-            else if (message == "PC_+1") {
-                if (pcSelParamMode == PC_SELPARAMMODE_KD)
                     pidSensors_kd += 0.01;
                 else if (pcSelParamMode == PC_SELPARAMMODE_KI)
                     pidSensors_ki += 0.01;
@@ -502,25 +484,25 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
                     pidSensors_kp += 0.01;
                 notifyClients(getPIDStatus());            
             }
+            else if (message == "PC_+2") {
+                if (pcSelParamMode == PC_SELPARAMMODE_KD)
+                    pidSensors_kd += 0.001;
+                else if (pcSelParamMode == PC_SELPARAMMODE_KI)
+                    pidSensors_ki += 0.001;
+                else
+                    pidSensors_kp += 0.001;
+                notifyClients(getPIDStatus());            
+            }
+            else if (message == "PC_+1") {
+                if (pcSelParamMode == PC_SELPARAMMODE_KD)
+                    pidSensors_kd += 0.0001;
+                else if (pcSelParamMode == PC_SELPARAMMODE_KI)
+                    pidSensors_ki += 0.0001;
+                else
+                    pidSensors_kp += 0.0001;
+                notifyClients(getPIDStatus());            
+            }
             else if (message == "PC_-3") {
-                if (pcSelParamMode == PC_SELPARAMMODE_KD)
-                    pidSensors_kd -= 1.0;
-                else if (pcSelParamMode == PC_SELPARAMMODE_KI)
-                    pidSensors_ki -= 1.0;
-                else
-                    pidSensors_kp -= 1.0;
-                notifyClients(getPIDStatus());            
-            }
-            else if (message == "PC_-2") {
-                if (pcSelParamMode == PC_SELPARAMMODE_KD)
-                    pidSensors_kd -= 0.1;
-                else if (pcSelParamMode == PC_SELPARAMMODE_KI)
-                    pidSensors_ki -= 0.1;
-                else
-                    pidSensors_kp -= 0.1;
-                notifyClients(getPIDStatus());            
-            }
-            else if (message == "PC_-1") {
                 if (pcSelParamMode == PC_SELPARAMMODE_KD)
                     pidSensors_kd -= 0.01;
                 else if (pcSelParamMode == PC_SELPARAMMODE_KI)
@@ -528,6 +510,25 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
                 else
                     pidSensors_kp -= 0.01;
                 notifyClients(getPIDStatus());            
+            }
+            else if (message == "PC_-2") {
+                if (pcSelParamMode == PC_SELPARAMMODE_KD)
+                    pidSensors_kd -= 0.001;
+                else if (pcSelParamMode == PC_SELPARAMMODE_KI)
+                    pidSensors_ki -= 0.001;
+                else
+                    pidSensors_kp -= 0.001;
+                notifyClients(getPIDStatus());            
+            }
+            else if (message == "PC_-1") {
+                if (pcSelParamMode == PC_SELPARAMMODE_KD)
+                    pidSensors_kd -= 0.0001;
+                else if (pcSelParamMode == PC_SELPARAMMODE_KI)
+                    pidSensors_ki -= 0.0001;
+                else
+                    pidSensors_kp -= 0.0001;
+                notifyClients(getPIDStatus());            
+            }
             else {
                 logWrite("WS: command \'"+message+"\' available only in PC mode");
             }

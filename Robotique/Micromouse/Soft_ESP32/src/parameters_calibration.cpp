@@ -160,7 +160,7 @@ void ParamCalRunStep() {
 
     // Checl wall collision
     if ( (lwall_dist < WALL_DISTANCE_LMIN) || 
-         (fwall_dist < WALL_DISTANCE_LMIN) ) {
+         (rwall_dist < WALL_DISTANCE_LMIN) ) {
         motorSetSpeed(&motorL, 0);
         motorSetSpeed(&motorR, 0);
         logWrite("ParamCalRunStep : Wall crash");
