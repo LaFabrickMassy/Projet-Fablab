@@ -237,6 +237,7 @@ void loop()
         case ROBOT_MODE_PARAM:
             switch(current_state) {
                 case ROBOT_STATE_STOP:
+                    ParamCalStop();
                     break;
                 case ROBOT_STATE_CRASH:
                     ParamCalStop();
