@@ -246,42 +246,19 @@ void loop()
                     ParamCalRunStep();
                     break;
                 case ROBOT_STATE_RUN_END:
-                    #if LOG_SENSORPID_ERRORS > 0
-                    //logSensorErrorsTab();
-                    #endif
                     notifyClients(getDispErrorsTab());
-                    #if TRACE_LEVEL >= 2
-                    logWrite("loop: RunEnd, ParamCalRotateInit() == START");
-                    #endif
                     ParamCalRotateInit();
                     current_state = ROBOT_STATE_ROTATE;
-                    #if TRACE_LEVEL >= 2
-                    logWrite("loop: ParamCalRotateInit() == END");
-                    #endif
                     break;
                 case ROBOT_STATE_ROTATE:
                     ParamCalRotateStep();
                     break;
                 case ROBOT_STATE_ROTATE_END:
                     if (pcFlagAuto) {
-                        #if TRACE_LEVEL >= 2
-                        logWrite("loop: RotateEnd, ParamCalRunInit() == START");
-                        logRobotState();
-                        #endif
                         ParamCalRunInit();
-                        #if TRACE_LEVEL >= 2
-                        logWrite("loop: ParamCalRunInit() == END");
-                        #endif
                     }
                     else {
-                        #if TRACE_LEVEL >= 2
-                        logWrite("loop: RotateEnd, ParamCalRunInit() == START");
-                        logRobotState();
-                        #endif
                         current_state = ROBOT_STATE_STOP;
-                        #if TRACE_LEVEL >= 2
-                        logWrite("loop: ParamCalRunInit() == END");
-                        #endif
                     }
                     break;
                 default:

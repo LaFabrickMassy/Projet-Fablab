@@ -47,6 +47,8 @@ void rotationInit(double degrees, double speed) {
     double ticks_to_runL;
     double ticks_to_runR;
 
+    logWrite("rotationInit("+String(degrees)+","+String(speed)+") ##### START");
+
     // encoder values at initialisation
     start_encvalueL = encoderL.count;
     start_encvalueR = encoderR.count;
@@ -66,7 +68,7 @@ void rotationInit(double degrees, double speed) {
         dirR = -1;
         // nb of encoder ticks to reach the target
         ticks_to_runL = -ticks_to_runL;
-        ticks_to_runR = -ticks_to_runL;
+        ticks_to_runR = -ticks_to_runR;
     }
 
 
@@ -100,6 +102,7 @@ void rotationInit(double degrees, double speed) {
     debug_nbticksL = 0;
     debug_nbticksR = 0;
     #endif
+    logWrite("rotationInit ##### END");
 }
 
 //*****************************************************************************
@@ -140,60 +143,42 @@ int rotationStep() {
     }
     else if (nbticksL < nbticks_step1L) {
         // speed_up
-        debug_message += "A";
         speedL = alpha_upL*(double)nbticksL+beta_upL;
     }
     else if (nbticksL < nbticks_step2L) {
         // normal rotation
-        debug_message += "B";
         speedL = speed_targetL;
     }
     else if (nbticksL < nbticks_targetL) {
         // speed down
-        debug_message += "C";
         speedL = alpha_dnL*(double)nbticksL+beta_dnL;
     }
     else {
-        debug_message += "+";
         speedL = 0;
     }
-    debug_message += " eL=";
-    debug_message += String(nbticksL);
-    debug_message += "/";
-    debug_message += String(nbticks_targetL);
-    debug_message += " sL=";
-    debug_message += String(dirL*speedL);
-    debug_message += " mR=";
+    logWrite("rotationStep() : tL="+String(nbticksL)+" tL_tgt"+String(nbticks_targetL)+" spL="+String(dirL*speedL));
 
     if (nbticksR <= 0) {
-        debug_message += "-";
         speedR = SPEED_MIN;
     }
     else if (nbticksR < nbticks_step1R) {
         // speed_up
-        debug_message += "A";
         speedR = alpha_upR*(double)nbticksL+beta_upR;
     }
     else if (nbticksR < nbticks_step2R) {
         // normal rotation
-        debug_message += "B";
         speedR = speed_targetR;
     }
     else if (nbticksR < nbticks_targetR) {
         // speed down
-        debug_message += "C";
         speedR = alpha_dnR*(double)nbticksL+beta_dnR;
     }
     else {
         debug_message += "+";
         speedR = 0;
     }
-    debug_message += " eR=";
-    debug_message += String(nbticksR);
-    debug_message += "/";
-    debug_message += String(nbticks_targetR);
-    debug_message += " sR=";
-    debug_message += String(dirR*speedR);
+
+    logWrite("rotationStep() : tR="+String(nbticksR)+" tR_tgt"+String(nbticks_targetR)+" spR="+String(dirL*speedR));
 
     if (nbticksL >= nbticks_targetL || nbticksR >= nbticks_targetR) {
         motorSetSpeed(&motorL, 0);

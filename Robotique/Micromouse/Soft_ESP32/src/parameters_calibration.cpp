@@ -18,7 +18,7 @@
 #include "parameters_calibration.h"
 #include "micromouse.h"
 
-#define SPEED_BASE 0.4
+#define SPEED_BASE 0.7
 
 #define STAB_ERRTAB_SIZE 10
 #define DISP_ERRTAB_SIZE 1000
@@ -151,7 +151,6 @@ void ParamCalRunStep() {
         // update encoders parameter values
         encL_sum += encoderL.count - fwall_refticks_Lwheel;
         encR_sum += encoderR.count - fwall_refticks_Rwheel;
-        nb_runs++;
         run_length += fwall_dist - fwall_refdist;
         //notifyClients("{\"trailtext\":\""+String(getParamCalEncoderResolution())+"\"}");
 
@@ -252,6 +251,7 @@ void ParamCalRotateStep() {
     status = rotationStep();
 
     if (status) {
+        logWrite("ParamCalrotationStep() : done ----------------");
         // target angle reached, stop rotation
         current_state = ROBOT_STATE_ROTATE_END;
     }
