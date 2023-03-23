@@ -153,7 +153,11 @@ void ParamCalRunStep() {
         encL_sum += encoderL.count - fwall_refticks_Lwheel;
         encR_sum += encoderR.count - fwall_refticks_Rwheel;
         run_length += fwall_refdist - fwall_dist;
-        logWrite("Run "+String(fwall_dist - fwall_refdist)+" enc "+String(encoderL.count - fwall_refticks_Lwheel)+"/"+String(encoderR.count - fwall_refticks_Lwheel));
+        logWrite("Finished: wall="+String(fwall_dist)+" enc="+String(encoderL.count)+"/"+String(encoderR.count));
+        logWrite("Run "+String(fwall_dist - fwall_refdist)+" enc "+String(encoderL.count - fwall_refticks_Lwheel)+"/"+String(encoderR.count - fwall_refticks_Rwheel));
+        logWrite("Encoder resolution : L="+
+            String((double)(fwall_dist - fwall_refdist)/(double)(encoderL.count - fwall_refticks_Lwheel))+"mm/tck R="+
+            String((double)(fwall_dist - fwall_refdist)/(double)(encoderR.count - fwall_refticks_Rwheel))+"mm/tck ");
         logWrite("Encoder resolution : L="+String((double)run_length/(double)encL_sum)+"mm/tck "+" R="+String((double)run_length/(double)encR_sum)+"mm/tck ");
 
         return;
@@ -200,6 +204,7 @@ void ParamCalRunStep() {
             fwall_refdist = fwall_dist;
             fwall_refticks_Lwheel = encoderL.count;
             fwall_refticks_Rwheel = encoderR.count;
+            logWrite("Stabilised: wall="+String(fwall_dist)+" enc="+String(fwall_refticks_Lwheel)+"/"+String(fwall_refticks_Rwheel));
         }
     }
     

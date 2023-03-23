@@ -47,7 +47,7 @@ void rotationInit(double degrees, double speed) {
     double ticks_to_runL;
     double ticks_to_runR;
 
-    logWrite("rotationInit("+String(degrees)+","+String(speed)+") ##### START");
+    //logWrite("rotationInit("+String(degrees)+","+String(speed)+") ##### START");
 
     // encoder values at initialisation
     start_encvalueL = encoderL.count;
@@ -102,7 +102,7 @@ void rotationInit(double degrees, double speed) {
     debug_nbticksL = 0;
     debug_nbticksR = 0;
     #endif
-    logWrite("rotationInit ##### END");
+    //logWrite("rotationInit ##### END");
 }
 
 //*****************************************************************************
