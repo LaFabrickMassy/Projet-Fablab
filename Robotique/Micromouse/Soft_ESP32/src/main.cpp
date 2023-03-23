@@ -196,41 +196,25 @@ void loop()
         case ROBOT_MODE_TEST_DRIVE:
             switch(current_state) {
                 case ROBOT_STATE_STOP:
+                    testDriveStop();
                     // Stopped, do nothing
                     break;
                 case ROBOT_STATE_CRASH:
-                case ROBOT_STATE_RUN_END:
-                case ROBOT_STATE_ROTATE_END:
-                    #if TRACE_LEVEL >= 2
-                    logWrite("loop: CRASH/END, testDriveStop() == START");
-                    #endif
                     testDriveStop();
-                    #if TRACE_LEVEL >= 2
-                    logWrite("loop: testDriveStop() == END");
-                    #endif
+                    break;
+                case ROBOT_STATE_RUN_END:
+                    testDriveStop();
+                    break;
+                case ROBOT_STATE_ROTATE_END:
+                    testDriveStop();
                     break;
                 case ROBOT_STATE_RUN:
-                    #if TRACE_LEVEL >= 2
-                    logWrite("loop: RUN, testDriveRunStep() == START");
-                    #endif
                     testDriveRunStep();
-                    #if TRACE_LEVEL >= 2
-                    logWrite("loop: testDriveRunStep() == END");
-                    #endif
                     break;
                 case ROBOT_STATE_ROTATE:
-                    #if TRACE_LEVEL >= 2
-                    logWrite("loop: RUN, testDriveRotateStep() == START");
-                    #endif
                     testDriveRotateStep();
-                    #if TRACE_LEVEL >= 2
-                    logWrite("loop: testDriveRotateStep() == END");
-                    #endif
                     break;
                 default:
-                    #if TRACE_LEVEL >= 2
-                    logWrite("loop: Unknown state in mode TEST_DRIVE: "+String(current_state));
-                    #endif
                     break;
             }
             break;
@@ -275,86 +259,4 @@ void loop()
             #endif
             break;
     }
-    #ifdef TO_REMOVE
-    if (current_mode == ROBOT_MODE_TEST_DRIVE) {
-        if (current_state == ROBOT_STATE_RUN) {
-            testDriveRunStep();
-        }
-        else if (current_state == ROBOT_STATE_RUN_END) {
-            #if TRACE_LEVEL >= 2
-            logWrite("loop: RunEnd, testDriveStop() == START");
-            #endif
-            testDriveStop();
-            #if TRACE_LEVEL >= 2
-            logWrite("loop: testDriveStop() == END");
-            #endif
-        }
-        else if (current_state == ROBOT_STATE_ROTATE) {
-            testDriveRotateStep();
-        }
-        else if (current_state == ROBOT_STATE_ROTATE_END) {
-            #if TRACE_LEVEL >= 2
-            logWrite("loop: RotateEnd, testDriveStop() == START");
-            #endif
-            testDriveStop();
-            #if TRACE_LEVEL >= 2
-            logWrite("loop: testDriveStop() == END");
-            #endif
-        }
-    }
-    if (current_mode == ROBOT_MODE_PARAM) {
-        if (current_state == ROBOT_STATE_RUN) {
-            // Run step
-            // RunStep set state to RUN_END when wall 
-            ParamCalRunStep();
-        }
-        else if (current_state == ROBOT_STATE_RUN_END) {
-            // end of run, start rotate
-            // RotateInit set state to ROTATION
-            #if LOG_SENSORPID_ERRORS > 0
-            //logSensorErrorsTab();
-            #endif
-            #if TRACE_LEVEL >= 2
-            logWrite("loop: RunEnd, ParamCalRotateInit() == START");
-            #endif
-            ParamCalRotateInit();
-            current_state = ROBOT_STATE_STOP;
-            #if TRACE_LEVEL >= 2
-            logWrite("loop: ParamCalRotateInit() == END");
-            #endif
-
-        }
-        else if (current_state == ROBOT_STATE_ROTATE) {
-            #ifdef DEBUG
-            debug_nbticksL += (abs(speed_targetL)*0.0033);
-            debug_nbticksR += (abs(speed_targetR)*0.0033);
-            #endif
-            // Rotation step
-            // RotationStep set state to ROTATION_END when target angle reached
-            ParamCalRotateStep();
-        }
-        else if (current_state == ROBOT_STATE_ROTATE_END) {
-            // end of rotation, start run
-            // RunInit set state to RUN
-            #if TRACE_LEVEL >= 2
-            logWrite("loop: RotateEnd, ParamCalRunInit() == START");
-            logRobotState();
-            #endif
-            ParamCalRunInit();
-            #if TRACE_LEVEL >= 2
-            logWrite("loop: ParamCalRunInit() == END");
-            #endif
-        }
-        else if (current_state == ROBOT_STATE_CRASH) {
-            // Crash
-            #if TRACE_LEVEL >= 2
-            logWrite("loop: Crash, ParamCalStop() == START");
-            #endif
-            ParamCalStop();
-            #if TRACE_LEVEL >= 2
-            logWrite("loop: ParamCalStop() == END");
-            #endif
-        }
-    }
-    #endif
 }

@@ -20,7 +20,7 @@
 
 #define SPEED_BASE 0.7
 
-#define STAB_ERRTAB_SIZE 10
+#define STAB_ERRTAB_SIZE 100
 #define DISP_ERRTAB_SIZE 1000
 
 // error tab used to check if stabilised
@@ -148,16 +148,18 @@ void ParamCalRunStep() {
         logWrite("ParamCalRunStep : FWall found");
         current_state = ROBOT_STATE_RUN_END;
 
-        // update encoders parameter values
+        // set final values for encoders resolution evaluation
+        if (fwall_found == 1)
         encL_sum += encoderL.count - fwall_refticks_Lwheel;
         encR_sum += encoderR.count - fwall_refticks_Rwheel;
-        run_length += fwall_dist - fwall_refdist;
-        //notifyClients("{\"trailtext\":\""+String(getParamCalEncoderResolution())+"\"}");
+        run_length += fwall_refdist - fwall_dist;
+        logWrite("Run "+String(fwall_dist - fwall_refdist)+" enc "+String(encoderL.count - fwall_refticks_Lwheel)+"/"+String(encoderR.count - fwall_refticks_Lwheel));
+        logWrite("Encoder resolution : L="+String((double)run_length/(double)encL_sum)+"mm/tck "+" R="+String((double)run_length/(double)encR_sum)+"mm/tck ");
 
         return;
     }
 
-    // Checl wall collision
+    // Check wall collision
     if ( (lwall_dist < WALL_DISTANCE_LMIN) || 
          (rwall_dist < WALL_DISTANCE_LMIN) ) {
         motorSetSpeed(&motorL, 0);
@@ -178,7 +180,7 @@ void ParamCalRunStep() {
     total_error += abs(error);
 
     // Sample errors to draw graph. 0x3FF -> 1 sample per 1024 loops
-    if ((dispErrorsNb < DISP_ERRTAB_SIZE) && ((step & 0x3FF) == 0)) {
+    if ((dispErrorsNb < DISP_ERRTAB_SIZE) && ((step & 0xFF) == 0)) {
         dispErrorsTab[dispErrorsNb] = error;
         dispErrorsNb++;
     }
@@ -191,6 +193,7 @@ void ParamCalRunStep() {
 
     step++;
 
+    // Set values for encoder resolution evaluation
     if (stabilised) {
         if ((fwall_found == 0) && (fwall_dist < 1000)) {
             fwall_found = 1;
@@ -198,14 +201,6 @@ void ParamCalRunStep() {
             fwall_refticks_Lwheel = encoderL.count;
             fwall_refticks_Rwheel = encoderR.count;
         }
-        /*
-        if (fwall_found == 1) {
-            ticks_Lwheel = -encoderL.count - fwall_refticks_Lwheel;
-            ticks_Rwheel =  encoderR.count - fwall_refticks_Rwheel;
-            ticksL_per_mm = 100*(fwall_refdist-fwall_dist) / ticks_Lwheel;
-            ticksR_per_mm = 100*(fwall_refdist-fwall_dist) / ticks_Rwheel;
-        }
-        */
     }
     
 
@@ -396,11 +391,9 @@ String getDispErrorsTab() {
 
     String s;
 
-    logWrite("### getDispErrorsTab START ########################");
     s = "{\"errGraph\":[";
     for (i=0;i<dispErrorsNb-1;i++)
         s += "\""+ String(dispErrorsTab[i])+ "\",";
     s += "\""+ String(dispErrorsTab[i])+ "\"]}";
-    logWrite("### getDispErrorsTab END ########################");
     return s;
 }

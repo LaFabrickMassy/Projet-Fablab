@@ -156,7 +156,7 @@ int rotationStep() {
     else {
         speedL = 0;
     }
-    logWrite("rotationStep() : tL="+String(nbticksL)+" tL_tgt"+String(nbticks_targetL)+" spL="+String(dirL*speedL));
+    //logWrite("rotationStep() : tL="+String(nbticksL)+" tL_tgt"+String(nbticks_targetL)+" spL="+String(dirL*speedL));
 
     if (nbticksR <= 0) {
         speedR = SPEED_MIN;
@@ -178,7 +178,7 @@ int rotationStep() {
         speedR = 0;
     }
 
-    logWrite("rotationStep() : tR="+String(nbticksR)+" tR_tgt"+String(nbticks_targetR)+" spR="+String(dirL*speedR));
+    //logWrite("rotationStep() : tR="+String(nbticksR)+" tR_tgt"+String(nbticks_targetR)+" spR="+String(dirL*speedR));
 
     if (nbticksL >= nbticks_targetL || nbticksR >= nbticks_targetR) {
         motorSetSpeed(&motorL, 0);
