@@ -7,6 +7,7 @@
 //*****************************************************************************
 
 #include <Arduino.h>
+#include <math.h>
 #include "parameters.h"
 #include "motor.h"
 #include "distance_sensor.h"
@@ -28,7 +29,13 @@ double stabErrorsTab[STAB_ERRTAB_SIZE];
 double total_error;
 // error tab used to display error
 double dispErrorsTab[DISP_ERRTAB_SIZE];
+int fwallDistsTab[DISP_ERRTAB_SIZE];
+double encResTab[DISP_ERRTAB_SIZE];
 int dispErrorsNb;
+// sensod stats data
+#define SENSORS_DATA_SIZE 10000
+int sensorsData [SENSORS_DATA_SIZE];
+int sensorsDataIdx = 0;
 
 int step;
 int stabilised;
@@ -76,6 +83,21 @@ void ParamCalInit() {
 
     // reset nb of runs
     nb_runs = 0;
+
+    ParamSensorsStatsInit();
+}
+
+//*****************************************************************************
+//
+//
+//
+//*****************************************************************************
+void ParamSensorsStatsInit() {
+    int i;
+    // reset sensors stats data
+    sensorsDataIdx = 0;
+    for (i=0;i<SENSORS_DATA_SIZE;i++)
+        sensorsData[i] = 0;
 }
 
 //*****************************************************************************
@@ -84,10 +106,10 @@ void ParamCalInit() {
 //
 //*****************************************************************************
 void ParamCalStop() {
+    int i;
     current_state = ROBOT_STATE_STOP;
     motorSetSpeed(&motorL, 0);
     motorSetSpeed(&motorR, 0);
-
 }
 
 //*****************************************************************************
@@ -149,16 +171,16 @@ void ParamCalRunStep() {
         current_state = ROBOT_STATE_RUN_END;
 
         // set final values for encoders resolution evaluation
-        if (fwall_found == 1)
-        encL_sum += encoderL.count - fwall_refticks_Lwheel;
-        encR_sum += encoderR.count - fwall_refticks_Rwheel;
-        run_length += fwall_refdist - fwall_dist;
-        logWrite("Finished: wall="+String(fwall_dist)+" enc="+String(encoderL.count)+"/"+String(encoderR.count));
-        logWrite("Run "+String(fwall_dist - fwall_refdist)+" enc "+String(encoderL.count - fwall_refticks_Lwheel)+"/"+String(encoderR.count - fwall_refticks_Rwheel));
-        logWrite("Encoder resolution : L="+
-            String((double)(fwall_dist - fwall_refdist)/(double)(encoderL.count - fwall_refticks_Lwheel))+"mm/tck R="+
-            String((double)(fwall_dist - fwall_refdist)/(double)(encoderR.count - fwall_refticks_Rwheel))+"mm/tck ");
-        logWrite("Encoder resolution : L="+String((double)run_length/(double)encL_sum)+"mm/tck "+" R="+String((double)run_length/(double)encR_sum)+"mm/tck ");
+        if (fwall_found == 1) {
+            encL_sum += encoderL.count - fwall_refticks_Lwheel;
+            encR_sum += encoderR.count - fwall_refticks_Rwheel;
+            run_length += fwall_refdist - fwall_dist;
+            logWrite("Finished: wall="+String(fwall_dist)+" enc="+String(encoderL.count)+"/"+String(encoderR.count));
+            logWrite("Run "+String(fwall_dist - fwall_refdist)+" enc "+String(encoderL.count - fwall_refticks_Lwheel)+"/"+String(encoderR.count - fwall_refticks_Rwheel));
+            logWrite("Encoder resolution : L="+String(1000.*(double)run_length/(double)encL_sum)+"µm/tck "+" R="+String(1000.*(double)run_length/(double)encR_sum)+"µm/tck ");
+        }
+        else
+            logWrite("Finished not stabilised");
 
         return;
     }
@@ -186,6 +208,14 @@ void ParamCalRunStep() {
     // Sample errors to draw graph. 0x3FF -> 1 sample per 1024 loops
     if ((dispErrorsNb < DISP_ERRTAB_SIZE) && ((step & 0xFF) == 0)) {
         dispErrorsTab[dispErrorsNb] = error;
+        if (fwall_found) {
+            fwallDistsTab[dispErrorsNb] = fwall_dist;
+            encResTab[dispErrorsNb] = (encoderL.count - fwall_refticks_Lwheel);
+        }
+        else {
+            fwallDistsTab[dispErrorsNb] = 1000;
+            encResTab[dispErrorsNb] = 0.0;
+        }
         dispErrorsNb++;
     }
 
@@ -199,7 +229,7 @@ void ParamCalRunStep() {
 
     // Set values for encoder resolution evaluation
     if (stabilised) {
-        if ((fwall_found == 0) && (fwall_dist < 1000)) {
+        if ((fwall_found == 0) && (fwall_dist < 400) && (fwall_dist > 100)) {
             fwall_found = 1;
             fwall_refdist = fwall_dist;
             fwall_refticks_Lwheel = encoderL.count;
@@ -254,6 +284,18 @@ void ParamCalRotateStep() {
         logWrite("ParamCalrotationStep() : done ----------------");
         // target angle reached, stop rotation
         current_state = ROBOT_STATE_ROTATE_END;
+    }
+}
+
+//*****************************************************************************
+//
+//
+//
+//*****************************************************************************
+void sensorsStatsUpdate() {
+    if (sensorsDataIdx < SENSORS_DATA_SIZE -1) {
+        sensorsData[sensorsDataIdx] = distanceSensor3() - distanceSensor1();
+        sensorsDataIdx++;
     }
 }
 
@@ -396,9 +438,49 @@ String getDispErrorsTab() {
 
     String s;
 
-    s = "{\"errGraph\":[";
+    s  = "{\"dataGraph\":{";
+    s += "\"errors\":[";
     for (i=0;i<dispErrorsNb-1;i++)
         s += "\""+ String(dispErrorsTab[i])+ "\",";
-    s += "\""+ String(dispErrorsTab[i])+ "\"]}";
+    s += "\""+ String(dispErrorsTab[i])+ "\"],";
+    s += "\"wall\":[";
+    for (i=0;i<dispErrorsNb-1;i++)
+        s += "\""+ String(fwallDistsTab[i])+ "\",";
+    s += "\""+ String(fwallDistsTab[i])+ "\"],";
+    s += "\"encr\":[";
+    for (i=0;i<dispErrorsNb-1;i++)
+        s += "\""+ String(encResTab[i])+ "\",";
+    s += "\""+ String(encResTab[i])+ "\"]";
+    s += "}}";
     return s;
+}
+
+//********************************************************************
+// 
+//********************************************************************
+void logSensorsStats() {
+    int i;
+    double mean;
+    double var;
+    double sigma;
+
+    if (sensorsDataIdx > 0) {
+        for (i=0;i<sensorsDataIdx;i++)
+            mean += (double)sensorsData[i];
+        mean /= (double)sensorsDataIdx;
+        for (i=0;i<sensorsDataIdx;i++)
+            var += ((double)sensorsData[i]-mean)*((double)sensorsData[i]-mean);
+        var /= (double)sensorsDataIdx;
+    }
+    else {
+        mean = 0.0;
+        var = 0.0;
+    }
+    sigma = sqrt(var);
+
+    logWrite("n="+String(sensorsDataIdx)+
+             "mean: "+String(mean)+
+             "var: "+String(var)+
+             "sigma: "+String(sigma)
+            );
 }

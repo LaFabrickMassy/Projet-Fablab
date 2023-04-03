@@ -48,7 +48,8 @@
 // dist=-26832(76) - EncL=124678/-0.22mm/t - EncR=124407/-0.22mm/t - 
 #define ENCL_RESOL 0.2152103819438874540817144965431
 #define ENCR_RESOL 0.21567918203959584267766283247727
-
+// Sensors stats
+#define SENSORS_STDDEV 2.35 // Standard deviation of e=dL-dR
 
 //* Motors and encoders definitions ***********************
 // DIR1 : yellow 4

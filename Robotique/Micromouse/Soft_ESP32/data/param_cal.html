@@ -279,6 +279,9 @@
 		<div>
 		<canvas id="errorsGraph" ></canvas>
 		</div>
+		<div>
+		<canvas id="errorsGraph" ></canvas>
+		</div>
     </div>
     <script src="/chart.js"></script>
 	<script type = "text/JavaScript">
@@ -299,16 +302,29 @@
 				datasets : [
 						{
 							data : [0,0],
-							//label : "Errors",
-							//borderColor : "#3cba9f",
+							label : "Errors",
+							borderColor : "#3cba9f",
+							//fill : false,
+							tension : 0
+						},
+						{
+							data : [0,0],
+							label : "Wall distance",
+							borderColor : "#ffcc00",
 							//fill : false,
 							tension : 0
 						}]
 			},
 			options : {
-				title : {
-					display : true,
-					text : 'Chart JS Line Chart Example'
+				scales: {
+					e: {
+						type: 'linear',
+						position: 'left',
+					},
+					w: {
+						type: 'linear',
+						position: 'right',
+					}
 				}
 			}
 		});
@@ -381,11 +397,9 @@
 				if (key == "err"){
 					document.getElementById("total_error").innerHTML = val;
 				}
-				if (key == "errGraph") {
-					console.log("call errorsGraph("+val+")");
-					console.log(typeof(val));
-					console.log(typeof(val[0]));
-					errorsGraph(val);
+				if (key == "dataGraph") {
+					console.log("call dataGraph("+val+")");
+					dataGraph(val);
 				}
 			}
 		}
@@ -495,41 +509,66 @@
 			});
 		}
 
-		function errorsGraph(errorsStr) {
-			console.log("errorsGraph("+errorsStr+")");
+		function dataGraph(data) {
+			//console.log("dataGraph("+data+")");
 			var i = 0;
 			var labels = [];
 			var errors = [];
+			var wall = [];
+			var encr = [];
 			
-			for (i = 0; i<errorsStr.length;i++) {
-				e = errorsStr[i]
-				console.log(e);
-				console.log(parseFloat(e));
+			for (i = 0; i<data.errors.length;i++) {
+				e = data.errors[i]
 				errors.push(parseFloat(e));
+				e = data.wall[i]
+				wall.push(parseFloat(e));
+				e = data.encr[i]
+				encr.push(parseFloat(e));
 				labels.push(i);
-				i = i+1;
 			}
+
 			console.log("Modified ---");
 			console.log(errors);
+			console.log(wall);
 			if (chart !== undefined)
 				chart.destroy()
 			chart = new Chart(canvas, {
 				type : 'line',
 				data : {
 					labels : labels,
-					datasets : [
-							{
-								data : errors,
-								label : "Errors",
-								borderColor : "#3cba9f",
-								//fill : false,
-								tension : 0
-							}]
+					datasets : [ {
+						data : errors,
+						label : "Errors",
+						borderColor : "#3cba9f",
+						yAxisID: 'e',
+						//fill : false,
+						tension : 0
+					},{
+						data : wall,
+						label : "Wall distance",
+						borderColor : "#ffcc00",
+						yAxisID: 'w',
+						//fill : false,
+						tension : 0
+					},{
+						data : encr,
+						label : "enc resol",
+						borderColor : "#ccFF00",
+						yAxisID: 'w',
+						//fill : false,
+						tension : 0
+					}]
 				},
 				options : {
-					title : {
-						display : true,
-						text : 'Chart JS Line Chart Example'
+					scales: {
+						e: {
+							type: 'linear',
+							position: 'left',
+						},
+						w: {
+							type: 'linear',
+							position: 'right',
+						}
 					}
 				}
 			});

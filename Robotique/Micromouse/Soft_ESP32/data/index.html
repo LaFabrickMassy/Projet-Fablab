@@ -42,6 +42,7 @@
 			console.log("function initButton");
 			document.getElementById('but_menu_td').addEventListener('click', click_test_drive);
 			document.getElementById('but_menu_pcal').addEventListener('click', click_param_cal);
+			document.getElementById('but_menu_estats').addEventListener('click', click_enc_stats);
 		}
 
 		function click_test_drive(){
@@ -54,6 +55,12 @@
 			console.log('click_param_cal');
 			websocket.send('IDX_PC');
 			window.open("param_cal.html", "_self");
+		}
+
+		function click_enc_stats(){
+			console.log('click_enc_stats');
+			websocket.send('IDX_ES');
+			window.open("enc_stats.html", "_self");
 		}
 
 	</script>

@@ -20,6 +20,7 @@
 JSONVar RobotStatus;
 
 /* Put IP Address details */
+#define WIFI_CHANNEL 8
 IPAddress local_ip(192,168,4,1);
 IPAddress gateway(192,168,4,1);
 IPAddress subnet(255,255,255,0);
@@ -42,7 +43,7 @@ int pcSelParamMode = PC_SELPARAMMODE_KP;
 //********************************************************************
 void initWiFi() {
     #ifdef WIFI_MODE_AP
-    if (WiFi.softAP(ssid, password))
+    if (WiFi.softAP(ssid, password, WIFI_CHANNEL))
     {
 		logWrite("*******************************");	
         logWrite("Wifi AP launched");
@@ -260,6 +261,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
             }
             else if (message == "PC_start") {
                 #if TRACE_LEVEL >= 2
+                logSensorsStats();
                 logWrite("WS: ParamCalRunInit() === START");
                 logRobotState();
                 #endif
@@ -326,7 +328,8 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
                     pidSensors_ki += 0.01;
                 else
                     pidSensors_kp += 0.01;
-                notifyClients(getPIDStatus());            
+                notifyClients(getPIDStatus());     
+                logWrite(getPIDStatus());
             }
             else if (message == "PC_+2") {
                 if (pcSelParamMode == PC_SELPARAMMODE_KD)
@@ -336,6 +339,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
                 else
                     pidSensors_kp += 0.001;
                 notifyClients(getPIDStatus());            
+                logWrite(getPIDStatus());
             }
             else if (message == "PC_+1") {
                 if (pcSelParamMode == PC_SELPARAMMODE_KD)
@@ -345,6 +349,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
                 else
                     pidSensors_kp += 0.0001;
                 notifyClients(getPIDStatus());            
+                logWrite(getPIDStatus());
             }
             else if (message == "PC_-3") {
                 if (pcSelParamMode == PC_SELPARAMMODE_KD)
@@ -354,6 +359,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
                 else
                     pidSensors_kp -= 0.01;
                 notifyClients(getPIDStatus());            
+                logWrite(getPIDStatus());
             }
             else if (message == "PC_-2") {
                 if (pcSelParamMode == PC_SELPARAMMODE_KD)
@@ -363,6 +369,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
                 else
                     pidSensors_kp -= 0.001;
                 notifyClients(getPIDStatus());            
+                logWrite(getPIDStatus());
             }
             else if (message == "PC_-1") {
                 if (pcSelParamMode == PC_SELPARAMMODE_KD)
@@ -372,6 +379,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
                 else
                     pidSensors_kp -= 0.0001;
                 notifyClients(getPIDStatus());            
+                logWrite(getPIDStatus());
             }
             else {
                 logWrite("WS: command \'"+message+"\' available only in PC mode");

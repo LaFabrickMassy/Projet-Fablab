@@ -47,6 +47,7 @@ double mov_h;
 long millis_count_status;
 long millis_count_mode;
 long millis_current;
+long loops_count;
 
 // Initialize SPIFFS
 void initFS() {
@@ -142,8 +143,16 @@ void loop()
 {
     millis_current = millis();
 
-    if (millis_current - millis_count_status > 5000) {
-        millis_count_status = millis_current;        
+    if (millis_current - millis_count_status > 100) {
+        loops_count ++;
+        millis_count_status = millis_current;
+        if ((current_mode == ROBOT_MODE_PARAM) && (current_state == ROBOT_STATE_STOP)) {
+            sensorsStatsUpdate();
+        }
+    }
+
+    if (loops_count > 50) {
+        loops_count -= 50;                
 
         //logWrite("Loop ----------------");
         logRobotState();
@@ -151,6 +160,7 @@ void loop()
             notifyClients(getRobotStatus());
         if (current_mode == ROBOT_MODE_PARAM)
             notifyClients(getPIDStatus());
+            logSensorsStats();
             //notifyClients("{\"trailtext\":\""+String(current_mode)+"/"+String(current_state)+" "+debug_message+"\"}");
         #ifdef DEBUG_SENSORS
         // print measured distance for sensor 1
@@ -189,6 +199,7 @@ void loop()
 
         #endif // DEBUG_SENSORS
     }
+
 
     switch(current_mode) {
         case ROBOT_MODE_STOP:
@@ -232,6 +243,7 @@ void loop()
                     break;
                 case ROBOT_STATE_RUN_END:
                     notifyClients(getDispErrorsTab());
+                    logSensorsStats();
                     ParamCalRotateInit();
                     current_state = ROBOT_STATE_ROTATE;
                     break;
@@ -243,6 +255,7 @@ void loop()
                         ParamCalRunInit();
                     }
                     else {
+                        ParamSensorsStatsInit();
                         current_state = ROBOT_STATE_STOP;
                     }
                     break;
