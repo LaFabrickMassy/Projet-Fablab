@@ -8,20 +8,22 @@ typedef struct {
     int pinB;
     int flag_reverse;
 	long count;
+    long last_count;
     long last_micros;
     long elapsed_micros;
+    double speed;
 }
 encoder_t;
 
 extern encoder_t encoderL;
-extern long lastCountL;
 extern encoder_t encoderR;
-extern long lastCountR;
 
 void setupEncoderL(int pinA, int pinB, int flag_reverse);
 void setupEncoderR(int pinA, int pinB, int flag_reverse);
 void resetEncoderL();
 void resetEncoderR();
-void computeMove();
-
+long countEncoderL();
+long countEncoderR();
+void tachometerInit();
+void IRAM_ATTR tachometer();
 #endif

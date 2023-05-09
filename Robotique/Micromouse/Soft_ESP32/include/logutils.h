@@ -7,6 +7,5 @@ int logOpen();
 void logWrite(String s);
 void logWriteln(String s);
 void dumpToSerial();
-void logRobotState();
 
 #endif

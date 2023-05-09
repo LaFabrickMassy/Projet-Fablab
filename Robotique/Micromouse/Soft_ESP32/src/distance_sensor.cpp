@@ -16,7 +16,6 @@
 //********************************************************************
 
 #include <Arduino.h>
-#include "parameters.h"
 #include "distance_sensor.h"
 
 //********************************************************************
@@ -28,11 +27,15 @@ sensor_t sensor1;
 // ISR for sensor 1 : read pulse duration
 void IRAM_ATTR isr_sensor1() {
     sensor1.count++;
+
 	if (digitalRead(sensor1.pin))
+        // rising edge : begining of measure
 		sensor1.rising_time = micros();
 	else
 	{
+        // falling edge : end of measure
 		sensor1.duration = micros() - sensor1.rising_time;
+        sensor1.newvalue = 1;
 	}
 }
 
@@ -45,19 +48,29 @@ void setupSensor1(int pin) {
 	sensor1.pin = pin;
 	sensor1.rising_time = 0;
 	sensor1.duration = 0;
+    sensor1.newvalue = 0;
 	pinMode(pin, INPUT_PULLDOWN);
 	attachInterrupt(pin, isr_sensor1, CHANGE);
 }
 
 //********************************************************************
 // Read measured distance of sensor 1
+//********************************************************************
 long distanceSensor1() {
+    sensor1.newvalue = 0;
 	if(sensor1.duration > 1850)
 		return SENSOR_MAX;
 	else if(sensor1.duration < 1000)
 		return 0;
 	else
-		return (sensor1.duration-1000)*3/4;
+		return (long)(((double)sensor1.duration-1000.)*3./4.);
+}
+
+//********************************************************************
+//
+//********************************************************************
+void resetSensor1() {
+    sensor1.newvalue = 0;
 }
 
 #if NB_OF_SENSORS >= 2
@@ -74,6 +87,7 @@ void IRAM_ATTR isr_sensor2() {
 	else
 	{
 		sensor2.duration = micros() - sensor2.rising_time;
+        sensor2.newvalue = 1;
 	}
 }
 
@@ -82,20 +96,29 @@ void setupSensor2(int pin) {
 	sensor2.pin = pin;
 	sensor2.rising_time = 0;
 	sensor2.duration = 0;
+    sensor2.newvalue = 0;
 	pinMode(pin, INPUT_PULLDOWN);
 	attachInterrupt(pin, isr_sensor2, CHANGE);
 }
 
 //********************************************************************
 long distanceSensor2() {
+    sensor2.newvalue = 0;
 	if(sensor2.duration > 1850)
 		return SENSOR_MAX;
 	else if(sensor2.duration < 1000)
 		return 0;
 	else
-		return (sensor2.duration-1000)*3/4;
+		return (long)(((double)sensor2.duration-1000.)*3./4.);
 }
 #endif
+
+//********************************************************************
+//
+//********************************************************************
+void resetSensor2() {
+    sensor2.newvalue = 0;
+}
 
 #if NB_OF_SENSORS >= 3
 //********************************************************************
@@ -111,6 +134,7 @@ void IRAM_ATTR isr_sensor3() {
 	else
 	{
 		sensor3.duration = micros() - sensor3.rising_time;
+        sensor3.newvalue = 1;
 	}
 }
 
@@ -119,20 +143,29 @@ void setupSensor3(int pin) {
 	sensor3.pin = pin;
 	sensor3.rising_time = 0;
 	sensor3.duration = 0;
+    sensor3.newvalue = 0;
 	pinMode(pin, INPUT_PULLDOWN);
 	attachInterrupt(pin, isr_sensor3, CHANGE);
 }
 
 //********************************************************************
 long distanceSensor3() {
+    sensor3.newvalue = 0;
 	if(sensor3.duration > 1850)
 		return SENSOR_MAX;
 	else if(sensor3.duration < 1000)
 		return 0;
 	else
-		return (sensor3.duration-1000)*3/4;
+		return (long)(((double)sensor3.duration-1000.)*3./4.);
 }
 #endif
+
+//********************************************************************
+//
+//********************************************************************
+void resetSensor3() {
+    sensor3.newvalue = 0;
+}
 
 #if NB_OF_SENSORS >= 4
 //********************************************************************
@@ -147,6 +180,7 @@ void IRAM_ATTR isr_sensor4() {
 	else
 	{
 		sensor4.duration = micros() - sensor4.rising_time;
+        sensor4.newvalue = 1;
 	}
 }
 
@@ -155,19 +189,29 @@ void setupSensor4(int pin) {
 	sensor4.pin = pin;
 	sensor4.rising_time = 0;
 	sensor4.duration = 0;
+    sensor4.newvalue = 0;
 	pinMode(pin, INPUT_PULLDOWN);
 	attachInterrupt(pin, isr_sensor4, CHANGE);
 }
 
 //********************************************************************
 long distanceSensor4() {
+    sensor4.newvalue = 0;
 	if(sensor4.duration > 1850)
 		return SENSOR_MAX;
 	else if(sensor4.duration < 1000)
 		return 0;
 	else
-		return (sensor4.duration-1000)*3/4;
+		return (long)(((double)sensor4.duration-1000.)*3./4.);
 }
+
+//********************************************************************
+//
+//********************************************************************
+void resetSensor4() {
+    sensor4.newvalue = 0;
+}
+
 #endif
 
 #if NB_OF_SENSORS >= 5
@@ -183,6 +227,7 @@ void IRAM_ATTR isr_sensor5() {
 	else
 	{
 		sensor5.duration = micros() - sensor5.rising_time;
+        sensor5.newvalue = 1;
 	}
 }
 
@@ -191,17 +236,27 @@ void setupSensor5(int pin) {
 	sensor5.pin = pin;
 	sensor5.rising_time = 0;
 	sensor5.duration = 0;
+    sensor5.newvalue = 0;
 	pinMode(pin, INPUT_PULLDOWN);
 	attachInterrupt(pin, isr_sensor5, CHANGE);
 }
 
 //********************************************************************
 long distanceSensor5() {
+    sensor5.newvalue = 0;
 	if(sensor5.duration > 1850)
 		return SENSOR_MAX;
 	else if(sensor5.duration < 1000)
 		return 0;
 	else
-		return (sensor5.duration-1000)*3/4;
+		return (long)(((double)sensor5.duration-1000.)*3./4.);
 }
+
+//********************************************************************
+//
+//********************************************************************
+void resetSensor5() {
+    sensor5.newvalue = 0;
+}
+
 #endif

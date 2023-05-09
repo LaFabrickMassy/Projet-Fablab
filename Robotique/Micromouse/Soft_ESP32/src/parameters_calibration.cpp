@@ -17,13 +17,22 @@
 #include "webserver.h"
 #include "logutils.h"
 #include "parameters_calibration.h"
+#include "robot.h"
+#include "maze.h"
 #include "micromouse.h"
 
-#define SPEED_BASE 0.7
-
-#define STAB_ERRTAB_SIZE 100
+#define STAB_ERRTAB_SIZE 5
 #define DISP_ERRTAB_SIZE 1000
 
+#define ENCODER_RESOLUTION_MEASURE 0
+
+// transition state
+int pc_state;
+
+// error buffer to compute smoothed error
+#define ERRBUF_SIZE 1
+int errorBufferNb;
+double errorBuffer[ERRBUF_SIZE];
 // error tab used to check if stabilised
 double stabErrorsTab[STAB_ERRTAB_SIZE];
 double total_error;
@@ -32,7 +41,7 @@ double dispErrorsTab[DISP_ERRTAB_SIZE];
 int fwallDistsTab[DISP_ERRTAB_SIZE];
 double encResTab[DISP_ERRTAB_SIZE];
 int dispErrorsNb;
-// sensod stats data
+// sensor stats data
 #define SENSORS_DATA_SIZE 10000
 int sensorsData [SENSORS_DATA_SIZE];
 int sensorsDataIdx = 0;
@@ -40,7 +49,8 @@ int sensorsDataIdx = 0;
 int step;
 int stabilised;
 int fwall_found;
-int pcFlagAuto = 0; // re-run after U-turn if set
+int wall_detection_count; // nb of wall detection after a hole
+int FlagAuto = 0; // re-run after U-turn if set
 
 long ticks_Lwheel;
 long ticks_Rwheel;
@@ -55,6 +65,8 @@ double ticksR_per_mm;
 double lwall_dist;
 double rwall_dist;
 double fwall_dist;
+double swall_dist_sum; // sum of l+r wall distance
+int swall_dist_nb;
 
 // encoder resolution 
 long encL_sum;
@@ -64,18 +76,17 @@ long run_length;
 
 // PID parameters tables
 
+// IHM toggles
+static boolean flagauto;
+static int paramMode;
 
 //*****************************************************************************
 //
 // Initialisation of parameter calibration :
 //
 //*****************************************************************************
-void ParamCalInit() {
-    current_state = ROBOT_STATE_STOP;
-
-    // Init PID table
-    
-
+void paramCalInit() {
+    robot.Stop();
     // Init encoder resolution values
     encL_sum = 0;
     encR_sum = 0;
@@ -84,15 +95,207 @@ void ParamCalInit() {
     // reset nb of runs
     nb_runs = 0;
 
-    ParamSensorsStatsInit();
+    //paramSensorsStatsInit();
 }
+
+//*****************************************************************************
+//
+// 
+//
+//*****************************************************************************
+void paramCalStop() {
+    robot.Stop();
+}
+
+//*****************************************************************************
+//
+// 
+//
+//*****************************************************************************
+void paramCalStep() {
+    switch(pc_state) {
+        case PC_STATE_STOP:
+            robot.Stop();
+            break;
+        case PC_STATE_CRASH:
+            robot.Crash();
+            break;
+        case PC_STATE_RUN:
+            paramCalRunStep();
+            break;
+        case PC_STATE_RUN_END:
+            notifyClients(getDispErrorsTab());
+            //logSensorsStats();
+            paramCalRotateInit();
+            break;
+        case PC_STATE_ROTATE:
+            paramCalRotateStep();
+            break;
+        case PC_STATE_ROTATE_END:
+            if (FlagAuto) {
+                paramCalRunInit();
+            }
+            else {
+                paramSensorsStatsInit();
+                paramCalStop();
+                pc_state = PC_STATE_STOP;
+            }
+            break;
+        default:
+            #if TRACE_LEVEL >= 2
+            logWrite("loop: Unknown state in mode PARAM: "+String(pc_state));
+            #endif
+            break;
+    }
+}
+//*****************************************************************************
+//
+//
+//
+//*****************************************************************************
+void paramCalHandleMessage(String message) {
+    logWrite("WS: Mode PARAM");
+    if (message == "index") {
+        // Set mode to stop
+        paramCalStop();
+        #if TRACE_LEVEL >= 2
+        logWrite("WS: PC Index, ParamCalStop()");
+        logWrite(robot.String_State());
+        #endif
+    }
+    else if (message == "start") {
+        #if TRACE_LEVEL >= 2
+        logSensorsStats();
+        logWrite("WS: ParamCalRunInit() === START");
+        logWrite(robot.String_State());
+        #endif
+        // start PID run
+        paramCalRunInit();
+        #if TRACE_LEVEL >= 2
+        logWrite("WS: ParamCalRunInit() === DONE");
+        logWrite(robot.String_State());
+        #endif
+    }
+    else if (message == "uturn") {
+        #if TRACE_LEVEL >= 2
+        logWrite("WS: ParamCalRotateInit() === START");
+        logWrite(robot.String_State());
+        #endif
+        // start PID run
+        paramCalRotateInit();
+        #if TRACE_LEVEL >= 2
+        logWrite("WS: ParamCalRotateInit() === DONE");
+        logWrite(robot.String_State());
+        #endif
+    }
+    else if (message == "stop") {
+        #if TRACE_LEVEL >= 2
+        logWrite("WS: ParamCalStop() === START");
+        logWrite(robot.String_State());
+        #endif
+        // stop PID run
+        paramCalStop();
+        #if TRACE_LEVEL >= 2
+        logWrite("WS: ParamCalStop() === DONE");
+        logWrite(robot.String_State());
+        #endif
+    }
+    else if (message == "auto_on") {
+        // stop PID run
+        FlagAuto = 1;
+        #if TRACE_LEVEL >= 2
+        logWrite("WS: PC flag_auto set to "+String(FlagAuto)+" =======");
+        logWrite(robot.String_State());
+        #endif
+    }
+    else if (message == "auto_off") {
+        // stop PID run
+        FlagAuto = 0;
+        #if TRACE_LEVEL >= 2
+        logWrite("WS: PC flag_auto set to "+String(FlagAuto)+" =======");
+        logWrite(robot.String_State());
+        #endif
+    }
+    else if (message == "sel_kp") {
+        paramMode = PC_SELPARAMMODE_KP;
+    }
+    else if (message == "sel_ki") {
+        paramMode = PC_SELPARAMMODE_KI;
+    }
+    else if (message == "sel_kd") {
+        paramMode = PC_SELPARAMMODE_KD;
+    }
+    else if (message == "+3") {
+        if (paramMode == PC_SELPARAMMODE_KD)
+            pidSensors_kd += 0.01;
+        else if (paramMode == PC_SELPARAMMODE_KI)
+            pidSensors_ki += 0.01;
+        else
+            pidSensors_kp += 0.01;
+        notifyClients(getPIDStatus());     
+        logWrite(getPIDStatus());
+    }
+    else if (message == "+2") {
+        if (paramMode == PC_SELPARAMMODE_KD)
+            pidSensors_kd += 0.001;
+        else if (paramMode == PC_SELPARAMMODE_KI)
+            pidSensors_ki += 0.001;
+        else
+            pidSensors_kp += 0.001;
+        notifyClients(getPIDStatus());            
+        logWrite(getPIDStatus());
+    }
+    else if (message == "+1") {
+        if (paramMode == PC_SELPARAMMODE_KD)
+            pidSensors_kd += 0.0001;
+        else if (paramMode == PC_SELPARAMMODE_KI)
+            pidSensors_ki += 0.0001;
+        else
+            pidSensors_kp += 0.0001;
+        notifyClients(getPIDStatus());            
+        logWrite(getPIDStatus());
+    }
+    else if (message == "-3") {
+        if (paramMode == PC_SELPARAMMODE_KD)
+            pidSensors_kd -= 0.01;
+        else if (paramMode == PC_SELPARAMMODE_KI)
+            pidSensors_ki -= 0.01;
+        else
+            pidSensors_kp -= 0.01;
+        notifyClients(getPIDStatus());            
+        logWrite(getPIDStatus());
+    }
+    else if (message == "-2") {
+        if (paramMode == PC_SELPARAMMODE_KD)
+            pidSensors_kd -= 0.001;
+        else if (paramMode == PC_SELPARAMMODE_KI)
+            pidSensors_ki -= 0.001;
+        else
+            pidSensors_kp -= 0.001;
+        notifyClients(getPIDStatus());            
+        logWrite(getPIDStatus());
+    }
+    else if (message == "-1") {
+        if (paramMode == PC_SELPARAMMODE_KD)
+            pidSensors_kd -= 0.0001;
+        else if (paramMode == PC_SELPARAMMODE_KI)
+            pidSensors_ki -= 0.0001;
+        else
+            pidSensors_kp -= 0.0001;
+        notifyClients(getPIDStatus());            
+        logWrite(getPIDStatus());
+    }
+    else {
+        logWrite("WS: command \'"+String(message)+"\' not available");
+    }
+}       
 
 //*****************************************************************************
 //
 //
 //
 //*****************************************************************************
-void ParamSensorsStatsInit() {
+void paramSensorsStatsInit() {
     int i;
     // reset sensors stats data
     sensorsDataIdx = 0;
@@ -105,20 +308,14 @@ void ParamSensorsStatsInit() {
 // Initialisation of run
 //
 //*****************************************************************************
-void ParamCalStop() {
+void paramCalRunInit() {
     int i;
-    current_state = ROBOT_STATE_STOP;
-    motorSetSpeed(&motorL, 0);
-    motorSetSpeed(&motorR, 0);
-}
 
-//*****************************************************************************
-//
-// Initialisation of run
-//
-//*****************************************************************************
-void ParamCalRunInit() {
-    int i;
+    // initialise error buffer array to 0
+    for (i=0;i<ERRBUF_SIZE;i++) {
+        errorBuffer[i] = 0.;
+    }
+    errorBufferNb = 0;
 
     // Initialise stabilisation error array to 0
     for (i=0;i<STAB_ERRTAB_SIZE;i++)
@@ -137,9 +334,8 @@ void ParamCalRunInit() {
     initPIDSensors();
     initPIDMotors();
 
-    current_state = ROBOT_STATE_RUN;
-    motorSetSpeed(&motorL, SPEED_BASE);
-    motorSetSpeed(&motorR, SPEED_BASE);
+    pc_state = PC_STATE_RUN;
+    robot.robot_hw.MotorsSetSpeed(MOTOR_CMD_MAX, MOTOR_CMD_MAX);
 }
 
 //*****************************************************************************
@@ -149,27 +345,26 @@ void ParamCalRunInit() {
 // Stop if wall distance is too low
 //
 //*****************************************************************************
-void ParamCalRunStep() {
+void paramCalRunStep() {
 
     double error;
     double u;
     double speed_l, speed_r;
     int i;
 
+    int meanError;
+
     // get wall distance
-    lwall_dist = distanceSensor1();
     fwall_dist = distanceSensor2();
-    rwall_dist = distanceSensor3();
 
     // Check front wall distance
     if ( fwall_dist < WALL_DISTANCE_FMIN ) {
 
         // stop robot and set state
-        motorSetSpeed(&motorL, 0);
-        motorSetSpeed(&motorR, 0);
+        robot.Stop();
         logWrite("ParamCalRunStep : FWall found");
-        current_state = ROBOT_STATE_RUN_END;
 
+        #if ENCODER_RESOLUTION_MEASURE > 0
         // set final values for encoders resolution evaluation
         if (fwall_found == 1) {
             encL_sum += encoderL.count - fwall_refticks_Lwheel;
@@ -181,78 +376,226 @@ void ParamCalRunStep() {
         }
         else
             logWrite("Finished not stabilised");
+        #endif
 
+        pc_state = PC_STATE_RUN_END;
         return;
     }
+
+    // get wall distance
+    if (!sensor1.newvalue && !sensor3.newvalue) {
+        // no updates
+        return;
+    }
+    lwall_dist = distanceSensor1();
+    rwall_dist = distanceSensor3();
 
     // Check wall collision
     if ( (lwall_dist < WALL_DISTANCE_LMIN) || 
          (rwall_dist < WALL_DISTANCE_LMIN) ) {
-        motorSetSpeed(&motorL, 0);
-        motorSetSpeed(&motorR, 0);
+        robot.Crash();
         logWrite("ParamCalRunStep : Wall crash");
-        current_state = ROBOT_STATE_CRASH;
+        pc_state = PC_STATE_CRASH;
         return;
     }
 
-    // compute error
-    error = lwall_dist - rwall_dist;
+    // if not stabilised, use distance sensors
+    if (!stabilised) {
+        // compute error
+        error = lwall_dist - rwall_dist;
 
-    // update error array and compute total error
-    total_error -= stabErrorsTab[0];
-    for (i=0;i<STAB_ERRTAB_SIZE-1;i++)
-        stabErrorsTab[i] = stabErrorsTab[i+1];
-    stabErrorsTab[STAB_ERRTAB_SIZE-1] = abs(error);
-    total_error += abs(error);
+        // smooth error : update error buffer 
+        if (ERRBUF_SIZE > 0) {
+            if (errorBufferNb == 0) {
+                // 1st step, fill errorBuffer with the current error
+                for (i=0;i<ERRBUF_SIZE;i++) {
+                    errorBuffer[i] = error;
+                }
+            }
+            else {
+                meanError -= errorBuffer[0];
+                for (i=0;i<ERRBUF_SIZE-1;i++) {
+                    errorBuffer[i] = errorBuffer[i+1];
+                }
+                errorBuffer[ERRBUF_SIZE-1] += error;
+                meanError += error;
+                error = meanError/(double)ERRBUF_SIZE;
+            }
+        }
 
-    // Sample errors to draw graph. 0x3FF -> 1 sample per 1024 loops
-    if ((dispErrorsNb < DISP_ERRTAB_SIZE) && ((step & 0xFF) == 0)) {
-        dispErrorsTab[dispErrorsNb] = error;
-        if (fwall_found) {
-            fwallDistsTab[dispErrorsNb] = fwall_dist;
-            encResTab[dispErrorsNb] = (encoderL.count - fwall_refticks_Lwheel);
+        // update error array and compute total error
+        total_error -= stabErrorsTab[0];
+        for (i=0;i<STAB_ERRTAB_SIZE-1;i++) {
+            stabErrorsTab[i] = stabErrorsTab[i+1];
+        }
+        stabErrorsTab[STAB_ERRTAB_SIZE-1] = abs(error);
+        total_error += abs(error);
+
+        // Sample errors to draw graph. 0x3FF -> 1 sample per 1024 loops
+        if ((dispErrorsNb < DISP_ERRTAB_SIZE) && ((step & 0) == 0)) {
+            dispErrorsTab[dispErrorsNb] = error;
+            if (fwall_found) {
+                fwallDistsTab[dispErrorsNb] = fwall_dist;
+                encResTab[dispErrorsNb] = (encoderL.count - fwall_refticks_Lwheel);
+            }
+            else {
+                fwallDistsTab[dispErrorsNb] = 1000;
+                encResTab[dispErrorsNb] = 0.0;
+            }
+            dispErrorsNb++;
+        }
+
+        // check if now stabilised
+        if ((step > STAB_ERRTAB_SIZE) && (total_error < STAB_ERRTAB_SIZE*PIDSENSORS_MAX_ERROR) ) {
+            stabilised = 1;
+            total_error = 0;
+            wall_detection_count = 100;
+        }
+
+
+        #if ENCODER_RESOLUTION_MEASURE > 0
+        // Set values for encoder resolution evaluation
+        if (stabilised) {
+            if ((fwall_found == 0) && (fwall_dist < 400) && (fwall_dist > 100)) {
+                fwall_found = 1;
+                fwall_refdist = fwall_dist;
+                fwall_refticks_Lwheel = encoderL.count;
+                fwall_refticks_Rwheel = encoderR.count;
+                //logWrite("Stabilised: wall="+String(fwall_dist)+" enc="+String(fwall_refticks_Lwheel)+"/"+String(fwall_refticks_Rwheel));
+            }
+        }
+        #endif
+
+        // PID
+        u = PIDSensors(error);
+
+        if (u> 0) {
+            speed_l = MOTOR_CMD_MAX * (1-u);
+            speed_r = MOTOR_CMD_MAX;
         }
         else {
-            fwallDistsTab[dispErrorsNb] = 1000;
-            encResTab[dispErrorsNb] = 0.0;
+            speed_l = MOTOR_CMD_MAX;
+            speed_r = MOTOR_CMD_MAX * (1+u);
         }
-        dispErrorsNb++;
+
+        robot.robot_hw.MotorsSetSpeed(speed_l, speed_r);
+
+        step++;
+
     }
-
-    // check if now stabilised
-    if ((step > STAB_ERRTAB_SIZE) && (total_error < STAB_ERRTAB_SIZE*PIDSENSORS_MAX_ERROR) && (stabilised == 0)) {
-        stabilised = 1;
-        total_error = 0;
-    }
-
-    step++;
-
-    // Set values for encoder resolution evaluation
-    if (stabilised) {
-        if ((fwall_found == 0) && (fwall_dist < 400) && (fwall_dist > 100)) {
-            fwall_found = 1;
-            fwall_refdist = fwall_dist;
-            fwall_refticks_Lwheel = encoderL.count;
-            fwall_refticks_Rwheel = encoderR.count;
-            logWrite("Stabilised: wall="+String(fwall_dist)+" enc="+String(fwall_refticks_Lwheel)+"/"+String(fwall_refticks_Rwheel));
-        }
-    }
-    
-
-    // PID
-    u = PIDSensors(error);
-
-    if (u> 0) {
-        speed_l = SPEED_BASE * (1-u);
-        speed_r = SPEED_BASE;
-    }
+    // if stabilised, use encoders when holes
     else {
-        speed_l = SPEED_BASE;
-        speed_r = SPEED_BASE * (1+u);
-    }
 
-    motorSetSpeed(&motorL, speed_l);
-    motorSetSpeed(&motorR, speed_r);
+        // check if between walls
+        if((lwall_dist + rwall_dist) < 2*WALL_DISTANCE_MAX) {
+            // between walls
+            error = lwall_dist - rwall_dist;
+            if (!wall_detection_count) {
+                // 1st detection after a hole
+
+                // reset error buffer
+                if (ERRBUF_SIZE > 0) {
+                    if (errorBufferNb == 0) {
+                        // 1st step, fill errorBuffer with the current error
+                        for (i=0;i<ERRBUF_SIZE;i++) {
+                            errorBuffer[i] = error;
+                        }
+                    }
+                }
+                wall_detection_count = 1;
+                swall_dist_sum = lwall_dist + rwall_dist;
+                swall_dist_nb = 1;
+            }
+            else {
+                wall_detection_count++;
+                swall_dist_sum += lwall_dist + rwall_dist;
+                swall_dist_nb ++;
+                if(wall_detection_count > 5) {
+                    // center using distance sensors
+
+                    // smooth error : update error buffer 
+                    if (ERRBUF_SIZE > 0) {
+                        if (errorBufferNb == 0) {
+                            // 1st step, fill errorBuffer with the current error
+                            for (i=0;i<ERRBUF_SIZE;i++) {
+                                errorBuffer[i] = error;
+                            }
+                        }
+                        else {
+                            meanError -= errorBuffer[0];
+                            for (i=0;i<ERRBUF_SIZE-1;i++) {
+                                errorBuffer[i] = errorBuffer[i+1];
+                            }
+                            errorBuffer[ERRBUF_SIZE-1] += error;
+                            meanError += error;
+                            error = meanError/(double)ERRBUF_SIZE;
+                        }
+                    }
+
+                    // PID
+                    u = PIDSensors(error);
+
+                    if (u> 0) {
+                        speed_l = MOTOR_CMD_MAX * (1-u);
+                        speed_r = MOTOR_CMD_MAX;
+                    }
+                    else {
+                        speed_l = MOTOR_CMD_MAX;
+                        speed_r = MOTOR_CMD_MAX * (1+u);
+                    }
+
+                    robot.robot_hw.MotorsSetSpeed(speed_l, speed_r);
+                }
+            }
+        }
+        else {
+            wall_detection_count = 0;
+
+            if (lwall_dist  < swall_dist_sum/(2.*0.9*swall_dist_nb)) {            
+                // right hole
+                logWrite("Right hole ooooooooooooooooo");
+                error = lwall_dist - swall_dist_sum/(2.*swall_dist_nb);
+
+                u = PIDSensors(error);
+
+                if (u> 0) {
+                    speed_l = MOTOR_CMD_MAX * (1-u);
+                    speed_r = MOTOR_CMD_MAX;
+                }
+                else {
+                    speed_l = MOTOR_CMD_MAX;
+                    speed_r = MOTOR_CMD_MAX * (1+u);
+                }
+
+                robot.robot_hw.MotorsSetSpeed(speed_l, speed_r);
+
+            }
+            else if (rwall_dist  < swall_dist_sum/(2.*0.9*swall_dist_nb)) {            
+                // left hole
+                logWrite("Left hole ooooooooooooooooo");
+                error = - rwall_dist + swall_dist_sum/(2.*swall_dist_nb);
+
+                u = PIDSensors(error);
+
+                if (u> 0) {
+                    speed_l = MOTOR_CMD_MAX * (1-u);
+                    speed_r = MOTOR_CMD_MAX;
+                }
+                else {
+                    speed_l = MOTOR_CMD_MAX;
+                    speed_r = MOTOR_CMD_MAX * (1+u);
+                }
+
+                robot.robot_hw.MotorsSetSpeed(speed_l, speed_r);
+
+            }
+            else {
+                // between two holes, continue straight ahead
+                    robot.robot_hw.MotorsSetSpeed(MOTOR_CMD_MAX, MOTOR_CMD_MAX);
+            }
+        }
+
+    }
 
 }
 
@@ -261,13 +604,13 @@ void ParamCalRunStep() {
 // 
 //
 //*****************************************************************************
-void ParamCalRotateInit() {
+void paramCalRotateInit() {
 
     if (nb_runs & 1)
-        rotationInit(170., 0.5);
+        robot.controller.RotateInit(170., 0.5);
     else
-        rotationInit(-170., 0.5);
-    current_state = ROBOT_STATE_ROTATE;
+        robot.controller.RotateInit(-170., 0.5);
+    pc_state = PC_STATE_ROTATE;
 }
 
 //*****************************************************************************
@@ -275,15 +618,15 @@ void ParamCalRotateInit() {
 // 
 //
 //*****************************************************************************
-void ParamCalRotateStep() {
+void paramCalRotateStep() {
     int status;
 
-    status = rotationStep();
+    status = robot.controller.RotateStep();
 
     if (status) {
         logWrite("ParamCalrotationStep() : done ----------------");
         // target angle reached, stop rotation
-        current_state = ROBOT_STATE_ROTATE_END;
+        pc_state = PC_STATE_ROTATE_END;
     }
 }
 
@@ -308,9 +651,9 @@ String getPIDStatus() {
     String jsonString;
     
     jsonString = "{";
-    jsonString += "\"mode\":\""+String(current_mode)+"\"";
+    jsonString += "\"mode\":\"PC\"";
     jsonString += ",";
-    jsonString += "\"state\":\""+String(current_state)+"\"";
+    jsonString += "\"state\":\""+String(pc_state)+"\"";
     jsonString += ",";
     jsonString += "\"kp\":\""+String(100*pidSensors_kp)+"\"";
     jsonString += ",";
@@ -442,16 +785,20 @@ String getDispErrorsTab() {
     s += "\"errors\":[";
     for (i=0;i<dispErrorsNb-1;i++)
         s += "\""+ String(dispErrorsTab[i])+ "\",";
-    s += "\""+ String(dispErrorsTab[i])+ "\"],";
+    s += "\""+ String(dispErrorsTab[i])+ "\"]";
+    /*
+    s += ",";
     s += "\"wall\":[";
     for (i=0;i<dispErrorsNb-1;i++)
         s += "\""+ String(fwallDistsTab[i])+ "\",";
-    s += "\""+ String(fwallDistsTab[i])+ "\"],";
+    s += "\""+ String(fwallDistsTab[i])+ "\"]";
+    s += ",";
     s += "\"encr\":[";
     for (i=0;i<dispErrorsNb-1;i++)
         s += "\""+ String(encResTab[i])+ "\",";
     s += "\""+ String(encResTab[i])+ "\"]";
-    s += "}}";
+    */
+   s += "}}";
     return s;
 }
 

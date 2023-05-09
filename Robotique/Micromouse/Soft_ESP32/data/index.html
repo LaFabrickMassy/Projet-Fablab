@@ -26,6 +26,7 @@
 
 		function onOpen(event) {
 			console.log('Connection opened');
+			websocket.send("page_index");
 		}
 
 		function onClose(event) {
@@ -42,7 +43,8 @@
 			console.log("function initButton");
 			document.getElementById('but_menu_td').addEventListener('click', click_test_drive);
 			document.getElementById('but_menu_pcal').addEventListener('click', click_param_cal);
-			document.getElementById('but_menu_estats').addEventListener('click', click_enc_stats);
+			document.getElementById('but_menu_explore').addEventListener('click', click_param_explore);
+			//document.getElementById('but_menu_estats').addEventListener('click', click_enc_stats);
 		}
 
 		function click_test_drive(){
@@ -55,6 +57,12 @@
 			console.log('click_param_cal');
 			websocket.send('IDX_PC');
 			window.open("param_cal.html", "_self");
+		}
+
+		function click_param_explore(){
+			console.log('click_param_explore');
+			websocket.send('IDX_EX');
+			window.open("explore.html", "_self");
 		}
 
 		function click_enc_stats(){
@@ -130,6 +138,15 @@
             </div>
             <div class="card">
                 <p><button id="but_menu_pcal" class="button_green">Param calibration</button></p>
+            </div>
+            <div class="card">
+            </div>
+        </div>
+        <div class="card-grid3">
+            <div class="card">
+            </div>
+            <div class="card">
+                <p><button id="but_menu_explore" class="button_green">Explore</button></p>
             </div>
             <div class="card">
             </div>

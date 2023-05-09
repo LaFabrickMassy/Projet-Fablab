@@ -1,8 +1,7 @@
-#include "Arduino.h"
+#include <Arduino.h>
 #include "SPIFFS.h"
 #include "motor.h"
 #include "webserver.h"
-#include "micromouse.h"
 #include "logutils.h"
 
 File logfd;
@@ -60,39 +59,3 @@ void dumpToSerial() {
     logfd = SPIFFS.open(LOGFNAME, FILE_APPEND);
 }
 
-//********************************************************************
-// 
-//********************************************************************
-void logRobotState() {
-
-    String s_mode;      
-    String s_state;
-
-    if (current_mode == ROBOT_MODE_STOP) 
-        s_mode = "STOP";     
-    else if (current_mode == ROBOT_MODE_TEST_DRIVE)
-        s_mode = "Test Drive";
-    else if (current_mode == ROBOT_MODE_PARAM)
-        s_mode = "Parameters Calibration";
-    else
-        s_mode = "UNKNOWN";
-
-    if (current_state == ROBOT_STATE_STOP)
-        s_state = "STOP";
-    else if (current_state == ROBOT_STATE_RUN)
-        s_state = "RUN";
-    else if (current_state == ROBOT_STATE_RUN_END)
-        s_state = "RUN END";
-    else if (current_state == ROBOT_STATE_ROTATE)
-        s_state = "ROTATE";
-    else if (current_state == ROBOT_STATE_ROTATE_END)
-        s_state = "ROTATE END";
-    else if (current_state == ROBOT_STATE_TURN)
-        s_state = "TURN";
-    else if (current_state == ROBOT_STATE_TURN_END)
-        s_state = "TURN END";
-    else if (current_state == ROBOT_STATE_CRASH)
-        s_state = "CRASH";
-
-    logWrite("Mode="+s_mode+" State="+s_state);
-}

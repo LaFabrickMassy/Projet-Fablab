@@ -306,13 +306,14 @@
 							borderColor : "#3cba9f",
 							//fill : false,
 							tension : 0
-						},
+						/*},
 						{
 							data : [0,0],
 							label : "Wall distance",
 							borderColor : "#ffcc00",
 							//fill : false,
 							tension : 0
+						*/
 						}]
 			},
 			options : {
@@ -320,10 +321,11 @@
 					e: {
 						type: 'linear',
 						position: 'left',
-					},
+					/*},
 					w: {
 						type: 'linear',
 						position: 'right',
+					*/
 					}
 				}
 			}
@@ -350,7 +352,8 @@
 
 		function onOpen(event) {
 			console.log('Connection opened');
-			getValues();
+			websocket.send("page_pc");
+
 		}
 
 		function onClose(event) {
@@ -520,10 +523,12 @@
 			for (i = 0; i<data.errors.length;i++) {
 				e = data.errors[i]
 				errors.push(parseFloat(e));
+				/*
 				e = data.wall[i]
 				wall.push(parseFloat(e));
 				e = data.encr[i]
 				encr.push(parseFloat(e));
+				*/
 				labels.push(i);
 			}
 
@@ -543,6 +548,7 @@
 						yAxisID: 'e',
 						//fill : false,
 						tension : 0
+					/*
 					},{
 						data : wall,
 						label : "Wall distance",
@@ -557,6 +563,7 @@
 						yAxisID: 'w',
 						//fill : false,
 						tension : 0
+					*/
 					}]
 				},
 				options : {
@@ -564,10 +571,11 @@
 						e: {
 							type: 'linear',
 							position: 'left',
-						},
+						/*},
 						w: {
 							type: 'linear',
 							position: 'right',
+						*/
 						}
 					}
 				}

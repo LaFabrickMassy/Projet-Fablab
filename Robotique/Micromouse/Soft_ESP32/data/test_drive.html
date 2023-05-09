@@ -3,16 +3,379 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Micromouse simple run</title>
+    <title>Micromouse Test drive</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/png" href="favicon.png">
-    <script type = "text/JavaScript">
+	<style type="text/css">
+		html {
+			font-family: Arial, Helvetica, sans-serif;
+			display: inline-block;
+			text-align: center;
+		}
+		h1 {
+			font-size: 1.8rem;
+			color: white;
+		}
+		p {
+			font-size: 1.4rem;
+		}
+		.topnav {
+			overflow: hidden;
+			background-color: #0A1128;
+		}
+		body {
+			margin: 0;
+		}
+		.button_blue {
+			padding: 15px 30px;
+			font-size: 24px;
+			text-align: center;
+			outline: none;
+			color: #FFF;
+			background-color: #0f8b8d;
+			border: none;
+			border-radius: 5px;
+			-webkit-touch-callout: none;
+			-webkit-user-select: none;
+			-khtml-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+			user-select: none;
+			-webkit-tap-highlight-color: rgba(0,0,0,0);
+		}
+		.button_green {
+			padding: 15px 30px;
+			font-size: 24px;
+			text-align: center;
+			outline: none;
+			color: #FFF;
+			background-color: #00CC00;
+			border: none;
+			border-radius: 5px;
+			-webkit-touch-callout: none;
+			-webkit-user-select: none;
+			-khtml-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+			user-select: none;
+			-webkit-tap-highlight-color: rgba(0,0,0,0);
+		}
+		.button_red {
+			padding: 15px 30px;
+			font-size: 24px;
+			text-align: center;
+			outline: none;
+			color: #fff;
+			background-color: #CC0000;
+			border: none;
+			border-radius: 5px;
+			-webkit-touch-callout: none;
+			-webkit-user-select: none;
+			-khtml-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+			user-select: none;
+			-webkit-tap-highlight-color: rgba(0,0,0,0);
+		}
+		.button_orange {
+			padding: 15px 30px;
+			font-size: 24px;
+			text-align: center;
+			outline: none;
+			color: #fff;
+			background-color: #FF9933;
+			border: none;
+			border-radius: 5px;
+			-webkit-touch-callout: none;
+			-webkit-user-select: none;
+			-khtml-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+			user-select: none;
+			-webkit-tap-highlight-color: rgba(0,0,0,0);
+		}
+		.button_off {
+			padding: 15px 30px;
+			font-size: 24px;
+			text-align: center;
+			outline: none;
+			color: #fff;
+			background-color: #AAAAAA;
+			border: #555555;
+			border-radius: 5px;
+			-webkit-touch-callout: none;
+			-webkit-user-select: none;
+			-khtml-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+			user-select: none;
+			-webkit-tap-highlight-color: rgba(0,0,0,0);
+		}
+		/*.button:hover {background-color: #0f8b8d}*/
+		/*
+		.button:active {
+			 background-color: #0f8b8d;
+			 box-shadow: 2 2px #CDCDCD;
+			 transform: translateY(2px);
+		}
+		*/
+		.content {
+			padding: 30px;
+		}
+		.card-grid2 {
+			max-width: 600px;
+			margin: 0 auto;
+			display: grid;
+			grid-gap: 0rem;
+			grid-template-columns: 1fr 1fr;
+		}
+		.card-grid3 {
+			max-width: 600px;
+			margin: 0 auto;
+			display: grid;
+			grid-gap: 0rem;
+			grid-template-columns: 1fr 1fr 1fr;
+		}
+		.card-grid4 {
+			max-width: 600px;
+			margin: 0 auto;
+			display: grid;
+			grid-gap: 0rem;
+			grid-template-columns: 1fr 1fr 1fr 1fr;
+		}
+		.card-grid5 {
+			max-width: 600px;
+			margin: 0 auto;
+			display: grid;
+			grid-gap: 0rem;
+			grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+		}
+		.card {
+			background-color: white;
+		}
+		.card-title {
+			font-size: 1.2rem;
+			font-weight: bold;
+			color: #034078
+		}
+		.state {
+			font-size: 1.2rem;
+			color:#1282A2;
+		}
+		.slider {
+			-webkit-appearance: none;
+			margin: 0 auto;
+			width: 100%;
+			height: 15px;
+			border-radius: 10px;
+			background: #FFD65C;
+			outline: none;
+		}
+		.slider::-webkit-slider-thumb {
+			-webkit-appearance: none;
+			appearance: none;
+			width: 30px;
+			height: 30px;
+			border-radius: 50%;
+			background: #034078;
+			cursor: pointer;
+		}
+		.slider::-moz-range-thumb {
+			width: 30px;
+			height: 30px;
+			border-radius: 50% ;
+			background: #034078;
+			cursor: pointer;
+		}
+		.switch {
+			padding-left: 5%;
+			padding-right: 5%;
+		}
+		table, th,td {
+			border 0px;
+		}
+		table {
+			font-size: 1.2rem;
+			color:#1282A2;
+			max-width: 600px;
+			border-collapse: collapse;
+			width: 100%;
+			margin: 0 auto;
+		}
+
+	</style>
+</head>
+<body>
+    <div class="topnav">
+        <h1>Micromouse Test drive</h1>
+    </div>
+    <div class="content">
+        <div class="card-grid3">
+            <div class="card">
+                <p><button id="but_start" class="button_green">START</button></p>
+            </div>
+            <div class="card">
+            </div>
+            <div class="card">
+                <p><button id="but_stop" class="button_red">STOP</button></p>
+            </div>
+        </div>
+        <div class="card-grid5">
+            <div class="card">
+                <p><button class="button_blue">C</button></p>
+            </div>
+            <div class="card">
+                <p><button class="button_blue">Sp</button></p>
+            </div>
+            <div class="card">
+                <p><button id="but_sel_kp" class="button_green">kP</button></p>
+            </div>
+            <div class="card">
+                <p><button id="but_sel_ki" class="button_off">kI</button></p>
+            </div>
+            <div class="card">
+                <p><button id="but_sel_kd" class="button_off">kD</button></p>
+            </div>
+        </div>
+        <div class="card-grid5">
+            <div class="card">
+                <p><button id="but_c+" class="button_green">+0.01</button></p>
+            </div>
+            <div class="card">
+                <p><button id="but_s+10" class="button_green">+10</button></p>
+            </div>
+            <div class="card">
+                <p><button id="but_+3" class="button_green">+1</button></p>
+            </div>
+            <div class="card">
+                <p><button id="but_+2" class="button_green">+0.1</button></p>
+            </div>
+            <div class="card">
+                <p><button id="but_+1" class="button_green">+0.01</button></p>
+            </div>
+        </div>
+        <div class="card-grid5">
+            <div class="card">
+                <p><button id="but_c-" class="button_green">-0.01</button></p>
+            </div>
+            <div class="card">
+                <p><button id="but_s-10" class="button_green">-10</button></p>
+            </div>
+            <div class="card">
+                <p><button id="but_-3" class="button_green">-1</button></p>
+            </div>
+            <div class="card">
+                <p><button id="but_-2" class="button_green">-0.1</button></p>
+            </div>
+            <div class="card">
+                <p><button id="but_-1" class="button_green">-0.01</button></p>
+            </div>
+        </div>
+
+		<div><table>
+			<tr>
+				<td>kP(x100)=<span id="kp"></span></td>
+				<td>kI(x100)=<span id="ki"></span></td>
+				<td>kD(x100)=<span id="kd"></span></td>
+			</tr>
+		</table></div>
+		<br>
+		<div><table>
+			<tr>
+				<td>Speed L=<span id="mean_speedL"></span>/<span id="target_speedL"></span></td>
+				<td>Speed L=<span id="mean_speedR"></span>/<span id="target_speedR"></span></td>
+			</tr>
+			<tr>
+				<td>cmd R=<span id="cmd_motorL"></span></td>
+				<td>cmd L=<span id="cmd_motorR"></span></td>
+			</tr>
+		</table></div>
+        <div class="card-grid3">
+            <div class="card">
+                <p><button id="but_auto" class="button_off">Auto</button></p>
+            </div>
+            <div class="card">
+            </div>
+            <div class="card">
+                <p><button id="but_index" class="button_orange">Index</button></p>
+            </div>
+        </div>
+		<div>
+		<canvas id="errorsGraph" ></canvas>
+		</div>
+        <div class="card-grid3">
+            <div class="card">
+                <p><span id="nb_samples"></span></p>
+            </div>
+            <div class="card">
+            </div>
+            <div class="card">
+            </div>
+        </div>
+    </div>
+    <script src="/chart.js"></script>
+	<script type = "text/JavaScript">
 		var gateway = `ws://${window.location.hostname}/ws`;
 		var websocket;
+		var trailtext = "";
 		window.addEventListener('load', onLoad);
+		var mode_auto = 0;
+		const selMode_kp = 0;
+		const selMode_ki = 1;
+		const selMode_kd = 2;
+		var selMode = selMode_kp;
+		canvas = document.getElementById("errorsGraph")
+		chart = new Chart(canvas, {
+			type : 'line',
+			data : {
+				labels : [0,1],
+					datasets : [ {
+						data : [0,0],
+						label : "speedL",
+						borderColor : "#3cba9f",
+						yAxisID: 'e',
+						//fill : false,
+						tension : 0
+					},{
+						data : [0,0],
+						label : "speedR",
+						borderColor : "#ccff00",
+						yAxisID: 'e',
+						//fill : false,
+						tension : 0
+					},{
+						data : [0,0],
+						label : "cmdL",
+						borderColor : "#9f3cba",
+						yAxisID: 'w',
+						//fill : false,
+						tension : 0
+					},{
+						data : [0,0],
+						label : "cmdR",
+						borderColor : "#ff00cc",
+						yAxisID: 'w',
+						//fill : false,
+						tension : 0
+					}]
+			},
+			options : {
+				scales: {
+					e: {
+						type: 'linear',
+						position: 'left',
+					},
+					w: {
+						type: 'linear',
+						position: 'right',
+					}
+				}
+			}
+		});
+		
 
 		function onLoad(event) {
-			console.log('onLoad function');
+			console.log('onLoad TD function');
 			initWebSocket();
 			initButton();
 		}
@@ -31,7 +394,7 @@
 
 		function onOpen(event) {
 			console.log('Connection opened');
-			getValues();
+			websocket.send("page_td");
 		}
 
 		function onClose(event) {
@@ -40,374 +403,268 @@
 		}
 
 		function onMessage(event) {
-			var speed;
-			var turn;
-			var pos_x;
-			var pos_y;
-			var heading;
-			var enc_L;
-			var enc_R;
-			var sens_L;
-			var sens_F;
-			var sens_R;
-			
+
+			console.log("onMessage");
 			console.log(event.data);
+
+			// console.log(event.data);
 			var myObj = JSON.parse(event.data);
 			var keys = Object.keys(myObj);
+			const allowed_keys = ["mean_speedL", "mean_speedR", "target_speedL", "target_speedR", 
+				"cmd_motorL", "cmd_motorR", "kp", "ki", "kd"];	
+			
+
 
 			for (var i = 0; i < keys.length; i++){
 				var key = keys[i];
-				if (key == "speed"){
-					speed = myObj[key];
-					document.getElementById("speed").innerHTML = speed;
+				val = myObj[key];
+				if (key == "controller_data") {
+					console.log("call dataGraph("+val+")");
+					dataGraph(val);
 				}
-				if (key == "turn"){
-					turn = myObj[key];
-					document.getElementById("turn").innerHTML = turn;
+				else if (allowed_keys.indexOf(key) > -1) {
+					document.getElementById(key).innerHTML = val;
 				}
-				if (key == "x"){
-					pos_x = myObj[key];
-					document.getElementById("pos_x").innerHTML = "x: "+pos_x;
+				else if (key == "log") {
+					;
 				}
-				if (key == "y"){
-					pos_y = myObj[key];
-					document.getElementById("pos_y").innerHTML = "y: "+pos_y;
+				else {
+					console.log("!!!! unknown key "+key)
 				}
-				if (key == "h"){
-					heading = myObj[key];
-					document.getElementById("heading").innerHTML = "h: "+heading;
+				/*
+				if (key == "kp") {
+					document.getElementById("val_"+key).innerHTML = val;
 				}
-				if (key == "eL"){
-					enc_L = myObj[key];
-					document.getElementById("enc_L").innerHTML = "EncL: "+enc_L;
+				if (key == "ki") {
+					document.getElementById("val_"+key).innerHTML = val;
 				}
-				if (key == "eR"){
-					enc_R = myObj[key];
-					document.getElementById("enc_R").innerHTML = "EncR: "+enc_R;
+				if (key == "kd") {
+					document.getElementById("val_"+key).innerHTML = val;
 				}
 				if (key == "sens_L"){
-					sens_L = myObj[key];
-					document.getElementById("sens_L").innerHTML = "dL: <br>"+sens_L;
+					document.getElementById("sens_L").innerHTML = val;
 				}
 				if (key == "sens_F"){
-					sens_F = myObj[key];
-					document.getElementById("sens_F").innerHTML = "dF: <br>"+sens_F;
+					document.getElementById("sens_F").innerHTML = val;
 				}
 				if (key == "sens_R"){
-					sens_R = myObj[key];
-					document.getElementById("sens_R").innerHTML = "dR: <br>"+sens_R;
+					document.getElementById("sens_R").innerHTML = val;
 				}
+				if (key == "ticks_L"){
+					document.getElementById("ticks_L").innerHTML = val;
+				}
+				if (key == "ticks_R"){
+					document.getElementById("ticks_R").innerHTML = val;
+				}
+				if (key == "err"){
+					document.getElementById("total_error").innerHTML = val;
+				}
+				if (key == "mean_speedL"){
+					document.getElementById("mean_speedL").innerHTML = val;
+				}
+				if (key == "mean_speedR"){
+					document.getElementById("mean_speedR").innerHTML = val;
+				}
+				*/
 			}
 		}
 
 		function initButton() {
 			console.log("function initButton");
-			document.getElementById('butt_rccw').addEventListener('click', click_butt_rccw);
-			document.getElementById('butt_rcw').addEventListener('click', click_butt_rcw);
-			document.getElementById('butt_run').addEventListener('click', click_butt_run);
-			document.getElementById('butt_up').addEventListener('click', click_butt_up);
-			document.getElementById('butt_down').addEventListener('click', click_butt_down);
-			document.getElementById('butt_left').addEventListener('click', click_butt_left);
-			document.getElementById('butt_right').addEventListener('click', click_butt_right);
-			document.getElementById('butt_stop').addEventListener('click', click_butt_stop);
-			document.getElementById('butt_home').addEventListener('click', click_butt_home);
-			document.getElementById('butt_index').addEventListener('click', click_butt_index);
+			document.getElementById('but_start').addEventListener('click', (e) => {
+				console.log('button START');
+				websocket.send("start");
+			});
+			document.getElementById('but_stop').addEventListener('click', (e) => {
+				console.log('button STOP');
+				websocket.send("stop");
+			});
+			document.getElementById('but_index').addEventListener('click', (e) => {
+				console.log('button HOME');
+				window.open("/index.html", "_self");
+				websocket.send("home");
+			});
+			document.getElementById('but_auto').addEventListener('click', (e) => {
+				console.log('button AUTO');
+				if (mode_auto == 1) {
+					console.log('mode AUTO disabled');
+					mode_auto = 0;
+					document.getElementById('but_auto').classList.add('button_off');
+					document.getElementById('but_auto').classList.remove('button_green');
+					websocket.send("auto_off");
+				}
+				else {
+					console.log('mode AUTO activated');
+					mode_auto = 1;
+					document.getElementById('but_auto').classList.add('button_green');
+					document.getElementById('but_auto').classList.remove('button_off');
+					websocket.send("auto_on");
+				}
+			});
+
+			document.getElementById('but_sel_kp').addEventListener('click', (e) => {
+				console.log('button kP');
+				selMode = selMode_kp;
+				document.getElementById('but_sel_kp').classList.add('button_green');
+				document.getElementById('but_sel_kp').classList.remove('button_off');
+				document.getElementById('but_sel_ki').classList.add('button_off');
+				document.getElementById('but_sel_ki').classList.remove('button_green');
+				document.getElementById('but_sel_kd').classList.add('button_off');
+				document.getElementById('but_sel_kd').classList.remove('button_green');
+				websocket.send("sel_kp");
+			});
+
+
+			document.getElementById('but_sel_ki').addEventListener('click', (e) => {
+				console.log('button kI');
+				selMode = selMode_kp;
+				document.getElementById('but_sel_ki').classList.add('button_green');
+				document.getElementById('but_sel_ki').classList.remove('button_off');
+				document.getElementById('but_sel_kp').classList.add('button_off');
+				document.getElementById('but_sel_kp').classList.remove('button_green');
+				document.getElementById('but_sel_kd').classList.add('button_off');
+				document.getElementById('but_sel_kd').classList.remove('button_green');
+				websocket.send("sel_ki");
+			});
+
+			document.getElementById('but_sel_kd').addEventListener('click', (e) => {
+				console.log('button kD');
+				selMode = selMode_kp;
+				document.getElementById('but_sel_kd').classList.add('button_green');
+				document.getElementById('but_sel_kd').classList.remove('button_off');
+				document.getElementById('but_sel_kp').classList.add('button_off');
+				document.getElementById('but_sel_kp').classList.remove('button_green');
+				document.getElementById('but_sel_ki').classList.add('button_off');
+				document.getElementById('but_sel_ki').classList.remove('button_green');
+				websocket.send("sel_kd");
+			});
+
+			document.getElementById('but_c+').addEventListener('click', (e) => {
+				console.log('button c+');
+				websocket.send("c+");
+			});
+
+			document.getElementById('but_c-').addEventListener('click', (e) => {
+				console.log('button c-');
+				websocket.send("c-");
+			});
+
+			document.getElementById('but_s+10').addEventListener('click', (e) => {
+				console.log('button s+10');
+				websocket.send("s+10");
+			});
+
+			document.getElementById('but_s-10').addEventListener('click', (e) => {
+				console.log('button s-10');
+				websocket.send("s-10");
+			});
+
+			document.getElementById('but_+3').addEventListener('click', (e) => {
+				console.log('button +3');
+				websocket.send("+3");
+			});
+
+			document.getElementById('but_+2').addEventListener('click', (e) => {
+				console.log('button +2');
+				websocket.send("+2");
+			});
+
+			document.getElementById('but_+1').addEventListener('click', (e) => {
+				console.log('button +1');
+				websocket.send("+1");
+			});
+
+			document.getElementById('but_-3').addEventListener('click', (e) => {
+				console.log('button -3');
+				websocket.send("-3");
+			});
+
+			document.getElementById('but_-2').addEventListener('click', (e) => {
+				console.log('button -2');
+				websocket.send("-2");
+			});
+
+			document.getElementById('but_-1').addEventListener('click', (e) => {
+				console.log('button -1');
+				websocket.send("-1");
+			});
 		}
 
-		function click_butt_rccw(){
-			console.log('TD_rccw');
-			websocket.send('TD_rccw');
-		}
+		function dataGraph(data) {
+			//console.log("dataGraph("+data+")");
+			var i = 0;
+			var labels = [];
+			var speedL = [];
+			var speedR = [];
+			var cmdL = [];
+			var cmdR = [];
+			
+			for (i = 0; i<data.tab_elapsed.length;i++) {
+				e = data.tab_elapsed[i]
+				labels.push(e)
+				e = data.tab_speedL[i]
+				speedL.push(parseFloat(e));
+				e = data.tab_speedR[i]
+				speedR.push(parseFloat(e));
+				e = data.tab_cmdL[i]
+				cmdL.push(parseFloat(e));
+				e = data.tab_cmdR[i]
+				cmdR.push(parseFloat(e));
+			}
 
-		function click_butt_rcw(){
-			console.log('TD_rccw');
-			websocket.send('TD_rcw');
+			document.getElementById('nb_samples').innerHTML = data.tab_elapsed.length
+			console.log("Modified ---");
+			if (chart !== undefined)
+				chart.destroy()
+			chart = new Chart(canvas, {
+				type : 'line',
+				data : {
+					labels : labels,
+					datasets : [ {
+						data : speedL,
+						label : "speedL",
+						borderColor : "#3cba9f",
+						yAxisID: 'e',
+						//fill : false,
+						tension : 0
+					},{
+						data : speedR,
+						label : "speedR",
+						borderColor : "#ccff00",
+						yAxisID: 'e',
+						//fill : false,
+						tension : 0
+					},{
+						data : cmdL,
+						label : "cmdL",
+						borderColor : "#9f3cba",
+						yAxisID: 'w',
+						//fill : false,
+						tension : 0
+					},{
+						data : cmdR,
+						label : "cmdR",
+						borderColor : "#ff00cc",
+						yAxisID: 'w',
+						//fill : false,
+						tension : 0
+					}]
+				},
+				options : {
+					scales: {
+						e: {
+							type: 'linear',
+							position: 'left',
+						},
+						w: {
+							type: 'linear',
+							position: 'right',
+						}
+					}
+				}
+			});
 		}
-
-		function click_butt_run(){
-			console.log('TD_run');
-			websocket.send('TD_run');
-		}
-
-		function click_butt_up(){
-			websocket.send('TD_su');
-		}
-
-		function click_butt_down(){
-			websocket.send('TD_sd');
-		}
-
-		function click_butt_left(){
-			websocket.send('TD_tl');
-		}
-
-		function click_butt_right(){
-			websocket.send('TD_tr');
-		}
-
-		function click_butt_stop(){
-			websocket.send('TD_stop');
-		}
-
-		function click_butt_index(){
-			console.log('TD_index');
-			window.open("/index.html", "_self");
-			websocket.send('TD_index');
-		}
-
-		function click_butt_home(){
-			websocket.send('TD_home');
-		}
-
+		
 	</script>
-	<style type="text/css">
-		html {
-			font-family: Arial, Helvetica, sans-serif;
-			display: inline-block;
-			text-align: center;
-		  }
-		  h1 {
-			font-size: 1.8rem;
-			color: white;
-		  }
-		  p {
-			font-size: 1.4rem;
-		  }
-		  .topnav {
-			overflow: hidden;
-			background-color: #0A1128;
-		  }
-		  body {
-			margin: 0;
-		  }
-		  .button_blue {
-			padding: 15px 30px;
-			font-size: 24px;
-			text-align: center;
-			outline: none;
-			color: #FFF;
-			background-color: #0f8b8d;
-			border: none;
-			border-radius: 5px;
-			-webkit-touch-callout: none;
-			-webkit-user-select: none;
-			-khtml-user-select: none;
-			-moz-user-select: none;
-			-ms-user-select: none;
-			user-select: none;
-			-webkit-tap-highlight-color: rgba(0,0,0,0);
-		   }
-		  .button_green {
-			padding: 15px 30px;
-			font-size: 24px;
-			text-align: center;
-			outline: none;
-			color: #FFF;
-			background-color: #00CC00;
-			border: none;
-			border-radius: 5px;
-			-webkit-touch-callout: none;
-			-webkit-user-select: none;
-			-khtml-user-select: none;
-			-moz-user-select: none;
-			-ms-user-select: none;
-			user-select: none;
-			-webkit-tap-highlight-color: rgba(0,0,0,0);
-		   }
-		  .button_red {
-			padding: 15px 30px;
-			font-size: 24px;
-			text-align: center;
-			outline: none;
-			color: #fff;
-			background-color: #CC0000;
-			border: none;
-			border-radius: 5px;
-			-webkit-touch-callout: none;
-			-webkit-user-select: none;
-			-khtml-user-select: none;
-			-moz-user-select: none;
-			-ms-user-select: none;
-			user-select: none;
-			-webkit-tap-highlight-color: rgba(0,0,0,0);
-		   }
-		  .button_orange {
-			padding: 15px 30px;
-			font-size: 24px;
-			text-align: center;
-			outline: none;
-			color: #fff;
-			background-color: #FF9933;
-			border: none;
-			border-radius: 5px;
-			-webkit-touch-callout: none;
-			-webkit-user-select: none;
-			-khtml-user-select: none;
-			-moz-user-select: none;
-			-ms-user-select: none;
-			user-select: none;
-			-webkit-tap-highlight-color: rgba(0,0,0,0);
-		   }
-		   /*.button:hover {background-color: #0f8b8d}*/
-		   .button:active {
-			 background-color: #0f8b8d;
-			 box-shadow: 2 2px #CDCDCD;
-			 transform: translateY(2px);
-		   }
-		  .content {
-			padding: 30px;
-		  }
-		  .card-grid3 {
-			max-width: 600px;
-			margin: 0 auto;
-			display: grid;
-			grid-gap: 0rem;
-			grid-template-columns: 1fr 1fr 1fr;
-		  }
-		  .card-grid5 {
-			max-width: 600px;
-			margin: 0 auto;
-			display: grid;
-			grid-gap: 0rem;
-			grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
-		  }
-		  .card {
-			background-color: white;
-		  }
-		  .card-title {
-			font-size: 1.2rem;
-			font-weight: bold;
-			color: #034078
-		  }
-		  .state {
-			font-size: 1.2rem;
-			color:#1282A2;
-		  }
-		  .slider {
-			-webkit-appearance: none;
-			margin: 0 auto;
-			width: 100%;
-			height: 15px;
-			border-radius: 10px;
-			background: #FFD65C;
-			outline: none;
-		  }
-		  .slider::-webkit-slider-thumb {
-			-webkit-appearance: none;
-			appearance: none;
-			width: 30px;
-			height: 30px;
-			border-radius: 50%;
-			background: #034078;
-			cursor: pointer;
-		  }
-		  .slider::-moz-range-thumb {
-			width: 30px;
-			height: 30px;
-			border-radius: 50% ;
-			background: #034078;
-			cursor: pointer;
-		  }
-		  .switch {
-			padding-left: 5%;
-			padding-right: 5%;
-		  }
-
-
-	</style>
-</head>
-<body>
-    <div class="topnav">
-        <h1>Micromouse simple run</h1>
-    </div>
-    <div class="content">
-        <div class="card-grid3">
-            <div class="card">
-                <p><button id="butt_rccw" class="button_orange">Rot CCW</button></p>
-            </div>
-            <div class="card">
-                <p><button id="butt_run" class="button_green">Run</button></p>
-            </div>
-            <div class="card">
-                <p><button id="butt_rcw" class="button_orange">Rot CCW</button></p>
-            </div>
-        </div>
-        <div class="card-grid3">
-            <div class="card">
-                <p class="state">Speed:</p>
-                <p><span id="speed"></span> &percnt;</p>
-            </div>
-            <div class="card">
-                <p><button id="butt_up" class="button_green">^</button></p>
-            </div>
-            <div class="card">
-                <p class="state">Turn:</p>
-                <p><span id="turn"></span> &percnt;</p>
-            </div>
-        </div>
-        <div class="card-grid3">
-            <div class="card">
-                <p><button id="butt_right" class="button_green"><</button></p>
-            </div>
-            <div class="card">
-                <p><button id="butt_stop" class="button_red">STOP</button></p>
-            </div>
-            <div class="card">
-                <p><button id="butt_left" class="button_green">></button></p>
-            </div>
-        </div>
-        <div class="card-grid">
-            <div class="card">
-            </div>
-            <div class="card">
-                <p><button id="butt_down" class="button_green">v</button></p>
-            </div>
-            <div class="card">
-            </div>
-        </div>
-        <div class="card-grid3">
-            <div class="card">
-                <p><button id="butt_home" class="button_orange">HOME</button></p>
-            </div>
-            <div class="card">
-            </div>
-            <div class="card">
-                <p><button id="butt_index" class="button_orange">Index</button></p>
-            </div>
-        </div>
-        <div class="card-grid3">
-            <div class="card">
-                <p class="state"><span id="pos_x"></span></p>
-            </div>
-            <div class="card">
-                <p class="state"><span id="pos_y"></span></p>
-            </div>
-            <div class="card">
-                <p class="state"><span id="heading"></span></p>
-            </div>
-        </div>
-        <div class="card-grid3">
-            <div class="card">
-                <p class="state"><span id="enc_L"></span></p>
-            </div>
-            <div class="card">
-                <p></p>
-            </div>
-            <div class="card">
-                <p class="state"><span id="enc_R"></span></p>
-            </div>
-        </div>
-        <div class="card-grid3">
-            <div class="card">
-                <p class="state"><span id="sens_L"></span></p>
-            </div>
-            <div class="card">
-                <p class="state"><span id="sens_F"></span></p>
-            </div>
-            <div class="card">
-                <p class="state"><span id="sens_R"></span></p>
-            </div>
-        </div>
-    </div>
 </body>
 </html>

@@ -1,55 +1,7 @@
 
 
-#ifndef _PARAMETERS_H
-#define _PARAMETERS_H
-
-//#define DEBUG 1
-//#define DEBUG_MOVE 1
-
-// Trace level:
-// 1: IHM, state change
-// 2: robot control init and stop
-#define TRACE_LEVEL 2
-#define LOG_SENSORPID_ERRORS 1
-
-#define NB_OF_SENSORS 3
-
-// Wifi mode
-#define WIFI_MODE_AP 1
-
-// Simple run parameters
-#define SPEED_MIN 0.2 // Minimal speed, needed to start
-#define SPEED_FACTOR 1.4
-#define TURN_STEP 0.1
-
-// Rotation parameters
-#define SPEEDUP_PART 0.1
-
-// PID parameters
-#define PIDSENSORS_KP 0.022
-#define PIDSENSORS_KI 0
-#define PIDSENSORS_KD 0
-#define PIDMOTORS_KP 0
-#define PIDMOTORS_KI 0
-#define PIDMOTORS_KD 0
-
-// Maze parameters
-#define MAZE_WALL_LENGTH 204
-#define MAZE_WALL_THICKNESS 9
-#define MAZE_X_SIZE 9
-#define MAZE_Y_SIZE 9
-
-// Wall minimal distance for crash detection
-#define WALL_DISTANCE_FMIN 50 // front distance
-#define WALL_DISTANCE_LMIN 30 // border distance
-
-// Robot mechanics
-#define WHEEL_DISTANCE 93.
-// dist=-26832(76) - EncL=124678/-0.22mm/t - EncR=124407/-0.22mm/t - 
-#define ENCL_RESOL 0.2152103819438874540817144965431
-#define ENCR_RESOL 0.21567918203959584267766283247727
-// Sensors stats
-#define SENSORS_STDDEV 2.35 // Standard deviation of e=dL-dR
+#ifndef _PARAMETERS_H_
+#define _PARAMETERS_H_
 
 //* Motors and encoders definitions ***********************
 // DIR1 : yellow 4
@@ -73,9 +25,61 @@
 #define PWMCH_R_MOTOR      1 // PWM channel
 
 //* Sensors definitions ***********************************
+#define NB_OF_SENSORS 3
 #define PIN_SENSORL 19
 #define PIN_SENSORF 18
 #define PIN_SENSORR 5
+
+// Wall minimal distance for crash detection
+#define WALL_DISTANCE_FMIN 50 // front distance
+#define WALL_DISTANCE_LMIN 30 // border distance
+#define WALL_DISTANCE_MAX 75. // max wall distance to detect holes
+
+// Robot mechanics
+// left and right sensors angle in degrees
+#define SIDE_SENSORS_ANGLE 75 
+#define ROBOT_WHEEL_DISTANCE 93.
+#define ENCL_RESOL 0.225
+#define ENCR_RESOL 0.225
+#define SPEED_MAX 10 // maximal speed, in mm/s
+#define TACHOMETER_PERIOD_US 20000 // 20 ms
+#define TACHOMETER_PERIOD_SEC (1000000.*(double)TACHOMETER_PERIOD_US)
+
+// PID Controllers parameters
+#define SPEED_PID_KP 0.
+#define SPEED_PID_KI 0.
+#define SPEED_PID_KD 0.
+#define HEAD_PID_KP 0.0022
+#define HEAD_PID_KI 0.0005
+#define HEAD_PID_KD 0.
+
+// Trace level:
+// 1: IHM, state change
+// 2: robot control init and stop
+#define TRACE_LEVEL 2
+#define LOG_SENSORPID_ERRORS 1
+
+// Wifi mode
+#define WIFI_MODE_AP 1
+
+// Simple run parameters
+#define SPEED_MIN 0.2 // Minimal speed, needed to start
+#define SPEED_FACTOR 1.4
+#define TURN_STEP 0.1
+
+// Rotation parameters
+#define SPEEDUP_PART 0.1
+
+// PID parameters
+#define PIDSENSORS_KP 0.022
+#define PIDSENSORS_KI 0.002
+#define PIDSENSORS_KD 0
+#define PIDMOTORS_KP 0
+#define PIDMOTORS_KI 0
+#define PIDMOTORS_KD 0
+
+// Sensors stats
+#define SENSORS_STDDEV 2.35 // Standard deviation of e=dL-dR
 
 #define PI 3.1415926535897932384626433832795
 

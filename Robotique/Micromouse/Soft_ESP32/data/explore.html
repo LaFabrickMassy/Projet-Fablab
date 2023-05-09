@@ -6,8 +6,180 @@
     <title>Micromouse Exploration</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" type="text/css" href="style.css">
-    <script src="explore.js"></script>
+	<style type="text/css">
+		html {
+			font-family: Arial, Helvetica, sans-serif;
+			display: inline-block;
+			text-align: center;
+		  }
+		  h1 {
+			font-size: 1.8rem;
+			color: white;
+		  }
+		  p {
+			font-size: 1.4rem;
+		  }
+		  .topnav {
+			overflow: hidden;
+			background-color: #0A1128;
+		  }
+		  body {
+			margin: 0;
+		  }
+		  .button_blue {
+			padding: 15px 30px;
+			font-size: 24px;
+			text-align: center;
+			outline: none;
+			color: #FFF;
+			background-color: #0f8b8d;
+			border: none;
+			border-radius: 5px;
+			-webkit-touch-callout: none;
+			-webkit-user-select: none;
+			-khtml-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+			user-select: none;
+			-webkit-tap-highlight-color: rgba(0,0,0,0);
+		   }
+		  .button_green {
+			padding: 15px 30px;
+			font-size: 24px;
+			text-align: center;
+			outline: none;
+			color: #FFF;
+			background-color: #00CC00;
+			border: none;
+			border-radius: 5px;
+			-webkit-touch-callout: none;
+			-webkit-user-select: none;
+			-khtml-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+			user-select: none;
+			-webkit-tap-highlight-color: rgba(0,0,0,0);
+		   }
+		  .button_red {
+			padding: 15px 30px;
+			font-size: 24px;
+			text-align: center;
+			outline: none;
+			color: #fff;
+			background-color: #CC0000;
+			border: none;
+			border-radius: 5px;
+			-webkit-touch-callout: none;
+			-webkit-user-select: none;
+			-khtml-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+			user-select: none;
+			-webkit-tap-highlight-color: rgba(0,0,0,0);
+		   }
+		  .button_orange {
+			padding: 15px 30px;
+			font-size: 24px;
+			text-align: center;
+			outline: none;
+			color: #fff;
+			background-color: #FF9933;
+			border: none;
+			border-radius: 5px;
+			-webkit-touch-callout: none;
+			-webkit-user-select: none;
+			-khtml-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+			user-select: none;
+			-webkit-tap-highlight-color: rgba(0,0,0,0);
+		   }
+		  .button_off {
+			padding: 15px 30px;
+			font-size: 24px;
+			text-align: center;
+			outline: none;
+			color: #fff;
+			background-color: #AAAAAA;
+			border: #555555;
+			border-radius: 5px;
+			-webkit-touch-callout: none;
+			-webkit-user-select: none;
+			-khtml-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+			user-select: none;
+			-webkit-tap-highlight-color: rgba(0,0,0,0);
+		   }
+		   /*.button:hover {background-color: #0f8b8d}*/
+		   /*
+		   .button:active {
+			 background-color: #0f8b8d;
+			 box-shadow: 2 2px #CDCDCD;
+			 transform: translateY(2px);
+		   }
+		   */
+		  .content {
+			padding: 30px;
+		  }
+		  .card-grid3 {
+			max-width: 600px;
+			margin: 0 auto;
+			display: grid;
+			grid-gap: 0rem;
+			grid-template-columns: 1fr 1fr 1fr;
+		  }
+		  .card-grid5 {
+			max-width: 600px;
+			margin: 0 auto;
+			display: grid;
+			grid-gap: 0rem;
+			grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+		  }
+		  .card {
+			background-color: white;
+		  }
+		  .card-title {
+			font-size: 1.2rem;
+			font-weight: bold;
+			color: #034078
+		  }
+		  .state {
+			font-size: 1.2rem;
+			color:#1282A2;
+		  }
+		  .slider {
+			-webkit-appearance: none;
+			margin: 0 auto;
+			width: 100%;
+			height: 15px;
+			border-radius: 10px;
+			background: #FFD65C;
+			outline: none;
+		  }
+		  .slider::-webkit-slider-thumb {
+			-webkit-appearance: none;
+			appearance: none;
+			width: 30px;
+			height: 30px;
+			border-radius: 50%;
+			background: #034078;
+			cursor: pointer;
+		  }
+		  .slider::-moz-range-thumb {
+			width: 30px;
+			height: 30px;
+			border-radius: 50% ;
+			background: #034078;
+			cursor: pointer;
+		  }
+		  .switch {
+			padding-left: 5%;
+			padding-right: 5%;
+		  }
+
+
+	</style>
 </head>
 <body>
     <div class="topnav">
@@ -24,62 +196,309 @@
                 <p><button id="but_stop" class="button_red">STOP</button></p>
             </div>
         </div>
-        <div class="card-grid3">
-            <div class="card">
-                <p><button id="but_kp_up" class="button_blue">+</button></p>
-            </div>
-            <div class="card">
-                <p><button id="but_ki_up" class="button_blue">+</button></p>
-            </div>
-            <div class="card">
-                <p><button id="but_kd_up" class="button_blue">+</button></p>
-            </div>
-        </div>
-        <div class="card-grid3">
-            <div class="card">
-                <p class="state">kp=<span id="val_kp"></span></p>
-            </div>
-            <div class="card">
-                <p class="state">ki=<span id="val_ki"></span></p>
-            </div>
-            <div class="card">
-                <p class="state">kd=<span id="val_kd"></span></p>
-            </div>
-            <div class="card">
-            </div>
-        </div>
-        <div class="card-grid3">
-            <div class="card">
-                <p><button id="but_kp_dn" class="button_blue">-</button></p>
-            </div>
-            <div class="card">
-                <p><button id="but_ki_dn" class="button_blue">-</button></p>
-            </div>
-            <div class="card">
-                <p><button id="but_kd_dn" class="button_blue">-</button></p>
-            </div>
-        </div>
-        <div class="card-grid3">
-            <div class="card">
-                <p class="state">dL=<span id="sens_L"></span></p>
-            </div>
-            <div class="card">
-                <p class="state">dF=<span id="sens_F"></span></p>
-            </div>
-            <div class="card">
-                <p class="state">dR=<span id="sens_R"></span></p>
-            </div>
-        </div>
-        <div class="card-grid3">
-            <div class="card">
-            </div>
-            <div class="card">
-            </div>
-            <div class="card">
-                <p><button id="but_index" class="button_orange">Index</button></p>
-            </div>
-        </div>
 
+		<div>
+		<canvas id="maze" ></canvas>
+		</div>
     </div>
+    <script src="/chart.js"></script>
+	<script type = "text/JavaScript">
+		var gateway = `ws://${window.location.hostname}/ws`;
+		var websocket;
+		var trailtext = "";
+		window.addEventListener('load', onLoad);
+		var mode_auto = 0;
+		const selMode_kp = 0;
+		const selMode_ki = 1;
+		const selMode_kd = 2;
+		var selMode = selMode_kp;
+		canvas = document.getElementById("errorsGraph")
+		chart = new Chart(canvas, {
+			type : 'line',
+			data : {
+				labels : [0,1],
+				datasets : [
+						{
+							data : [0,0],
+							label : "Errors",
+							borderColor : "#3cba9f",
+							//fill : false,
+							tension : 0
+						/*},
+						{
+							data : [0,0],
+							label : "Wall distance",
+							borderColor : "#ffcc00",
+							//fill : false,
+							tension : 0
+						*/
+						}]
+			},
+			options : {
+				scales: {
+					e: {
+						type: 'linear',
+						position: 'left',
+					/*},
+					w: {
+						type: 'linear',
+						position: 'right',
+					*/
+					}
+				}
+			}
+		});
+		
+
+		function onLoad(event) {
+			console.log('onLoad function');
+			initWebSocket();
+			initButton();
+		}
+
+		function getValues(){
+			websocket.send("getValues");
+		}
+
+		function initWebSocket() {
+			console.log('Trying to open a WebSocket connection...');
+			websocket = new WebSocket(gateway);
+			websocket.onopen = onOpen;
+			websocket.onclose = onClose;
+			websocket.onmessage = onMessage;
+		}
+
+		function onOpen(event) {
+			console.log('Connection opened');
+			websocket.send("page_ex");
+		}
+
+		function onClose(event) {
+			console.log('Connection closed');
+			setTimeout(initWebSocket, 2000);
+		}
+
+		function onMessage(event) {
+
+			console.log("PID_Cal onMessage");
+			console.log(event.data);
+
+			// console.log(event.data);
+			var myObj = JSON.parse(event.data);
+			var keys = Object.keys(myObj);
+
+			for (var i = 0; i < keys.length; i++){
+				var key = keys[i];
+				val = myObj[key];
+				if (key == "kp") {
+					document.getElementById("val_"+key).innerHTML = val;
+				}
+				if (key == "ki") {
+					document.getElementById("val_"+key).innerHTML = val;
+				}
+				if (key == "kd") {
+					document.getElementById("val_"+key).innerHTML = val;
+				}
+				if (key == "sens_L"){
+					document.getElementById("sens_L").innerHTML = val;
+				}
+				if (key == "sens_F"){
+					document.getElementById("sens_F").innerHTML = val;
+				}
+				if (key == "sens_R"){
+					document.getElementById("sens_R").innerHTML = val;
+				}
+				if (key == "ticks_L"){
+					document.getElementById("ticks_L").innerHTML = val;
+				}
+				if (key == "ticks_R"){
+					document.getElementById("ticks_R").innerHTML = val;
+				}
+				if (key == "err"){
+					document.getElementById("total_error").innerHTML = val;
+				}
+				if (key == "dataGraph") {
+					console.log("call dataGraph("+val+")");
+					dataGraph(val);
+				}
+			}
+		}
+
+		function initButton() {
+			console.log("function initButton");
+			document.getElementById('but_start').addEventListener('click', (e) => {
+				console.log('button START');
+				websocket.send("start");
+			});
+			document.getElementById('but_uturn').addEventListener('click', (e) => {
+				console.log('button UTurn');
+				websocket.send("uturn");
+			});
+			document.getElementById('but_stop').addEventListener('click', (e) => {
+				console.log('button STOP');
+				websocket.send("stop");
+			});
+			document.getElementById('but_index').addEventListener('click', (e) => {
+				console.log('button HOME');
+				window.open("/index.html", "_self");
+				websocket.send("home");
+			});
+			document.getElementById('but_auto').addEventListener('click', (e) => {
+				console.log('button AUTO');
+				if (mode_auto == 1) {
+					console.log('mode AUTO disabled');
+					mode_auto = 0;
+					document.getElementById('but_auto').classList.add('button_off');
+					document.getElementById('but_auto').classList.remove('button_green');
+					websocket.send("PC_auto_off");
+				}
+				else {
+					console.log('mode AUTO activated');
+					mode_auto = 1;
+					document.getElementById('but_auto').classList.add('button_green');
+					document.getElementById('but_auto').classList.remove('button_off');
+					websocket.send("PC_auto_on");
+				}
+			});
+
+			document.getElementById('but_sel_kp').addEventListener('click', (e) => {
+				console.log('button kP');
+				selMode = selMode_kp;
+				document.getElementById('but_sel_kp').classList.add('button_green');
+				document.getElementById('but_sel_kp').classList.remove('button_off');
+				document.getElementById('but_sel_ki').classList.add('button_off');
+				document.getElementById('but_sel_ki').classList.remove('button_green');
+				document.getElementById('but_sel_kd').classList.add('button_off');
+				document.getElementById('but_sel_kd').classList.remove('button_green');
+				websocket.send("PC_sel_kp");
+			});
+
+
+			document.getElementById('but_sel_ki').addEventListener('click', (e) => {
+				console.log('button kI');
+				selMode = selMode_kp;
+				document.getElementById('but_sel_ki').classList.add('button_green');
+				document.getElementById('but_sel_ki').classList.remove('button_off');
+				document.getElementById('but_sel_kp').classList.add('button_off');
+				document.getElementById('but_sel_kp').classList.remove('button_green');
+				document.getElementById('but_sel_kd').classList.add('button_off');
+				document.getElementById('but_sel_kd').classList.remove('button_green');
+				websocket.send("PC_sel_ki");
+			});
+
+			document.getElementById('but_sel_kd').addEventListener('click', (e) => {
+				console.log('button kD');
+				selMode = selMode_kp;
+				document.getElementById('but_sel_kd').classList.add('button_green');
+				document.getElementById('but_sel_kd').classList.remove('button_off');
+				document.getElementById('but_sel_kp').classList.add('button_off');
+				document.getElementById('but_sel_kp').classList.remove('button_green');
+				document.getElementById('but_sel_ki').classList.add('button_off');
+				document.getElementById('but_sel_ki').classList.remove('button_green');
+				websocket.send("PC_sel_kd");
+			});
+
+			document.getElementById('but_+3').addEventListener('click', (e) => {
+				console.log('button +3');
+				websocket.send("PC_+3");
+			});
+
+			document.getElementById('but_+2').addEventListener('click', (e) => {
+				console.log('button +2');
+				websocket.send("PC_+2");
+			});
+
+			document.getElementById('but_+1').addEventListener('click', (e) => {
+				console.log('button +1');
+				websocket.send("PC_+1");
+			});
+
+			document.getElementById('but_-3').addEventListener('click', (e) => {
+				console.log('button -3');
+				websocket.send("PC_-3");
+			});
+
+			document.getElementById('but_-2').addEventListener('click', (e) => {
+				console.log('button -2');
+				websocket.send("PC_-2");
+			});
+
+			document.getElementById('but_-1').addEventListener('click', (e) => {
+				console.log('button -1');
+				websocket.send("PC_-1");
+			});
+		}
+
+		function dataGraph(data) {
+			//console.log("dataGraph("+data+")");
+			var i = 0;
+			var labels = [];
+			var errors = [];
+			var wall = [];
+			var encr = [];
+			
+			for (i = 0; i<data.errors.length;i++) {
+				e = data.errors[i]
+				errors.push(parseFloat(e));
+				/*
+				e = data.wall[i]
+				wall.push(parseFloat(e));
+				e = data.encr[i]
+				encr.push(parseFloat(e));
+				*/
+				labels.push(i);
+			}
+
+			console.log("Modified ---");
+			console.log(errors);
+			console.log(wall);
+			if (chart !== undefined)
+				chart.destroy()
+			chart = new Chart(canvas, {
+				type : 'line',
+				data : {
+					labels : labels,
+					datasets : [ {
+						data : errors,
+						label : "Errors",
+						borderColor : "#3cba9f",
+						yAxisID: 'e',
+						//fill : false,
+						tension : 0
+					/*
+					},{
+						data : wall,
+						label : "Wall distance",
+						borderColor : "#ffcc00",
+						yAxisID: 'w',
+						//fill : false,
+						tension : 0
+					},{
+						data : encr,
+						label : "enc resol",
+						borderColor : "#ccFF00",
+						yAxisID: 'w',
+						//fill : false,
+						tension : 0
+					*/
+					}]
+				},
+				options : {
+					scales: {
+						e: {
+							type: 'linear',
+							position: 'left',
+						/*},
+						w: {
+							type: 'linear',
+							position: 'right',
+						*/
+						}
+					}
+				}
+			});
+		}
+		
+	</script>
 </body>
 </html>

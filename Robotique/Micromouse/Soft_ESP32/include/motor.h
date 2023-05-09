@@ -5,6 +5,9 @@
 #ifndef MOTOR_H
 #define MOTOR_H
 
+#define MOTOR_CMD_MAX 0.7
+#define MOTOR_CMD_MIN 0.1
+
 typedef struct
 {
     int pin_speed;
