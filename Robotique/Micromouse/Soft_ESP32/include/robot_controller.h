@@ -11,8 +11,8 @@
 #define ROBOT_SPEED_MAX 250 // max robot speed in mm/s
 
 // Coefficient motor control -> speed
-#define ROBOT_CONTROLLER_MOTOR_KL (430/1.04)
-#define ROBOT_CONTROLLER_MOTOR_KR (426/1.04)
+#define ROBOT_CONTROLLER_MOTOR_KL 0.0025
+#define ROBOT_CONTROLLER_MOTOR_KR 0.0025
 
 #define ROBOT_CONTROLLER_SPEEDPID_KP 0.
 #define ROBOT_CONTROLLER_SPEEDPID_KI 0.

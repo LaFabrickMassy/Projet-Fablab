@@ -80,7 +80,7 @@ void RobotController::Stop() {
 double RobotController::SpeedPID(double target_speed, double current_speed) {
     double up, ui, ud;
     double dt;
-    dt = (double)(elapsed_time);
+    dt = (double)(loop_time - last_loop_time);
     sPID_error = target_speed - current_speed;
     up = 0.001* speedpid_kp * sPID_error;
     ui = 0.0000001* speedpid_ki * (sPID_error - sPID_old_error) * dt;
@@ -103,8 +103,8 @@ void RobotController::RunInit(double speed, double distance) {
     target_speedR = speed;
     target_distanceL = distance;
     target_distanceR = distance;
-    cmd_motorL = target_speedL/ROBOT_CONTROLLER_MOTOR_KL;
-    cmd_motorR = target_speedR/ROBOT_CONTROLLER_MOTOR_KR;
+    cmd_motorL = target_speedL*ROBOT_CONTROLLER_MOTOR_KL;
+    cmd_motorR = target_speedR*ROBOT_CONTROLLER_MOTOR_KR;
     run_distanceL = 0.;
     run_distanceR = 0.;
     init_encvalueL = encoderL.count;
@@ -173,6 +173,14 @@ boolean RobotController::RunStep(){
             cmd_motorR = -MOTOR_CMD_MAX/.2;
         #endif
         robot_hw.MotorsSetSpeed(cmd_motorL, cmd_motorR);
+        #ifdef DEBUG_ROBOT_CONTROLLER
+            elapsed[debug_tab_index] = elapsed_time/1000;
+            tab_speedL[debug_tab_index] = 0.;
+            tab_speedR[debug_tab_index] = 0.;
+            tab_cmdL[debug_tab_index] = cmd_motorL;
+            tab_cmdR[debug_tab_index] = cmd_motorR;
+            debug_tab_index++;
+        #endif
         return false;
     }
 

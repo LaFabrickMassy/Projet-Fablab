@@ -52,7 +52,7 @@ void testDriveInit() {
     robot.controller.Stop();
     notifyClients(robot.controller.JSON_SpeedPID_Params());
 
-    target_speed = 150.;
+    target_speed = 250.;
     
 
     logWrite("testDriveInit() END");
@@ -92,7 +92,7 @@ void testDriveStep() {
             testDriveStop();
             break;
         case TD_STATE_START:
-            robot.controller.RunInit(target_speed, 500);
+            robot.controller.RunInit(target_speed, 1000);
             td_state = TD_STATE_STEP1;
             break;
         case TD_STATE_STEP1:
