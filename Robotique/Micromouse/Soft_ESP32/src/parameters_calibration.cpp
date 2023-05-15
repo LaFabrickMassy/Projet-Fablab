@@ -607,9 +607,9 @@ void paramCalRunStep() {
 void paramCalRotateInit() {
 
     if (nb_runs & 1)
-        robot.controller.RotateInit(170., 0.5);
+        robot.controller.RotatePrepare(170., 0.5);
     else
-        robot.controller.RotateInit(-170., 0.5);
+        robot.controller.RotatePrepare(-170., 0.5);
     pc_state = PC_STATE_ROTATE;
 }
 
@@ -621,7 +621,7 @@ void paramCalRotateInit() {
 void paramCalRotateStep() {
     int status;
 
-    status = robot.controller.RotateStep();
+    status = robot.controller.Step();
 
     if (status) {
         logWrite("ParamCalrotationStep() : done ----------------");

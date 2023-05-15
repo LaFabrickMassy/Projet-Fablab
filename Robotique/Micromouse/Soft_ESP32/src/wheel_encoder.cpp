@@ -38,6 +38,7 @@ void setupEncoderL(int pinA, int pinB, int flag_reverse) {
 	pinMode(pinB, INPUT_PULLDOWN);
 	attachInterrupt(pinA, isrEncoderL, RISING);
     encoderL.last_count = 0;
+    encoderL.resolution = ENCL_RESOL;
 }
 
 //********************************************************************
@@ -86,6 +87,7 @@ void setupEncoderR(int pinA, int pinB, int flag_reverse) {
 	pinMode(pinB, INPUT_PULLDOWN);
 	attachInterrupt(pinA, isrEncoderR, RISING);
     encoderR.last_count = 0;
+    encoderR.resolution = ENCR_RESOL;
 }
 
 //********************************************************************
@@ -128,6 +130,9 @@ void tachometerInit() {
     timerAlarmWrite(tachometer_timer, TACHOMETER_PERIOD_US, true);
     // enable timer
     timerAlarmEnable(tachometer_timer);
+
+    encoderL.speed_available = false;
+    encoderR.speed_available = false;
 }
 
 //********************************************************************
@@ -142,6 +147,9 @@ void IRAM_ATTR tachometer() {
     countR = encoderR.count;
     delta_countR =  countR - encoderR.last_count;
     encoderR.last_count = countR;
+
+    encoderL.speed_available = true;
+    encoderR.speed_available = true;
     
     encoderL.speed = (double)delta_countL * ENCL_RESOL / TACHOMETER_PERIOD_SEC;
     encoderR.speed = (double)delta_countR * ENCR_RESOL / TACHOMETER_PERIOD_SEC;

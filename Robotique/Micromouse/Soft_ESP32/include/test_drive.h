@@ -13,11 +13,7 @@ void testDriveRotateInitCCW();
 void testDriveRotateStep();
 void testDriveHandleMessage(String message);
 
-#ifdef __OLD__
-void testDriveRunInit();
-void testDriveRunStep();
-void testDriveRotateStep();
-void testDriveStop();
-String getRobotStatus();
-#endif
+// robot state
+extern double x,y,h,speed;
+
 #endif

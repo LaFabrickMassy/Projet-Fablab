@@ -27,7 +27,8 @@ class Robot {
         void Stop();
         void Crash();
         void SetMotorsSpeed(double speedL, double speedR);
-        void ComputeMove();
+        void UpdateState();
+        
         String JSON_State();
         String String_State();
         // state : x,y,h,speed,...

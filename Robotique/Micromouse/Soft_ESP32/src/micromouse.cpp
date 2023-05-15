@@ -3,6 +3,7 @@
 #include "parameters.h"
 #include "maze.h"
 #include "robot_hw.h"
+#include "robot_speed_controller.h"
 #include "robot_controller.h"
 #include "robot.h"
 #include "webserver.h"
@@ -59,14 +60,23 @@ void setup() {
     Serial.begin(115200);
     Serial.println("Started");
 
+    robot.Init();
+
+    Serial.println("Started 2");
+
     initFS();
+
+    Serial.println("Started 3");
 
     initWiFi();
     delay(500);
+
+    Serial.println("Started 4");
+
     initWebServer();
     
-    robot.Init();
-    
+    Serial.println("Started 5");
+
     millis_current = millis();
     millis_count_mode = millis_current;
     millis_count_status = millis_current;
@@ -75,6 +85,9 @@ void setup() {
     Serial.println("End of setup");
 
     hmiInit();
+
+    Serial.println("Started 6");
+
 }
 
 /**********************************************************
@@ -113,6 +126,8 @@ void loop()
         //logWrite(robot.String_State());
         notifyClients(robot.controller.JSON_ControllerStatus());
         logWrite(robot.controller.String_ControllerStatus());
+        logWrite("SpeedCtrl L:"+robot.controller.speed_controllerL.String_SpeedPID_Params());
+        logWrite("SpeedCtrl R:"+robot.controller.speed_controllerL.String_SpeedPID_Params());
 
     }
 

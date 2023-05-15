@@ -12,6 +12,8 @@ typedef struct {
     long last_micros;
     long elapsed_micros;
     double speed;
+    boolean speed_available;
+    double resolution;
 }
 encoder_t;
 

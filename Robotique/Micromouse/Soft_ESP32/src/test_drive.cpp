@@ -25,6 +25,9 @@
 #define TD_STATE_STEP2 2 // rotate CW
 #define TD_STATE_STEP3 3 // run 500 mm
 #define TD_STATE_STEP4 4 // rotate CCW
+#define TD_STATE_STEP5 5 // rotate CCW
+#define TD_STATE_STEP6 6 // rotate CCW
+#define TD_STATE_STEP7 7 // rotate CCW
 #define TD_STATE_CRASH 99
 
 #define PARAMMODE_KP 1
@@ -32,7 +35,6 @@
 #define PARAMMODE_KD 3
 
 int td_state;
-double speed;
 double turn;
 double target_speed;
 
@@ -50,9 +52,10 @@ void testDriveInit() {
     td_state = TD_STATE_STOP;
     robot.Reset();
     robot.controller.Stop();
+
     notifyClients(robot.controller.JSON_SpeedPID_Params());
 
-    target_speed = 250.;
+    target_speed = 200.;
     
 
     logWrite("testDriveInit() END");
@@ -76,6 +79,7 @@ void testDriveStop() {
 //*****************************************************************************
 void testDriveStart() {
     td_state = TD_STATE_START;
+    target_speed = 200;
 }
 
 //*****************************************************************************
@@ -92,38 +96,70 @@ void testDriveStep() {
             testDriveStop();
             break;
         case TD_STATE_START:
-            robot.controller.RunInit(target_speed, 1000);
+            robot.controller.StraightPrepare(target_speed, 1000);
             td_state = TD_STATE_STEP1;
             break;
         case TD_STATE_STEP1:
-            if (robot.controller.RunStep()) {
+            if (robot.controller.Step()) {
+                logWrite("Finished step 1");
                 robot.controller.Stop();
                 notifyClients(robot.controller.JSON_ControlHistory());
                 td_state = TD_STATE_STEP2;
-                td_state = TD_STATE_STOP;
-                robot.controller.RotateInit(target_speed, -180);
+                //td_state = TD_STATE_STOP;
+                robot.controller.RotatePrepare(target_speed/2, -PI);
                 delay(500);
             }
             break;
         case TD_STATE_STEP2:
-            if (robot.controller.RotateStep()) {
+            if (robot.controller.Step()) {
+                logWrite("Finished step 2");
                 robot.controller.Stop();
+                notifyClients(robot.controller.JSON_ControlHistory());
                 td_state = TD_STATE_STEP3;
-                robot.controller.RunInit(target_speed, 500);
+                robot.controller.StraightPrepare(target_speed, 1000);
                 delay(500);
             }
             break;
         case TD_STATE_STEP3:
-            if (robot.controller.RunStep()) {
+            if (robot.controller.Step()) {
                 robot.controller.Stop();
+                notifyClients(robot.controller.JSON_ControlHistory());
                 td_state = TD_STATE_STEP4;
-                robot.controller.RotateInit(target_speed, 180);
+                robot.controller.RotatePrepare(target_speed/2, PI);
                 delay(500);
             }
             break;
         case TD_STATE_STEP4:
-            if (robot.controller.RotateStep()) {
+            if (robot.controller.Step()) {
                 robot.controller.Stop();
+                notifyClients(robot.controller.JSON_ControlHistory());
+                td_state = TD_STATE_STEP5;
+                robot.controller.TurnPrepare(target_speed/2, 200, PI/2);
+                delay(500);
+            }
+            break;
+        case TD_STATE_STEP5:
+            if (robot.controller.Step()) {
+                robot.controller.Stop();
+                notifyClients(robot.controller.JSON_ControlHistory());
+                td_state = TD_STATE_STEP6;
+                robot.controller.TurnPrepare(target_speed/2, -200, PI);
+                delay(500);
+            }
+            break;
+        case TD_STATE_STEP6:
+            if (robot.controller.Step()) {
+                robot.controller.Stop();
+                notifyClients(robot.controller.JSON_ControlHistory());
+                td_state = TD_STATE_STEP7;
+                robot.controller.TurnPrepare(target_speed/2, 100, PI/2);
+                delay(500);
+            }
+            break;
+        case TD_STATE_STEP7:
+            if (robot.controller.Step()) {
+                robot.controller.Stop();
+                notifyClients(robot.controller.JSON_ControlHistory());
                 td_state = TD_STATE_STOP;
                 robot.controller.Stop();
                 delay(500);
@@ -140,6 +176,11 @@ void testDriveStep() {
 //
 //*****************************************************************************
 void testDriveHandleMessage(String message) {
+    #define MUL 0.01
+    #define COEFF3 (100.*MUL)
+    #define COEFF2 (10.*MUL)
+    #define COEFF1 (1.*MUL)
+
     logWrite("TEST_DRIVE handle message "+message);
     if (message == "index") {
         logWrite("TD: Back to index");
@@ -178,14 +219,14 @@ void testDriveHandleMessage(String message) {
         paramMode = PARAMMODE_KD;
     }
     else if (message == "c+") {
-        robot.controller.cmd_motorL += 0.01;
-        robot.controller.cmd_motorR += 0.01;
+        robot.controller.speed_controllerL.cmd_motor += 0.01;
+        robot.controller.speed_controllerR.cmd_motor += 0.01;
         notifyClients(robot.controller.JSON_ControllerStatus());     
         logWrite(robot.controller.String_ControllerStatus());
     }
     else if (message == "c-") {
-        robot.controller.cmd_motorL -= 0.01;
-        robot.controller.cmd_motorR -= 0.01;
+        robot.controller.speed_controllerL.cmd_motor -= 0.01;
+        robot.controller.speed_controllerR.cmd_motor -= 0.01;
         notifyClients(robot.controller.JSON_ControllerStatus());     
         logWrite(robot.controller.String_ControllerStatus());
     }
@@ -200,62 +241,98 @@ void testDriveHandleMessage(String message) {
         logWrite(robot.controller.String_ControllerStatus());
     }
     else if (message == "+3") {
-        if (paramMode == PARAMMODE_KD)
-            robot.controller.speedpid_kd += 0.001;
-        else if (paramMode == PARAMMODE_KI)
-            robot.controller.speedpid_ki += 0.001;
-        else
-            robot.controller.speedpid_kp += 0.001;
+        if (paramMode == PARAMMODE_KD) {
+            robot.controller.speed_controllerL.wheel_speed_pid_kd += COEFF3;
+            robot.controller.speed_controllerR.wheel_speed_pid_kd += COEFF3;
+        }
+        else if (paramMode == PARAMMODE_KI) {
+            robot.controller.speed_controllerL.wheel_speed_pid_ki += COEFF3;
+            robot.controller.speed_controllerR.wheel_speed_pid_ki += COEFF3;
+        }
+        else {
+            robot.controller.speed_controllerL.wheel_speed_pid_kp += COEFF3;
+            robot.controller.speed_controllerR.wheel_speed_pid_kp += COEFF3;
+        }
         notifyClients(robot.controller.JSON_SpeedPID_Params());     
         logWrite(robot.controller.String_SpeedPID_Params());
     }
     else if (message == "+2") {
-        if (paramMode == PARAMMODE_KD)
-            robot.controller.speedpid_kd += 0.0001;
-        else if (paramMode == PARAMMODE_KI)
-            robot.controller.speedpid_ki += 0.0001;
-        else
-            robot.controller.speedpid_kp += 0.0001;
+        if (paramMode == PARAMMODE_KD) {
+            robot.controller.speed_controllerL.wheel_speed_pid_kd += COEFF2;
+            robot.controller.speed_controllerR.wheel_speed_pid_kd += COEFF2;
+        }
+        else if (paramMode == PARAMMODE_KI) {
+            robot.controller.speed_controllerL.wheel_speed_pid_ki += COEFF2;
+            robot.controller.speed_controllerR.wheel_speed_pid_ki += COEFF2;
+        }
+        else {
+            robot.controller.speed_controllerL.wheel_speed_pid_kp += COEFF2;
+            robot.controller.speed_controllerR.wheel_speed_pid_kp += COEFF2;
+        }
         notifyClients(robot.controller.JSON_SpeedPID_Params());     
         logWrite(robot.controller.JSON_SpeedPID_Params());
     }
     else if (message == "+1") {
-        if (paramMode == PARAMMODE_KD)
-            robot.controller.speedpid_kd += 0.00001;
-        else if (paramMode == PARAMMODE_KI)
-            robot.controller.speedpid_ki += 0.00001;
-        else
-            robot.controller.speedpid_kp += 0.00001;
+        if (paramMode == PARAMMODE_KD) {
+            robot.controller.speed_controllerL.wheel_speed_pid_kd += COEFF1;
+            robot.controller.speed_controllerR.wheel_speed_pid_kd += COEFF1;
+        }
+        else if (paramMode == PARAMMODE_KI) {
+            robot.controller.speed_controllerL.wheel_speed_pid_ki += COEFF1;
+            robot.controller.speed_controllerR.wheel_speed_pid_ki += COEFF1;
+        }
+        else {
+            robot.controller.speed_controllerL.wheel_speed_pid_kp += COEFF1;
+            robot.controller.speed_controllerR.wheel_speed_pid_kp += COEFF1;
+        }
         notifyClients(robot.controller.JSON_SpeedPID_Params());     
         logWrite(robot.controller.JSON_SpeedPID_Params());
     }
     else if (message == "-3") {
-        if (paramMode == PARAMMODE_KD)
-            robot.controller.speedpid_kd -= 0.001;
-        else if (paramMode == PARAMMODE_KI)
-            robot.controller.speedpid_ki -= 0.001;
-        else
-            robot.controller.speedpid_kp -= 0.001;
+        if (paramMode == PARAMMODE_KD) {
+            robot.controller.speed_controllerL.wheel_speed_pid_kd -= COEFF3;
+            robot.controller.speed_controllerR.wheel_speed_pid_kd -= COEFF3;
+        }
+        else if (paramMode == PARAMMODE_KI) {
+            robot.controller.speed_controllerL.wheel_speed_pid_ki -= COEFF3;
+            robot.controller.speed_controllerR.wheel_speed_pid_ki -= COEFF3;
+        }
+        else {
+            robot.controller.speed_controllerL.wheel_speed_pid_kp -= COEFF3;
+            robot.controller.speed_controllerR.wheel_speed_pid_kp -= COEFF3;
+        }
         notifyClients(robot.controller.JSON_SpeedPID_Params());     
         logWrite(robot.controller.JSON_SpeedPID_Params());
     }
     else if (message == "-2") {
-        if (paramMode == PARAMMODE_KD)
-            robot.controller.speedpid_kd -= 0.0001;
-        else if (paramMode == PARAMMODE_KI)
-            robot.controller.speedpid_ki -= 0.0001;
-        else
-            robot.controller.speedpid_kp -= 0.0001;
+        if (paramMode == PARAMMODE_KD) {
+            robot.controller.speed_controllerL.wheel_speed_pid_kd -= COEFF2;
+            robot.controller.speed_controllerR.wheel_speed_pid_kd -= COEFF2;
+        }
+        else if (paramMode == PARAMMODE_KI) {
+            robot.controller.speed_controllerL.wheel_speed_pid_ki -= COEFF2;
+            robot.controller.speed_controllerR.wheel_speed_pid_ki -= COEFF2;
+        }
+        else {
+            robot.controller.speed_controllerL.wheel_speed_pid_kp -= COEFF2;
+            robot.controller.speed_controllerR.wheel_speed_pid_kp -= COEFF2;
+        }
         notifyClients(robot.controller.JSON_SpeedPID_Params());     
         logWrite(robot.controller.JSON_SpeedPID_Params());
     }
     else if (message == "-1") {
-        if (paramMode == PARAMMODE_KD)
-            robot.controller.speedpid_kd -= 0.00001;
-        else if (paramMode == PARAMMODE_KI)
-            robot.controller.speedpid_ki -= 0.00001;
-        else
-            robot.controller.speedpid_kp -= 0.00001;
+        if (paramMode == PARAMMODE_KD) {
+            robot.controller.speed_controllerL.wheel_speed_pid_kd -= COEFF1;
+            robot.controller.speed_controllerR.wheel_speed_pid_kd -= COEFF1;
+        }
+        else if (paramMode == PARAMMODE_KI) {
+            robot.controller.speed_controllerL.wheel_speed_pid_ki -= COEFF1;
+            robot.controller.speed_controllerR.wheel_speed_pid_ki -= COEFF1;
+        }
+        else {
+            robot.controller.speed_controllerL.wheel_speed_pid_kp -= COEFF1;
+            robot.controller.speed_controllerR.wheel_speed_pid_kp -= COEFF1;
+        }
         notifyClients(robot.controller.JSON_SpeedPID_Params());     
         logWrite(robot.controller.JSON_SpeedPID_Params());
     }
@@ -356,4 +433,4 @@ void testDriveStop() {
 
 }
 
-#endif
+#endif                                       

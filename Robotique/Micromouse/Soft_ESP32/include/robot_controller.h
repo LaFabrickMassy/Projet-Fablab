@@ -7,6 +7,7 @@
 #include "motor.h"
 #include "wheel_encoder.h"
 #include "robot_hw.h"
+#include "robot_speed_controller.h"
 
 #define ROBOT_SPEED_MAX 250 // max robot speed in mm/s
 
@@ -14,9 +15,6 @@
 #define ROBOT_CONTROLLER_MOTOR_KL 0.0025
 #define ROBOT_CONTROLLER_MOTOR_KR 0.0025
 
-#define ROBOT_CONTROLLER_SPEEDPID_KP 0.
-#define ROBOT_CONTROLLER_SPEEDPID_KI 0.
-#define ROBOT_CONTROLLER_SPEEDPID_KD 0.
 
 // Speed -> motor cmd
 // 35 :  0.1/0.1
@@ -59,15 +57,14 @@ class RobotController{
         int Init();
         void Reset();
         void Stop();
-        double SpeedPID(double speed_target, double speed_current);
-        void RunInit(double speed, double distance);
-        void RunUpdateDistance(double distance);
-        boolean RunStep();
-        void TurnInit(double speed, double radius, double angle);
+        void StraightPrepare(double speed, double distance);
+        void TurnPrepare(double speed, double radius, double angle);
+        void RotatePrepare(double speed, double angle);
+        boolean Step();
         boolean TurnStep();
-        void RotateInit(double speed, double angle);
         boolean RotateStep();
-        void ComputeMove();
+        void ComputeMove(double h, double *dx, double *dy, double *dh);
+
         String JSON_SpeedPID_Params(); 
         String String_SpeedPID_Params();
         String JSON_ControllerStatus();
@@ -75,32 +72,24 @@ class RobotController{
         String JSON_ControlHistory();
 
         RobotHW robot_hw;
-        double speedpid_kp;
-        double speedpid_ki;
-        double speedpid_kd;
-        // target speed during move
-        double target_speedL, target_speedR;
-        // motors commands
-        double cmd_motorL, cmd_motorR;
+        RobotSpeedController speed_controllerL;
+        RobotSpeedController speed_controllerR;
+        
     private:
         // state 
         double state_x, state_y, state_h, state_speed;
-        // sequence times
-        unsigned long start_time; // beginning of sequence
-        unsigned long loop_time; // current loop
-        unsigned long last_loop_time; // last loop
-        long elapsed_time;
-        // target and run distance
-        double target_distanceL, target_distanceR;
-        double run_distanceL, run_distanceR;
-        double old_run_distanceL, old_run_distanceR;
-        long init_encvalueL, init_encvalueR;
         // target and run angle
         double target_angle, run_angle;
         // 
-        double mean_speedL, mean_speedR;
-        // 
+        double dt;
+        // motor control
+        double motor_speed_cmd_K;
+        // move computation
+        long cm_encoderL_lastcount, cm_encoderR_lastcount;
+
         #ifdef DEBUG_ROBOT_CONTROLLER
+        unsigned long start_time; // beginning of sequence
+        int elapsed_time;
         int loop_step;
         #endif
 

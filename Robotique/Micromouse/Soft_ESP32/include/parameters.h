@@ -39,11 +39,11 @@
 // left and right sensors angle in degrees
 #define SIDE_SENSORS_ANGLE 75 
 #define ROBOT_WHEEL_DISTANCE 93.
-#define ENCL_RESOL 0.225
+#define ENCL_RESOL 0.250 //0.225
 #define ENCR_RESOL 0.225
 #define SPEED_MAX 10 // maximal speed, in mm/s
-#define TACHOMETER_PERIOD_US 20000 // 20 ms
-#define TACHOMETER_PERIOD_SEC (1000000.*(double)TACHOMETER_PERIOD_US)
+#define TACHOMETER_PERIOD_US 50000 // 20 ms
+#define TACHOMETER_PERIOD_SEC ((double)TACHOMETER_PERIOD_US/1000000.)
 
 // PID Controllers parameters
 #define SPEED_PID_KP 0.
@@ -82,6 +82,8 @@
 #define SENSORS_STDDEV 2.35 // Standard deviation of e=dL-dR
 
 #define PI 3.1415926535897932384626433832795
+#define PIs2 (PI/2.)
+#define PIs4 (PI/4.)
 
 
 #endif

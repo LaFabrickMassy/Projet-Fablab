@@ -17,6 +17,7 @@ class RobotHW {
         RobotHW();
         int Init();
         void Reset();
+        void ComputeMove();
 
         // Motors 
         void MotorsStop();
@@ -26,13 +27,15 @@ class RobotHW {
 
         // distance sensors
 
+        // motors
+        motor_t motorL;
+        motor_t motorR;
+
 
 
 
     private:
-        // motors
-        motor_t motorL;
-        motor_t motorR;
+        long encoderL_lastcount, encoderR_lastcount;
 
 };
 

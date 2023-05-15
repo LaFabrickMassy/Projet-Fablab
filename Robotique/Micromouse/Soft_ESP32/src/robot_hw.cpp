@@ -50,7 +50,8 @@ int RobotHW::Init() {
     // Encoders initialisation
     setupEncoderR(PIN_L_MOTOR_SA, PIN_L_MOTOR_SB, 1);
     setupEncoderL(PIN_R_MOTOR_SA, PIN_R_MOTOR_SB, 0);
-
+    tachometerInit();
+    
     // Distance sensors setup
 	setupSensor1(PIN_SENSORL); // Left sensor
 	setupSensor2(PIN_SENSORF); // Front sensor
@@ -116,6 +117,4 @@ void RobotHW::MotorsSetSpeed(double motor_speedL, double motor_speedR) {
 // DISTANCE SENSORS
 //*****************************************************************************
 //*****************************************************************************
-
-
 
