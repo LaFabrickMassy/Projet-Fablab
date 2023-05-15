@@ -54,6 +54,9 @@ int Robot::Init() {
 void Robot::Reset() {
     //controller.Stop();
     controller.Reset();
+    x = 0;
+    y = 0;
+    h = 0;
 
     // dynamic state
     dynamic_state = ROBOT_DSTATE_STOP;
@@ -80,7 +83,8 @@ void Robot::Crash() {
 //********************************************************************
 void Robot::UpdateState() {
     double dx, dy, dh;
-    RobotController.ComputeMove(h, , &dx, &dy, &dh);
+    
+    controller.ComputeMove(h, &dx, &dy, &dh);
     x+=dx;
     y+=dy;
     h+=dh;
