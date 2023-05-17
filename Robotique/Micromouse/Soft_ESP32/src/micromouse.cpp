@@ -17,15 +17,6 @@
 
 String debug_message;
 
-#ifdef WIFI_MODE_AP
-//* Web server definitions ********************************
-const char* ssid = "ESP32";
-const char* password = NULL;
-#else
-const char* ssid = "";
-const char* password = "";
-#endif
-
 Maze maze;
 Robot robot;
 

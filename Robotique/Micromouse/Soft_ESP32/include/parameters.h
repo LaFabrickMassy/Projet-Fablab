@@ -59,9 +59,6 @@
 #define TRACE_LEVEL 2
 #define LOG_SENSORPID_ERRORS 1
 
-// Wifi mode
-#define WIFI_MODE_AP 1
-
 // Simple run parameters
 #define SPEED_MIN 0.2 // Minimal speed, needed to start
 #define SPEED_FACTOR 1.4

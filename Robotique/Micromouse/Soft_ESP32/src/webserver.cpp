@@ -34,38 +34,84 @@ AsyncWebServer server(80);
 // Create a WebSocket object
 AsyncWebSocket ws("/ws");
 
+//* Web server definitions ********************************
+const char* ap_ssid = "ESP32";
+const char* ap_password = NULL;
+const char* st_ssid = "HUAWEI_E5576_3910";
+const char* st_password = "D3HBJ7RB0L8";
+
+#define CHECK_WIFI_AP 1
+
 String message;
 
 //********************************************************************
 // Initialize WiFi
 //********************************************************************
 void initWiFi() {
-    #ifdef WIFI_MODE_AP
-    if (WiFi.softAP(ssid, password, WIFI_CHANNEL))
-    {
-		Serial.println("*******************************");	
-        Serial.println("Wifi AP launched");
-        if (!WiFi.softAPConfig(local_ip, gateway, subnet))
-            Serial.println("AP Config Failed");
-        else
-			Serial.println("IP Address: ");
-            Serial.println(String(WiFi.localIP().toString())); 
+    bool station_connected;
+
+    station_connected = false;
+
+    // Check if expected WIFI network is present, else open the AP
+    #if CHECK_WIFI_AP
+    bool ap_found;
+    int nb_wifi_networks;
+    int i;
+    WiFi.mode(WIFI_STA);
+    nb_wifi_networks = WiFi.scanNetworks();
+    ap_found = false;
+    if (nb_wifi_networks > 0) {
+        for (i=0;i<nb_wifi_networks;i++){
+            if (WiFi.SSID(i) == st_ssid) {
+                // The SSID is opened
+                ap_found = true;
+                WiFi.scanDelete();
+                break;
+            }
+        }
     }
-    else
-        Serial.println("Wifi AP failed");
-    #else	// WIFI station
-	WiFi.begin(ssid, password);
-	Serial.println("Connecting to WiFi \'");
-	Serial.println(ssid);
-	while (WiFi.status() != WL_CONNECTED) {
-		Serial.println(String("."));
-		delay(1000);
-	}
-	Serial.println("Connected, IP=");
-	Serial.println(String(WiFi.localIP()));	
-	Serial.println(" with signal stength ");
-	Serial.println(String(WiFi.RSSI()));
+    if (ap_found == true) {
+        WiFi.begin(st_ssid, st_password);
+        Serial.println(String("Trying to connect to SSID <")+st_ssid+String("> "));
+        i = 10;
+        while(WiFi.status() != WL_CONNECTED) {
+            Serial.print(".");
+            delay(500);
+            if (i<=0) { // tried during more than 5 sec.
+                break;
+            }
+        }
+        if (WiFi.status() == WL_CONNECTED) {
+            Serial.println("connected");
+            Serial.print("Connected, IP=");
+            Serial.println(WiFi.localIP().toString());	
+            Serial.print("with signal stength ");
+            Serial.println(String(WiFi.RSSI()));
+
+            station_connected = true;
+        }
+    }
     #endif
+
+    // if not connected, open the AP
+    if(station_connected == false) {
+        WiFi.mode(WIFI_AP);
+
+        if (!WiFi.softAPConfig(local_ip, gateway, subnet)) {
+            Serial.println("AP Config Failed");
+        }
+        else {
+            if (WiFi.softAP(ap_ssid, ap_password, WIFI_CHANNEL)) {
+                Serial.println("*******************************");	
+                Serial.println("Wifi AP launched");
+                    Serial.println("IP Address: ");
+                    Serial.println(String(WiFi.softAPIP().toString())); 
+            }
+            else {
+                Serial.println("Wifi AP failed");
+            }
+        }
+    }
 }
 
 //********************************************************************
