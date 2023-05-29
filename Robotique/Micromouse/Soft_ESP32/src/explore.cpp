@@ -80,6 +80,34 @@ void exploreStep() {
 //*****************************************************************************
 void exploreRunStep() {
 
+    // Update robot state
+    robot.UpdateState();
+
+    if (ex_state == EX_STATE_RUN) {
+        // Check for walls
+
+        // Update maze knowledge
+
+        // define movement
+
+    }
+    // Update control command
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     // front distance
     double fwall_dist; 
     // left and right distance

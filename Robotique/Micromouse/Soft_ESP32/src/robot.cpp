@@ -85,6 +85,7 @@ void Robot::UpdateState() {
     double dx, dy, dh;
     
     controller.ComputeMove(h, &dx, &dy, &dh);
+    
     x+=dx;
     y+=dy;
     h+=dh;

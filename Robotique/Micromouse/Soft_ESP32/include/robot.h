@@ -38,12 +38,12 @@ class Robot {
         int dynamic_state;
     private:
         // (x,y) position
-        double x;
-        double y;
+        double x_mean, x_var;
+        double y_mean, y_var;
         // heading
-        double h;
+        double h_mean, h_var;
         // speed
-        double speed;
+        double speed_mean, speed_var;
         // direction : north, east, south, west
         int direction;
         // current cell

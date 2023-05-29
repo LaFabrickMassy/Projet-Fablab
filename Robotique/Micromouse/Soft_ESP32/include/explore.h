@@ -6,6 +6,8 @@
 #define EX_STATE_RUN_END 2
 #define EX_STATE_ROTATE 3
 #define EX_STATE_ROTATE_END 4
+#define EX_STATE_TURN 6
+#define EX_STATE_TURN_END 7
 #define EX_STATE_CRASH 99
 
 void exploreInit();
