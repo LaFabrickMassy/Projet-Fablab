@@ -314,6 +314,8 @@ class Robot:
         self.current_pos_x = 0
         self.current_pos_y = 0
         self.current_heading = 0
+        self.current_wspeedL = 0
+        self.current_wspeedR = 0
         self.sensors_data = [None] * len(Robot.distance_sensors_dir)
         
         self.wall_side_dist = (Maze.cell_width - Maze.wall_width)/2*math.sqrt(2)
@@ -341,6 +343,8 @@ class Robot:
             self.current_heading = math.pi/2
             self.current_pos_x = (Maze.cell_width - Maze.wall_width)/2
             self.current_pos_y = (Maze.cell_width - Maze.wall_width)/2 #Robot.wheels_distance/2 + Maze.wall_width
+        self.current_wspeedL = 0
+        self.current_wspeedR = 0
 
     #######################################################
     #
@@ -664,13 +668,100 @@ class Robot:
         #print(f"DistanceSensors: sensors_data={self.sensors_data}")
 
     #######################################################
+    # Movement
+    # Compute dx, dy and dh from L and R speeds and dt
+    #######################################################
+    def Movement(self, l_speed, r_speed, dt):
+        dL = l_speed * dt
+        dR = r_speed * dt
+
+        if dL > 0:
+            if dR > 0:
+                if dL > dR:
+                    q = dL/dR
+                    rR = W/(q-1.)
+                    r = rR+W/2.
+                    dh = -dR / rR;      
+                    ch = math.cos(h)
+                    sh = math.sin(h)
+                    ca = math.cos(dh)
+                    sa = math.sin(dh)
+                    
+                    # O on right
+                    dx = -r * (sh*(1.-ca) - ch*sa)
+                    dy = -r * (ch*(1.-ca) - sh*sa)
+                elif dL == dR:
+                    pass
+                else:
+                    pass
+            elif dR == 0:
+                if dL > dR:
+                    pass
+                elif dL == dR:
+                    pass
+                else:
+                    pass
+            else: # dR < 0
+                if dL > dR:
+                    pass
+                elif dL == dR:
+                    pass
+                else:
+                    pass
+        elif dL == 0:
+            if dR > 0:
+                if dL > dR:
+                    pass
+                elif dL == dR:
+                    pass
+                else:
+                    pass
+            elif dR == 0:
+                if dL > dR:
+                    pass
+                elif dL == dR:
+                    pass
+                else:
+                    pass
+            else: # dR < 0
+                if dL > dR:
+                    pass
+                elif dL == dR:
+                    pass
+                else:
+                    pass
+        else: # dL <0
+            if dR > 0:
+                if dL > dR:
+                    pass
+                elif dL == dR:
+                    pass
+                else:
+                    pass
+            elif dR == 0:
+                if dL > dR:
+                    pass
+                elif dL == dR:
+                    pass
+                else:
+                    pass
+            else: # dR < 0
+                if dL > dR:
+                    pass
+                elif dL == dR:
+                    pass
+                else:
+                    pass
+
+    #######################################################
     # ExploreInit
     #######################################################
     def ExploreInit(self):
 
+        # Set initial position
         self.StartCellExplore()
-        self.DistanceSensors()
-        
+
+        # set flags        
         self.mode = Robot.MODE_EXPLORE
         self.mov  = Robot.MVT_AHEAD
         
@@ -684,10 +775,15 @@ class Robot:
     #######################################################
     def ExploreUpdate(self):
     
+        # predict position from state
+
+
+        # get sensors data
         self.DistanceSensors()
-        
         [[ld, lx, ly, la], [cd, cy, cy, ca],[rd, rx, ry, ra]] = self.sensors_data
-        
+
+        # update prediction from sensors
+
         
         # check if walls around
         if ld > self.wall_side_dmax:
