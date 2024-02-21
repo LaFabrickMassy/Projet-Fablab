@@ -1,264 +1,13 @@
 import math
 import time
 from maze import *
+from sensors import *
 
-###########################################################
-# Compute the distance between a ray, defined by a point p and
-# an angle alpha, and an horizontal segment [a,b]
-# distance is math.inf if no intersection
-#
-# @param px, py coordinates of point p
-# @param alpha angle of ray from x axis
-# @param ax, ay coordinates of point a
-# @param bx x coordinare of point b (here, by=ay)
-#
-# @return [distance, tx, ty] where t is the intersection point
-#         None if no intersection
-#
-###########################################################
-def Distance2HSegment(px, py, alpha, ax, ay, bx, by):
+# heading PID parameters
+headPID_kp = 1
+headPID_ki = 0
+headPID_kd = 0
 
-    #### DEBUG ####
-    #print(f"Distance2HSegment {px},{py},{math.degrees(alpha)},{ax},{ay},{bx},{ay}")
-    
-    # Normalise alpha in ]-pi,pi]
-    alpha = math.fmod(alpha, 2*math.pi)    
-    # here, alpha is in ]-2pi, 2pi[
-    if alpha < 0: 
-        alpha = alpha + 2*math.pi
-    # here, alpha is in [0, 2pi[
-    if alpha > math.pi:
-        alpha = alpha - 2*math.pi
-    # finished, alpha is now in ]-pi, pi]
-    
-    # set default results
-    distance = math.inf
-    tx = None
-    ty = None
-    
-    # if b is to the left of a, swap a and b so ax < bx
-    if bx < ax:
-        cx = ax
-        ax = bx
-        bx = cx
-        
-    if alpha == 0:
-        # intersection only if py == ay
-        if py == ay:
-            # intesection only if py < by
-            if px < bx:
-                if px > ax:
-                    # p is on [a,b]
-                    distance = 0
-                    tx = px
-                    ty = py
-                else:
-                    # p on the line, to the left of a
-                    # intersection is a
-                    distance = ay-py
-                    tx = ax
-                    ty = ay
-            else:
-                pass
-        else:
-            pass
-    elif alpha == -math.pi:
-        # intersection only if py == ay
-        if py == ay:
-            # intesection only if px > ax
-            if px > ax:
-                if px < bx:
-                    # p is on [a,b]
-                    distance = 0
-                    tx = px
-                    ty = py
-                else:
-                    # p on the line, to the right of b
-                    # intersection is b
-                    distance = py - by
-                    tx = bx
-                    ty = ay
-            else:
-                pass
-        else:
-            pass
-    elif (py > ay) and (alpha > 0):
-        # p is above and facing up
-        pass
-    elif (py < ay) and (alpha < 0):
-        # p is below and facing down
-        pass
-    elif (px < ax) and ((alpha > math.pi/2) or (alpha < -math.pi/2)):
-        # p is to the left and facing left
-        pass
-    elif (px > bx) and ((alpha < math.pi/2) and (alpha > -math.pi/2)):
-        # p is to the right and facing right
-        pass
-    else: # general case
-        # o point on (a,b) with same x coordinate as p
-        # The triangle (p,o,t) is square in o, 
-        # so op=distance * cos(beta) and ot=distance * sin(beta)
-        # with beta = pi/2-alpha 
-        beta = math.pi/2-alpha
-        distance = abs((ay-py)/math.cos(beta))
-        tx = px + distance*math.sin(beta)
-        if (ax<tx) and (tx<bx):
-            ty = ay
-        else:
-            distance = math.inf
-            tx = None
-
-    #### DEBUG ####
-    #print(f"  ==> {distance},{tx},{ty}")
-
-    return [distance, tx, ty]
-        
-###########################################################
-# Compute the distance between a ray, defined by a point p and
-# an angle alpha, and a vertical segment [a,b]
-# distance is math.inf if no intersection
-#
-# @param px, py coordinates of point p
-# @param alpha angle of ray from x axis
-# @param ax, ay coordinates of point a
-# @param by y coordinare of point b (here, bx=ax)
-#
-# @return [distance, tx, ty] where t is the intersection point
-#         None if no intersection
-#
-###########################################################
-def Distance2VSegment(px, py, alpha, ax, ay, bx, by):
-
-    #### DEBUG ####
-    #print(f"Distance2VSegment {px},{py},{math.degrees(alpha)},{ax},{ay},{ax},{by}")
-    
-    # Normalise alpha in ]-pi,pi]
-    alpha = math.fmod(alpha, 2*math.pi)    
-    # here, alpha is in ]-2pi, 2pi[
-    if alpha < 0: 
-        alpha = alpha + 2*math.pi
-    # here, alpha is in [0, 2pi[
-    if alpha > math.pi:
-        alpha = alpha - 2*math.pi
-    # finished, alpha is now in ]-pi, pi]
-    
-    # set result to None
-    distance = math.inf
-    tx = None
-    ty = None
-    
-    # if b is under a, swap a and b so ay < by
-    if by < ay:
-        cy = ay
-        ay = by
-        by = cy
-        
-    if alpha == math.pi/2:
-        #### DEBUG
-        #print("  Case 1 : alpha=90")
-        
-        # intersection only if px == ax
-        if px == ax:
-            # intesection only if py < by
-            if py < by:
-                if py > ay:
-                    #### DEBUG
-                    #print("p is on [a,b]")
-                    # p is on [a,b]
-                    distance = 0
-                    tx = px
-                    ty = py
-                else:
-                    # p on the line, under a
-                    # intersection is a
-                    #### DEBUG
-                    #print("p is on the line, under a")
-                    distance = ax - px
-                    tx = ax
-                    ty = ay
-            else:
-                pass
-        else:
-            pass
-    elif alpha == -math.pi/2:
-        #### DEBUG
-        #print("  Case 2: alpha=-90")
-
-        # intersection only if px == ax
-        if px == ax:
-            # intesection only if py > ay
-            if py > ay:
-                if py < by:
-                    # p is on [a,b]
-                    distance = 0
-                    tx = px
-                    ty = py
-                else:
-                    # p on the line, over b
-                    # intersection is b
-                    distance = px - bx
-                    tx = ax
-                    ty = by
-            else:
-                pass
-        else:
-            pass
-    elif (py > by) and (alpha > 0):
-        # p is above and facing up
-        
-        #### DEBUG
-        #print("  Case 3 : p above segment")
-        
-        pass
-    elif (py < ay) and (alpha < 0):
-        # p is below and facing down
-
-        #### DEBUG
-        #print("  Case 4 : p below segment")
-        
-        pass
-    elif (px < ax) and ((alpha > math.pi/2) or (alpha < -math.pi/2)):
-        # p is to the left and facing left
-
-        #### DEBUG
-        #print("  Case 5 : p to the left")
-        
-        pass
-    elif (px > ax) and ((alpha < math.pi/2) and (alpha > -math.pi/2)):
-        # p is to the right and facing right
-
-        #### DEBUG
-        #print("  Case 6 : p to the right")
-        
-        pass
-    else: # general case
-        # o point on (a,b) with same y coordinate as p
-        # The triangle (p,o,t) is square in o, 
-        # so op=distance * cos(alpha) and ot=distance * sin(alpha)
-        
-        distance = abs((ax-px)/math.cos(alpha))
-        ty = py + distance*math.sin(alpha)
-
-        #### DEBUG
-        #print(f"  Case 7 : good case, ty={ty}")        
-
-        if (ay<ty) and (ty<by):
-        
-            #### DEBUG
-            #print("    Case 7a : t on segment")
-            tx = ax
-        else:
-
-            #### DEBUG
-            #print("    Case 7b : t not on segment")
-
-            distance = math.inf
-            ty = None
-
-    #### DEBUG ####
-    #print(f"  ==> {distance},{tx},{ty}")
-
-    return [distance, tx, ty]
 
 ###########################################################
 #
@@ -268,7 +17,7 @@ class Robot:
     simu_time_step = 0.1 # time step in seconds
     wheels_distance = 100 # distance between wheels, in mm
     
-    distance_sensors_dir = [-math.pi/4, 0, math.pi/4]
+    distance_sensors_dir = [-75.*math.pi/180., 0, 75.*math.pi/180.] # [-math.pi/4, 0, math.pi/4]
 
     # movements : 
     MVT_STOP = 0 # stop
@@ -301,6 +50,20 @@ class Robot:
     Ki = 1
     Kd = 0
 
+    # Gaussian parameters for initial positions
+    pos_x_sigma = 10
+    pos_x_sigma2 = pos_x_sigma*pos_x_sigma
+    pos_y_sigma = 5
+    pos_y_sigma2 = pos_y_sigma*pos_y_sigma
+    pos_h_sigma = math.radians(5)
+    pos_h_sigma2 = pos_h_sigma*pos_h_sigma
+    # Gaussian parameters for sensors
+    dist_sensorL_sigma = 3
+    dist_sensorR_sigma = 3
+    dist_sensorF_sigma = 3
+    wheel_sensorL_sigma = 1
+    wheel_sensorR_sigma = 1
+
     #######################################################
     def __init__(self, maze):
     
@@ -326,8 +89,13 @@ class Robot:
         self.wall_front_dmax = Maze.cell_width
         
         self.current_state = Robot.MVT_STOP
+
+        self.rmotor_speed = 0.
+        self.lmotor_speed = 0.
+        self.headPID_error = 0
+        self.headPID_olderror = 0
         
-        self.StartCellCenter()
+        self.StartCellExplore()
     
     #######################################################
     #
@@ -335,16 +103,22 @@ class Robot:
     def StartCellCenter(self):
         if self.maze.generated == False or self.maze.start_H:
             # 1st cell output on the right
-            self.current_heading = 0
-            self.current_pos_x = (Maze.cell_width - Maze.wall_width)/2 #Robot.wheels_distance/2 + Maze.wall_width
-            self.current_pos_y = (Maze.cell_width - Maze.wall_width)/2
+            self.current_heading = 0 
+            self.current_pos_x = Robot.wheels_distance/2 + Maze.wall_width  # (Maze.cell_width - Maze.wall_width)/2
+            self.current_pos_y = (Maze.cell_width - Maze.wall_width)/2 
         else:
             # 1st cell output on the top
+<<<<<<< Updated upstream
             self.current_heading = math.pi/2
             self.current_pos_x = (Maze.cell_width - Maze.wall_width)/2
             self.current_pos_y = (Maze.cell_width - Maze.wall_width)/2 #Robot.wheels_distance/2 + Maze.wall_width
         self.current_wspeedL = 0
         self.current_wspeedR = 0
+=======
+            self.current_heading = math.pi/2 
+            self.current_pos_x = (Maze.cell_width - Maze.wall_width)/2 
+            self.current_pos_y = Robot.wheels_distance/2 + Maze.wall_width
+>>>>>>> Stashed changes
 
     #######################################################
     #
@@ -352,16 +126,275 @@ class Robot:
     def StartCellExplore(self):
         if self.maze.generated == False or self.maze.start_H:
             # 1st cell output on the right
-            self.current_heading = 0 + random.uniform(-Robot.START_HEADING_ERROR, Robot.START_HEADING_ERROR)
-            self.current_pos_x = Robot.wheels_distance/2 + Maze.wall_width
-            self.current_pos_y = (Maze.cell_width - Maze.wall_width)/2 + random.uniform(-Robot.START_LATERAL_ERROR, Robot.START_LATERAL_ERROR)
+            self.current_heading = 0 + random.gauss(0, self.pos_h_sigma)
+            self.current_pos_x = Robot.wheels_distance/2 + Maze.wall_width + random.gauss(0, self.pos_y_sigma) # (Maze.cell_width - Maze.wall_width)/2
+            self.current_pos_y = (Maze.cell_width - Maze.wall_width)/2 + random.gauss(0, self.pos_x_sigma)
         else:
             # 1st cell output on the top
-            self.current_heading = math.pi/2 + random.uniform(-Robot.START_HEADING_ERROR, Robot.START_HEADING_ERROR)
-            self.current_pos_x = (Maze.cell_width - Maze.wall_width)/2 + random.uniform(-Robot.START_LATERAL_ERROR, Robot.START_LATERAL_ERROR)
-            self.current_pos_y = Robot.wheels_distance/2 + Maze.wall_width
+            self.current_heading = math.pi/2 + random.gauss(0, self.pos_h_sigma)
+            self.current_pos_x = (Maze.cell_width - Maze.wall_width)/2 + random.gauss(0, self.pos_x_sigma)
+            self.current_pos_y = Robot.wheels_distance/2 + Maze.wall_width+ random.gauss(0, self.pos_y_sigma)
             
         print("StartCellExplore {}".format((math.degrees(self.current_heading), self.current_pos_x, self.current_pos_y)))
+
+    #######################################################
+    # 
+    #######################################################
+    def RunStepMotorSpeed(self, lspeed, rspeed):
+        """
+        Compute new position from motors speed
+        
+        """
+        dL = lspeed*self.simu_time_step
+        dR = rspeed*self.simu_time_step
+        
+        #print("RunStepMotorSpeed {:.1f},{:.1f}".format(dL, dR))
+        W = self.wheels_distance
+        
+        if dL > 0:
+            if dR > 0:
+                if dL > dR: # case 1
+                    #print(f"  # case 1, {dL},{dR}")
+                
+                    q = dL/dR
+                    rR = W/(q-1.)
+                    r = rR + W/2
+                    alpha = -dR / rR
+                    ch = math.cos(self.gen_heading)
+                    sh = math.sin(self.gen_heading)
+                    ca = math.cos(alpha)
+                    sa = math.sin(alpha)
+                    
+                    # O on right
+                    mov_x = +r * (sh*(1.-ca) - ch*sa)
+                    mov_y = -r * (ch*(1.-ca) + sh*sa)
+                    
+                elif dL == dR: # case 2
+                    #print("  # case 2, {dL},{dR}")
+                
+                    alpha = 0.
+                    r = dL
+                    ch = math.cos(self.gen_heading)
+                    sh = math.sin(self.gen_heading)
+
+                    # O on center
+                    mov_x = r*ch
+                    mov_y = r*sh
+                    
+                else: # dL < dR, case 3
+                    #print(f"  # case 3, {dL},{dR}")
+
+                    q = dR/dL
+                    rL = W/(q-1.)
+                    r = rL+W/2.
+                    alpha = dL / rL
+                    ch = math.cos(self.gen_heading)
+                    sh = math.sin(self.gen_heading)
+                    ca = math.cos(alpha)
+                    sa = math.sin(alpha)
+                    
+                    # O on left
+                    mov_x = -r * (sh*(1.-ca) - ch*sa)
+                    mov_y =  r * (ch*(1.-ca) + sh*sa)
+
+            elif dR == 0: # case 4
+                #print(f"  # case 4, {dL},{dR}")
+
+                r = W/2.
+                alpha = -dL/W
+                ch = math.cos(self.gen_heading)
+                sh = math.sin(self.gen_heading)
+                ca = math.cos(alpha)
+                sa = math.sin(alpha)
+                
+                # O on right
+                mov_x = +r * (sh*(1.-ca) - ch*sa)
+                mov_y = -r * (ch*(1.-ca) + sh*sa)
+
+            else: # dR < 0
+                if dL < -dR: # case 5
+                    #print(f"  # case 5, {dL},{dR}")
+            
+                    q = -dL/dR
+                    rR = W/(q+1.)
+                    r = W/2.-rR
+                    alpha = -dR / rR
+                    ch = math.cos(self.gen_heading)
+                    sh = math.sin(self.gen_heading)
+                    ca = math.cos(alpha)
+                    sa = math.sin(alpha)
+                    
+                    # O on right
+                    mov_x = +r * (sh*(1.-ca) - ch*sa)
+                    mov_y = -r * (ch*(1.-ca) + sh*sa)
+
+                elif dL == -dR: # case 6
+                    #print(f"  # case 6, {dL},{dR}")
+
+                    r = 0.
+                    alpha = -dL/(W/2.)
+
+                    # O on center
+                    mov_x = 0.
+                    mov_y = 0.
+
+                else: # dL > -dR, case 7
+                    #print(f"  # case 7, {dL},{dR}")
+
+                    q = -dR/dL
+                    rL = W/(q+1.)
+                    r = W/2.-rL
+                    alpha = -dL / rL
+                    ch = math.cos(self.gen_heading)
+                    sh = math.sin(self.gen_heading)
+                    ca = math.cos(alpha)
+                    sa = math.sin(alpha)
+                    
+                    # O on left
+                    mov_x = -r * (sh*(1.-ca) - ch*sa)
+                    mov_y =  r * (ch*(1.-ca) + sh*sa)
+
+        elif dL == 0:
+            if dR > 0: # case 8
+                #print(f"  # case 8, {dL},{dR}")
+
+                r = W/2.
+                alpha = dR/W
+                ch = math.cos(self.gen_heading)
+                sh = math.sin(self.gen_heading)
+                ca = math.cos(alpha)
+                sa = math.sin(alpha)
+                
+                # O on left
+                mov_x = -r * (sh*(1.-ca) - ch*sa)
+                mov_y =  r * (ch*(1.-ca) + sh*sa)
+
+            elif dR == 0: # case 9
+                #print(f"  # case 9, {dL},{dR}")
+
+                r = 0.
+                alpha = 0.
+                mov_x = 0.
+                mov_y = 0.
+
+            else: # dR < 0, case 10
+                #print(f"  # case 10, {dL},{dR}")
+
+                r = W/2.
+                alpha = dR/W
+                
+                ch = math.cos(self.gen_heading)
+                sh = math.sin(self.gen_heading)
+                ca = math.cos(alpha)
+                sa = math.sin(alpha)
+                
+                # O on left
+                mov_x = -r * (sh*(1.-ca) - ch*sa)
+                mov_y =  r * (ch*(1.-ca) + sh*sa)
+
+        else: # dL < 0
+            if dR > 0:
+                if -dL < dR: # case 11
+                    #print(f"  # case 11, {dL},{dR}")
+
+                    q = -dR/dL
+                    rL = W/(q+1.)
+                    r = W/2. - rL
+                    alpha = -dL / rL
+                    ch = math.cos(self.gen_heading)
+                    sh = math.sin(self.gen_heading)
+                    ca = math.cos(alpha)
+                    sa = math.sin(alpha)
+                    
+                    # O on left
+                    mov_x = -r * (sh*(1.-ca) - ch*sa)
+                    mov_y =  r * (ch*(1.-ca) + sh*sa)
+
+                elif -dL == dR: # case 12
+                    #print(f"  # case 12, {dL},{dR}")
+
+                    r = 0
+                    alpha = -dL/(W/2.)
+                    mov_x = 0.
+                    mov_y = 0.
+
+                else: # -dL > dR, case 13
+                    #print(f"  # case 13, {dL},{dR}")
+
+                    q = -dL/dR
+                    rR = W/(q+1.)
+                    r = W/2.-rR
+                    alpha = -dR / rR
+                    ch = math.cos(self.gen_heading)
+                    sh = math.sin(self.gen_heading)
+                    ca = math.cos(alpha)
+                    sa = math.sin(alpha)
+                    
+                    # O on right
+                    mov_x = +r * (sh*(1.-ca) - ch*sa)
+                    mov_y = -r * (ch*(1.-ca) + sh*sa)
+
+            elif dR == 0: # case 14
+                #print(f"  # case 14, {dL},{dR}")
+
+                r = W/2.
+                alpha = -dL/W
+                ch = math.cos(self.gen_heading)
+                sh = math.sin(self.gen_heading)
+                ca = math.cos(alpha)
+                sa = math.sin(alpha)
+                
+                # O on right
+                mov_x = +r * (sh*(1.-ca) - ch*sa)
+                mov_y = -r * (ch*(1.-ca) + sh*sa)
+
+            else: # dR < 0
+                if dL < dR: # case 15
+                    #print(f"  # case 15, {dL},{dR}")
+
+                    q = dL/dR
+                    rR = W/(q-1.)
+                    r = W/2.+rR
+                    alpha = -dR / rR
+                    ch = math.cos(self.gen_heading)
+                    sh = math.sin(self.gen_heading)
+                    ca = math.cos(alpha)
+                    sa = math.sin(alpha)
+                    
+                    # O on right
+                    mov_x = +r * (sh*(1.-ca) - ch*sa)
+                    mov_y = -r * (ch*(1.-ca) + sh*sa)
+
+                if dL == dR: # case 16
+                    #print(f"  # case 16, {dL},{dR}")
+
+                    r = -dL
+                    alpha = 0.
+                    ch = math.cos(self.gen_heading)
+                    sh = math.sin(self.gen_heading)
+                    
+                    mov_x = -r*ch
+                    mov_y = -r*sh
+
+                else: # dL > dR, case 17
+                    #print(f"  # case 17, {dL},{dR}")
+
+                    q = dR/dL
+                    rL = W/(q-1.)
+                    r = rL+W/2.
+                    alpha = dL / rL
+                    ch = math.cos(self.gen_heading)
+                    sh = math.sin(self.gen_heading)
+                    ca = math.cos(alpha)
+                    sa = math.sin(alpha)
+                    
+                    # O on left
+                    mov_x = -r * (sh*(1.-ca) - ch*sa)
+                    mov_y =  r * (ch*(1.-ca) + sh*sa)
+
+        self.gen_heading += alpha;
+        self.gen_pos_x += mov_x;
+        self.gen_pos_y += mov_y;
 
     #######################################################
     #
@@ -764,6 +797,7 @@ class Robot:
         # set flags        
         self.mode = Robot.MODE_EXPLORE
         self.mov  = Robot.MVT_AHEAD
+        self.stabilised = False
         
         self.side_hole_found = False
         
@@ -781,6 +815,7 @@ class Robot:
         # get sensors data
         self.DistanceSensors()
         [[ld, lx, ly, la], [cd, cy, cy, ca],[rd, rx, ry, ra]] = self.sensors_data
+<<<<<<< Updated upstream
 
         # update prediction from sensors
 
@@ -789,55 +824,22 @@ class Robot:
         if ld > self.wall_side_dmax:
             # no wall on left
             wall_left = False
-        else:
-            wall_left = True
-        if rd > self.wall_side_dmax:
-            # no wall on right
-            wall_right = False
-        else:
-            wall_right = True
-        if cd > self.wall_front_dmax:
-            # no wall on front
-            wall_front = False
-        else:
-            wall_front = True
-
-        s = Robot.simu_time_step
+=======
         
-        if self.mov == Robot.MVT_AHEAD:
-            if wall_left and wall_right and not wall_front:
-                # continue ahead using Laplace form of PID
-                error = ld-rd
-                u = Robot.Kp * error + Robot.Ki * error/s * +Robot.Kd * error*s
-                
-                self.RunStepAngle(100, -u/1000)
-            
-        """
-        if self.current_state == Robot.MVT_AHEAD:
-            if wall_front:
-                if wall_left:
-                    if wall_right:
-                        pass
-                    else:
-                        # wall f,l,r, return back
-                        self.current_state = Robot.MVT_TO_BACK
-                else:
-                    if wall_right:
-                        pass
-                    else:
-                        pass
-            else:
-                if wall_left:
-                    if wall_right:
-                        pass
-                    else:
-                        pass
-                else:
-                    if wall_right:
-                        pass
-                    else:
-                        pass
-        """
+        if not self.stabilised:
+            # not stabilised, use PID
+            headPID_error = ld-rd
+            up = headPID_kp * headPID_error
+            ui = headPID_ki * (headPID_error + self.headPID_olderror)
+            ud = headPID_kd * (headPID_error - self.headPID_olderror)
+            self.lmotor_speed += up + ui + ud
+            self.rmotor_speed -= up + ui + ud
+            self.RunStepMotorSpeed (self.lmotor_speed, self.rmotor_speed)
+>>>>>>> Stashed changes
+        else:
+            pass
+
+
         
     #######################################################
     # Path2Moves
