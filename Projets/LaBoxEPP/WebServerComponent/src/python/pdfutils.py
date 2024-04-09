@@ -6,17 +6,22 @@ import shutil
 import pypdfium2 as pdfium
 # python -m pip install -U pypdfium2
 
+screen_w = 1920.0
+screen_h = 1080.0
+
 
 def convert_pdf(filename, destination_dir):
     pdf = pdfium.PdfDocument(filename)
     n_pages = len(pdf)
     for page_number in range(n_pages):
         page = pdf.get_page(page_number)
-        bitmap  = page.render( )
+        w_factor = screen_w / page.get_width()  
+        h_factor = screen_h / page.get_height()
+        scale = w_factor if (w_factor < h_factor) else h_factor
+        bitmap  = page.render(scale=scale)
         pil_image = bitmap.to_pil()
         nom_image = f'page_{page_number + 1}.png'
         fullname = os.path.join(destination_dir, nom_image)
-        chemin_image = filename + nom_image
         pil_image.save(fullname)
     pdf.close()
         
