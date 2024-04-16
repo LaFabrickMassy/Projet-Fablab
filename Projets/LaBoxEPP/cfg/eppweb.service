@@ -1,0 +1,13 @@
+[Unit]
+Description=Service web de La Box EPP (Engineering Performance Plan)
+After=network.target
+
+[Service]
+User=pi
+EnvironmentFile=/home/pi/laboxepp/laboxepp.env
+ExecStart=/usr/bin/python3  /home/pi/laboxepp/webserver/webserver.py 
+WorkingDirectory=/home/pi/laboxepp/webserver/
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

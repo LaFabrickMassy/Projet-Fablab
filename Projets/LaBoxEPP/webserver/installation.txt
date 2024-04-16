@@ -1,0 +1,19 @@
+# Flask (webserver)
+pip inbstall Flask
+
+# nginx (Flask reverse proxy)
+sudo apt-get -y install python-rpi.gpio
+
+# pygame (image dislay)
+pip install pygame
+
+# gpio (button management)
+sudo apt-get -y install python-rpi.gpio
+
+# hostapd (hotspot)
+sudo apt-get install hostapd
+
+# dnsmasq (dns for hotspot)
+sudo apt-get install dnsmasq
+
+

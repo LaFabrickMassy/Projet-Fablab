@@ -1,2 +1,0 @@
-pip inbstall Flask
-pip install pdf2image

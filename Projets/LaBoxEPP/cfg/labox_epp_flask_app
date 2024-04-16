@@ -1,0 +1,16 @@
+# copy this file in /etc/nginx/sites-available, and make a link to sites-enabled:
+#
+# sudo cp path_to_this_file/laboxepp_flask_app /etc/nginx/sites-available/
+# sudo ln -s /etc/nginx/sites-available/laboxepp_flask_app /etc/nginx/sites-enable/
+
+
+server {
+    listen 80;
+    server_name laboxepp.local;
+
+    location / {
+        proxy_pass http://localhost:5000;
+        include /etc/nginx/proxy_params;
+        proxy_redirect off;
+    }
+}

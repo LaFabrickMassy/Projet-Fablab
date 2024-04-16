@@ -1,0 +1,4 @@
+# copy this file in /etc/default
+# and copy the following file in its target dir:
+
+DAEMON_CONF="/etc/hostapd/hostapd.conf"
