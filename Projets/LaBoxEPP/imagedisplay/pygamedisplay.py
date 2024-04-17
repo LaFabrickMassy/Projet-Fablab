@@ -2,6 +2,10 @@ import pygame
 import os
 import time
 from os import environ
+import logging
+
+
+logging.basicConfig(filename="/var/log/laboxepp/eppdisplay.log")
 
 # Initialisation de pygame
 pygame.init()
@@ -12,8 +16,12 @@ w = screen.get_rect().width
 h = screen.get_rect().height
 
 working_dir = environ.get("EPP_IMG_DIR")
+msg=f"Working directory = {working_dir}"
+print(msg)
+logging.info(msg)
+
 if working_dir is None:
-    working_dir = "/tmp/laboxepp/img"
+    working_dir = "/var/laboxepp/"
     if not os.path.exists(working_dir):
         os.mkdirs(working_dir) 
 
