@@ -1,11 +1,16 @@
 from flask import Flask, render_template, request
 import os
 import shutil
+from os import environ
 
 from pdfutils import convert_pdf, clear_directory, copy_directory
 
-tmp_directory = "c:/tmp/"
-working_directory = "c:/tmp/working"
+tmp_directory = "/tmp/"
+
+working_directory = environ.get("EPP_IMG_DIR")
+if working_directory is None:
+    working_directory = "/tmp/laboxepp/"
+    os.mkdir(working_directory)
 
 
 ## Obtenir le chemin absolu du répertoire contenant ce fichier Python
@@ -43,7 +48,7 @@ def index():
             pdf_file.save(local_pdf_filename)
             # Create directory for image extraction
             dest_directory = os.path.join(tmp_directory, pdf_file.filename + "_imgs")
-            print("MAkedirs...")
+            print("Makedirs...")
             os.makedirs(dest_directory, exist_ok=True)
             # Convert pdf to images
             print("convert...")

@@ -1,6 +1,7 @@
 import pygame
 import os
 import time
+from os import environ
 
 # Initialisation de pygame
 pygame.init()
@@ -10,7 +11,11 @@ screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 w = screen.get_rect().width
 h = screen.get_rect().height
 
-working_dir = "C:\\tmp\\working"
+working_dir = environ.get("EPP_IMG_DIR")
+if working_dir is None:
+    working_dir = "/tmp/laboxepp/img"
+    if not os.path.exists(working_dir):
+        os.mkdirs(working_dir) 
 
 def displayImg(image_path):
     image = pygame.image.load(image_path)
@@ -22,7 +27,8 @@ def displayImg(image_path):
     k_h = float(img_h) / float(h)
     factor = k_w if (k_w > k_h) else k_h
    
-    image = pygame.transform.scale_by(image, factor=factor)
+    image = pygame.transform.scale(image, (int(img_w*factor), int(img_h*factor)))
+    #image = pygame.transform.scale_by(image, factor=factor)
     img_w = image.get_rect().width
     img_h = image.get_rect().height
 

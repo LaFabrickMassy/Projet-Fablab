@@ -1,0 +1,13 @@
+[Unit]
+Description=Service affichage de La Box EPP (Engineering Performance Plan)
+After=network.target
+
+[Service]
+User=pi
+EnvironmentFile=/etc/laboxepp/laboxepp.env
+ExecStart=/usr/bin/python  /etc/laboxepp/imagedisplay/pygamedisplay.py 
+WorkingDirectory=/etc/laboxepp/webserver/
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
