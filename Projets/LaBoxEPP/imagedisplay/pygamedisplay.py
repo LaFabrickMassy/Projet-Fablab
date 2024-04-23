@@ -1,6 +1,7 @@
 import pygame
 import os
 import time
+from datetime import datetime
 from os import environ
 import logging
 import signal
@@ -8,7 +9,10 @@ import RPi.GPIO as GPIO
 
 BUTTON_GPIO = 4
 
+button_state = GPIO.HIGH
+button_state_stamp = 0
 button_pressed = False
+button_long_pressed = False
 
 logging.basicConfig(filename="/var/log/laboxepp/eppdisplay.log")
 
@@ -56,16 +60,34 @@ def displayImg(image_path):
   
 def button_callback(gpio):
     global button_pressed
+    global button_long_pressed
+    global button_state
+    global button_state_stamp
+    
     time.sleep(0.05) # debounce
-    if GPIO.input(gpio) == GPIO.LOW:
-        print("Button pressed")
-        logging.info("Button pressed")
-        button_pressed = True
+    if (GPIO.input(gpio) == GPIO.LOW) and (button_state == GPIO.HIGH):
+        button_state = GPIO.LOW
+        button_state_stamp = datetime.now()
+        msg = f"button pressed at {button_state_stamp}"
+        print(msg)
+        logging.info(msg)
+    
+    if (GPIO.input(gpio) == GPIO.HIGH) and (button_state == GPIO.LOW):
+        button_state = GPIO.HIGH
+        now = datetime.now()
+        elapsed = (now - button_state_stamp).total_seconds()
+        msg = f"button released at {now}"
+        print(msg)
+        logging.info(msg)
+        if(elapsed < 3):
+            button_pressed = True
+        else:
+            button_long_pressed = True
     
 def initButton():
     GPIO.setmode(GPIO.BCM) # numbers as gpio value
     GPIO.setup(BUTTON_GPIO, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    GPIO.add_event_detect(BUTTON_GPIO, GPIO.FALLING, callback=button_callback, bouncetime=50)
+    GPIO.add_event_detect(BUTTON_GPIO, GPIO.BOTH, callback=button_callback, bouncetime=50)
 
     
 def fileListChanged(list1, list2):
@@ -101,8 +123,11 @@ while running:
         
     
     # replace this with the wait for the gpio input 
-    if(button_pressed):
+    if(button_pressed or button_long_pressed):
         button_pressed = False
+        if button_long_pressed:
+            button_long_pressed = False
+            index = 0
         if len(file_list) > 0:
             file_name = file_list[index]                
             image_path = os.path.join(working_dir, file_name)
@@ -112,8 +137,8 @@ while running:
         
 
     for event in pygame.event.get():
-        print(f"event: {event}")
-        logging.debug(f"event: {event}")
+        # print(f"event: {event}")
+        # logging.debug(f"event: {event}")
         if event.type == 2:   # key down
             running = False
         #if event.type == pygame.QUIT:
