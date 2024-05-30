@@ -6,6 +6,7 @@ from os import environ
 import logging
 import signal
 import RPi.GPIO as GPIO
+import subprocess
 
 BUTTON_GPIO = 4
 
@@ -13,6 +14,7 @@ button_state = GPIO.HIGH
 button_state_stamp = 0
 button_pressed = False
 button_long_pressed = False
+button_long_long_pressed = False
 
 logging.basicConfig(filename="/var/log/laboxepp/eppdisplay.log")
 
@@ -58,9 +60,17 @@ def displayImg(image_path):
     screen.blit(image, ((w-img_w)/2, (h-img_h)/2))
     pygame.display.flip()
   
+def shutdown():
+    try:
+        proc = subprocess.Popen(["sudo", "shutdown", "now"], stdout=subprocess.PIPE, universal_newlines=True)
+        out, err = proc.communicate() 
+    finally:
+        pass
+
 def button_callback(gpio):
     global button_pressed
     global button_long_pressed
+    global button_long_long_pressed
     global button_state
     global button_state_stamp
     
@@ -81,8 +91,10 @@ def button_callback(gpio):
         logging.info(msg)
         if(elapsed < 3):
             button_pressed = True
-        else:
+        elif (elapsed < 10):
             button_long_pressed = True
+        else:
+            button_long_long_pressed = True
     
 def initButton():
     GPIO.setmode(GPIO.BCM) # numbers as gpio value
@@ -97,7 +109,9 @@ def fileListChanged(list1, list2):
 
 
 def getImgList():
-    return [f for f in os.listdir(working_dir) if os.path.isfile(os.path.join(working_dir, f)) and f.lower().endswith(".png")]
+    imglist = [f for f in os.listdir(working_dir) if os.path.isfile(os.path.join(working_dir, f)) and f.lower().endswith(".png")]
+    imglist = sorted(imglist)
+    return imglist
 
 def exit_display(signal, frame):
     logging.info("Exiting display on interruption signal")
@@ -114,6 +128,8 @@ print(file_list)
 index = 0
 
 running = True
+useButton = True 
+
 while running:
     new_file_list = getImgList()
     
@@ -121,35 +137,39 @@ while running:
         file_list = new_file_list
         index = 0
         
-    
-    # replace this with the wait for the gpio input 
-    if(button_pressed or button_long_pressed):
-        button_pressed = False
-        if button_long_pressed:
-            button_long_pressed = False
-            index = 0
-        if len(file_list) > 0:
-            file_name = file_list[index]                
-            image_path = os.path.join(working_dir, file_name)
-            displayImg(image_path)
-            #iterate
-            index = (index + 1) if (index + 1) < len(file_list)  else 0
-        
-
-    for event in pygame.event.get():
-        # print(f"event: {event}")
-        # logging.debug(f"event: {event}")
-        if event.type == 2:   # key down
-            running = False
-        #if event.type == pygame.QUIT:
-        #    running = False
-    
-#for image_path in [os.path.join(working_dir, f) for f in os.listdir(working_dir) if os.path.isfile(os.path.join(working_dir, f)) ]:
-#    if(not image_path.lower().endswith(".png")):
-#        continue
-    # Charger l'image
-    
-#    displayImg(image_path)
+    if useButton:    
+       # replace this with the wait for the gpio input 
+       if(button_pressed or button_long_pressed or button_long_long_pressed):
+           button_pressed = False
+           if button_long_long_pressed:
+               button_long_long_pressed = False
+               shutdown()
+           elif button_long_pressed:
+               button_long_pressed = False
+               index = 0
+           
+           if len(file_list) > 0:
+               file_name = file_list[index]                
+               image_path = os.path.join(working_dir, file_name)
+               displayImg(image_path)
+               #iterate
+               index = (index + 1) if (index + 1) < len(file_list)  else 0
+           
+   
+       for event in pygame.event.get():
+           # print(f"event: {event}")
+           # logging.debug(f"event: {event}")
+           if event.type == 2:   # key down
+               running = False
+           #if event.type == pygame.QUIT:
+           #    running = False
+    else: 
+       for image_path in [os.path.join(working_dir, f) for f in os.listdir(working_dir) if os.path.isfile(os.path.join(working_dir, f)) ]:
+           if(not image_path.lower().endswith(".png")):
+              continue
+       # Charger l'image
+           displayImg(image_path)
+           time.sleep(5)
 #    logging(f"event: {event}")
     # Attendre jusqu'à ce que l'utilisateur ferme la fenêtre
 #   running = True
