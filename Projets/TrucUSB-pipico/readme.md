@@ -18,17 +18,27 @@
 # Sequences
 ## Production mode
 - Check button state
-	if button pressed
-		in configuration.txt, change option production_mode to 0
-		blink led during 10s
-		reboot
+	- if button pressed
+		- in configuration.txt, change option production_mode to 0
+		- blink led quickly during 10s
+		- reboot
 - Check configuration.txt	
-	if production_mode == 0
-		rename main.py to main.py.no_run
-		blink led during 10s
-		reboot
-	disable all USB devices created by circuitpython (list TBD)
-	if functionality ==
+	- if production_mode == 0
+		- rename main.py to main.py.no_run
+		- blink led during 10s
+		- reboot
+	- disable all USB devices created by circuitpython (list TBD)
+	- if functionality == 'keyboard'
+		- if option keyboard_keys is empty or non existent
+			- blink led quickly and wait
+		- else
+			- create a USB keyboard device
+			- read keyboard_keys
+			- transform keybard_keys to a list of key values
+			- send key values thought the USB keyboard device
+			- blink led slowly and wait
+	- if functionality == 'device'
+		- if option device
 
 ## Configuration mode
 In configuration state, as the script file has extension .py.no-run, the code is not launched
