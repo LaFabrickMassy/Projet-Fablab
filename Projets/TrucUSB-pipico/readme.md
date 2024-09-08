@@ -1,6 +1,6 @@
 # Purpose
 
-TrucUSB is a devices designed to test USB identification (vendor_ID and device_ID), and
+TrucUSB is a device designed to test USB identification (vendor_ID and device_ID), and
 to simulate keyboard sequences.
 It is configured in on of two modes:
 - USB identification : the vendor_ID and the device_ID can be set to any string
@@ -73,73 +73,72 @@ Possible solutions are:
 - read a GPIO status and disable devices only if the GPIO is up or down. 
 This needs to connect a GPIO to V+ or GND and set a pull up or pull down.
 
-# TrucUSB Modes
+# TrucUSB usage
 
-1. Production mode : create a personalised USB device.
-	- if keyboard funcionality, the content of kbd_data.txt is send
-	- if generic functionality, a USB device with personalised vendor_name, product ID, serial number
-	to switch to configuration mode, boot with button pressed
-2. Configuration mode : the Pico is in "normal state". 
-	
+## Modes
 
-# Switch between modes
-1. Production mode : if button is presses at boot, switch to configuration state
-2. Configuration mode : modify config.txt to set the option production_mode=1 and rename script file to main.py
+TrucUSB has two modes : production and configuration modes. 
 
-# Sequences
-## Production mode
-- Check button state
-	- if button pressed
-		- in configuration.txt, change option production_mode to 0
-		- blink led quickly during 10s
-		- reboot
-- Check configuration.txt	
-	- if production_mode == 0
-		- rename main.py to main.py.no_run
-		- blink led during 10s
-		- reboot
-	- disable all USB devices created by circuitpython : Communication, Mass storage, HID, Audio and USB composite device
-	- if functionality == 'keyboard'
-		- if option keyboard_keys is empty or non existent
-			- blink led quickly and wait
-		- else
-			- create a USB keyboard device
-			- read keyboard_keys
-			- transform keybard_keys to a list of key values
-			- send key values thought the USB keyboard device
-			- blink led slowly and wait
-	- if functionality == 'device'
-		- if option device is empty or non existent
-			- blink led quickly and wait
-		- else
-			- read device class, vendor_id, device_id from config.txt
-			- Create the USB device
-			
-## Configuration mode
-In configuration state, as the script file has extension .py.no-run, the code is not launched
+In production mode, it creates the USB devices and, if key generator is activated, sends the keys.
 
-# Annex A - keyboard_keys definition syntax
-Keycodes are available at https://www.win.tue.nl/~aeb/linux/kbd/scancodes-14.html. 
-Keycodes are defined for a US layout.
+In configuration mode, specific configurations are disabled. Default CIRCUITPY drive, serial port and REPL are usable.
+It is possible to modify the configuration only in this mode.
 
-keyboard_keys is a string containing key symbols, such as letters, digits or special characters, 
-escape sequences and pause.
+## Disable production mode
 
-Escape sequences begins with the backslash symbol. Available escape sequances are:
-- \\: backslash key
-- \{, \}: curly bracket keys
-- \', \": simple and double quote
-- \w: the "Windows" key
-- \DDD, \xXX: the key symbol ddd (in decimal) or XX (in hexa). 
-If the first character after the \ is a digit, the value is dd. 
-If the first character after the \ is a 'x' or a 'X', the value is 0xXX.
-- \n: the Enter key
-- \t: the Tab key
-- \<, \>, \^, \v: left, right, up and down keys
+Connecting GPIO13 to the ground during boot, using a jumper for example, disable the production mode. 
+GPIO number is parametrable in config.py with CONFIG_GPIO.
 
-Pause sequence is {nnnn}, describing a nnnn milliseconds pause (approximately, depending on software)
+## Configuration
 
-**Exemple** The following sequence "\wr{500}cmd.exe\n{1000}dir" sends the Windows+r commands, waits for 500ms, 
-sends "cmd.exe", waits for 1s and enter the "dir" command.
+The configuration is set in config.py. This file defines the following variables:
+- MODE_GPIO: GPIO number used to enter in configuration mode (integer)
+- CONFIG_USB_VENDOR: vendor_id of USB devices (string)
+- CONFIG_USB_PRODUCT: device_id of USB devices (string)
+- KEY_SEQUENCE: keys sent (string). See [Key sequences](#key-sequences). If this variable is not set,
+no keys are send.
+
+## Key sequences
+
+### Keyboard layouts
+
+USB keyboards send keys numbers and not symbols (letters, digits,...). 
+A key sends the same code wether the keyboard is a US QWERTY or a French AZERTY. The operating system
+applies locale translation to get a "A" when the "Q" key is pressed if the OS is configured with an
+AZERTY keyboard.
+
+Keycodes are defined in chapter 10 of [HID Usage Table](https://usb.org/sites/default/files/hut1_3_0.pdf)
+Keycodes match the sign printed on the kyboard only on a US keyboard.
+
+### KEY_SEQUENCE syntax
+
+The KEY_SEQUENCE string is composed of unitary symbols such as letters (capitalized or not), digits,
+symbols (dot, comma, colon, ...), modifiers and escaped symbols. 
+
+A key can be modified by a 'modifier' such as shift, control, ... A capital A is `<shift>a'
+
+- lowercase letters: a=04, ..., z=1D
+- uppercase letters: an uppercase letter sends the lowercase letter modified by right shift.
+- digits: 1=1E, ..., 0=27
+- specific keys:
+	- space: <spc> or <space>
+	- keyboard enter: <enter>
+	- numpad enter: <npenter>
+	- tab: <tab>
+	- home: <home>
+	- end: <end>
+	- page up: <pgup>
+	- page down: <pgdn>
+- modifers:
+	- left shift: <shift> or <lshift>
+	- right shift: <rshift>
+	- left control: <ctrl> or <lctrl>
+	- right control: <rctrl>
+	- left alt: <alt>
+	- right alt: <ralt> or <altgr>
+	- windows: <win>
+
+
+
 
 
