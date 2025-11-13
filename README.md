@@ -19,10 +19,15 @@ https://youtu.be/PtJthu3vwjM
 Part 3:  
 https://youtu.be/bib2IqzqXkU  
 
-PArt4:
-https://youtu.be/ZcDP0aldO_8
+PArt4:  
+https://youtu.be/ZcDP0aldO_8  
 
-Présentation du Pico 2 et de plein d'autres videos:
-https://www.youtube.com/watch?v=oXF_lVwA8A4
+Présentation du Pico 2 et de plein d'autres videos:  
+https://www.youtube.com/watch?v=oXF_lVwA8A4  
+
+Faire un oscilloscope  
+https://youtu.be/fR8VwuvkIAc
+
+
 
 
